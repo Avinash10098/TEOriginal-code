@@ -1,0 +1,230 @@
+//test class : testREST_LucidAPI
+@RestResource(urlMapping='/LucidAPI/*')
+global with sharing class REST_LucidAPI {
+    
+    @HttpPost
+    global static REST_result LucidAPI() {
+        REST_result res = new REST_result();
+        RequestWrapper requestData = (RequestWrapper) JSON.deserialize(RestContext.request.requestBody.toString(), RequestWrapper.class);
+        
+        // Validate required fields (guestName, contactNumber, and emailID)
+        String validationError = validateRequestFields(requestData);
+        if (validationError != null) {
+            res.returnCode = false;
+            res.message = validationError;
+            return res;
+        }
+        
+        string phone = requestData.contactNumber;
+        // Query for existing contact, store in list
+        List<Contact_Management__c> contactList = new List<Contact_Management__c>();
+        contactList = [SELECT Id, Name__c FROM Contact_Management__c WHERE 
+                       ((Email_P__c =: requestData.emailID AND Email_P__c != null) OR (Email_S__c =: requestData.emailID AND Email_S__c != null))
+                       OR (Phone_P__c =: phone OR Phone_S__c =: phone) LIMIT 1];
+        
+        string incomingPhone = '';
+        List<String> phoneList = phone.split('-');
+        incomingPhone = phoneList[1]; // Extract the number part (after '-')
+        string countryCode = phoneList[0];
+        if(contactList.size() == 0){
+            system.debug('inside if: contactList is empty');
+            contactList = [SELECT Id, Name__c FROM Contact_Management__c WHERE 
+                           ((Email_P__c =: requestData.emailID AND Email_P__c != null) OR (Email_S__c =: requestData.emailID AND Email_S__c != null))
+                           OR (Phone_P__c =: incomingPhone OR Phone_S__c =: incomingPhone) LIMIT 1];
+        }
+   /*     if(phone.contains('-')) {
+            system.debug('inside if: Phone contains a hyphen');
+            List<String> phoneList = phone.split('-');
+            incomingPhone = phoneList[1]; // Extract the number part (after '-')
+            contactList = [SELECT Id, Name__c FROM Contact_Management__c WHERE 
+                       ((Email_P__c =: requestData.emailID AND Email_P__c != null) OR (Email_S__c =: requestData.emailID AND Email_S__c != null))
+                       OR (Phone_P__c =: incomingPhone OR Phone_S__c =: incomingPhone) LIMIT 1];
+        } else {
+            system.debug('inside else: Phone does not contain a hyphen');
+            incomingPhone = phone;
+            contactList = [SELECT Id, Name__c FROM Contact_Management__c WHERE 
+                       ((Email_P__c =: requestData.emailID AND Email_P__c != null) OR (Email_S__c =: requestData.emailID AND Email_S__c != null))
+                       OR (Phone_P__c =: incomingPhone OR Phone_S__c =: incomingPhone) LIMIT 1];
+        }*/
+        
+        
+        Contact_Management__c contactManagement;
+        if (!contactList.isEmpty()) {
+            contactManagement = contactList[0]; // Assign the first contact if exists
+        }
+        
+        System.debug('contactManagement: ' + contactManagement);
+        
+        if(contactManagement != null) {
+            // Update the contact's name if necessary
+            if(contactManagement.Name__c.startsWith('TEHPLC')) {
+                contactManagement.Name__c = requestData.guestName;
+                update contactManagement; // Perform update only if needed
+            }
+        } else {
+            // Create new Contact_Management record
+            contactManagement = new Contact_Management__c(
+                Name__c = requestData.guestName,
+                Email_P__c = requestData.emailID,
+                Phone_P__c = requestData.contactNumber,
+                Product_Customer__c = 'F&B',
+                Category_independentRelationshipWith_TE__c = 'Normal',
+                Institution__c = 'TE Hospitality',
+                Relationship_Business_Level__c = 'Customer [F&B -India]',
+                Project_Customer__c = 'OB2 [Windmills of Your Mind]',
+                CurrencyIsoCode = 'INR'
+            );
+            insert contactManagement; // Insert new contact
+        }
+        
+        // Create and insert the Restaurant_Visit__c record
+        Restaurant_Visit__c newVisit = createRestaurantVisitFromRequest(requestData, contactManagement.Id);
+        try {
+            insert newVisit;
+            res.returnCode = true;
+            res.message = 'Restaurant Visit record inserted successfully.';
+        } catch (DmlException e) {
+            System.debug('Error inserting RestaurantVisit: ' + e.getMessage());
+            res.returnCode = false;
+            res.message = 'Error occurred while inserting the Restaurant Visit record. Error: ' + e;
+        }
+        
+        return res;
+    }
+    
+    // Helper method to validate required fields
+    private static String validateRequestFields(RequestWrapper requestData) {
+        if (String.isBlank(requestData.guestName)) {
+            return 'Error: guestName is required.';
+        }
+        if (String.isBlank(requestData.contactNumber)) {
+            return 'Error: contactNumber is required.';
+        }
+        if (String.isNotBlank(requestData.contactNumber)) {
+            system.debug('inside 1');
+            if(requestData.contactNumber.contains('-')) {
+                system.debug('inside 2');
+                List<String> phoneList = requestData.contactNumber.split('-');
+                if(phoneList.size() == 1){
+                    system.debug('inside 3');
+                    return 'Error: contactNumber is required.';
+                }
+            }
+        }
+       /* if (String.isBlank(requestData.emailID)) {
+            return 'Error: emailID is required.';
+        } */
+        if (requestData.pax == null) {
+            return 'Error: pax is required.';
+        }
+        if (String.isBlank(requestData.kotDateTime)) {
+            return 'Error: kotDateTime is required.';
+        }
+        if (String.isBlank(requestData.billDate)) {
+            return 'Error: billDate is required.';
+        }
+        if (String.isBlank(requestData.billTime)) {
+            return 'Error: billTime is required.';
+        }
+        if (requestData.netAmountFood == null) {
+            return 'Error: netAmountFood is required.';
+        }
+        if (requestData.netAmountSoftDrinks == null) {
+            return 'Error: netAmountSoftDrinks is required.';
+        }
+        if (requestData.netAmountLiquor == null) {
+            return 'Error: netAmountLiquor is required.';
+        }
+        if (requestData.netAmountBeer == null) {
+            return 'Error: netAmountBeer is required.';
+        }
+        if (requestData.netAmountEvents == null) {
+            return 'Error: netAmountEvents is required.';
+        }
+        if (requestData.totalNetAmount == null) {
+            return 'Error: totalNetAmount is required.';
+        }
+        if (requestData.payMode == null) {
+            return 'Error: payMode is required.';
+        }
+        if (requestData.outlet == null) {
+            return 'Error: outlet is required.';
+        }
+        return null; // No errors
+    }
+    
+    // Helper method to create Restaurant_Visit__c from RequestWrapper
+    private static Restaurant_Visit__c createRestaurantVisitFromRequest(RequestWrapper requestData, String contactManagementId) {
+        return new Restaurant_Visit__c(
+            Contact_Management__c = contactManagementId,
+            Guest_Name__c = requestData.guestName,
+            Contact_Number__c = requestData.contactNumber,
+            Email_ID__c = requestData.emailID,
+            PAX__c = requestData.pax,
+            KOT_Date_Time__c = DateTime.valueOf(requestData.kotDateTime),
+            Bill_Date__c = Date.valueOf(requestData.billDate),
+            Bill_Time__c = convertToTime(requestData.billTime),
+            Net_Amount_C01_Food__c = requestData.netAmountFood,
+            Net_Amount_C02_Soft_Drinks__c = requestData.netAmountSoftDrinks,
+            Net_Amount_C03_Liquor__c = requestData.netAmountLiquor,
+            Net_Amount_C04_Beer__c = requestData.netAmountBeer,
+            Net_Amount_C05_Events__c = requestData.netAmountEvents,
+            Total_Net_Amount__c = requestData.totalNetAmount,
+            Pay_Mode__c = requestData.payMode,
+            /*
+            Product_Customer__c = requestData.productCustomer,
+            Category__c = requestData.category,
+            Institution__c = requestData.institution,
+            Relationship_Business_Level__c = requestData.relationship,
+            Currency__c = requestData.currencyValue,
+            Project_Customer__c = requestData.projectCustomer, 
+			*/
+            Outlet__c = requestData.outlet
+        );
+    }
+    
+    // Helper method to convert bill time from String to Time
+    private static Time convertToTime(String billTime) {
+        String[] timeParts = billTime.split(' ');
+        String[] hhmm = timeParts[0].split(':');
+        Integer hour = Integer.valueOf(hhmm[0]);
+        Integer minute = Integer.valueOf(hhmm[1]);
+        
+        if (timeParts[1] == 'PM' && hour != 12) {
+            hour += 12;
+        } else if (timeParts[1] == 'AM' && hour == 12) {
+            hour = 0;
+        }
+        
+        return Time.newInstance(hour, minute, 0, 0);
+    }
+    
+    public class RequestWrapper {
+        public String guestName { get; set; }
+        public String contactNumber { get; set; }
+        public String emailID { get; set; }
+        public Integer pax { get; set; }
+        public String kotDateTime { get; set; }
+        public String billDate { get; set; }
+        public String billTime { get; set; }
+        public Decimal netAmountFood { get; set; }
+        public Decimal netAmountSoftDrinks { get; set; }
+        public Decimal netAmountLiquor { get; set; }
+        public Decimal netAmountBeer { get; set; }
+        public Decimal netAmountEvents { get; set; }
+        public Decimal totalNetAmount { get; set; }
+        public String payMode { get; set; }
+        public String productCustomer { get; set; }
+        public String category { get; set; }
+        public String institution { get; set; }
+        public String relationship { get; set; }
+        public Decimal currencyValue { get; set; }
+        public String projectCustomer { get; set; }
+        public String outlet { get; set; }
+    }
+    
+    global class REST_result {
+        webservice Boolean returnCode = false;
+        webservice String message = 'Unexpected error occurred.';
+    }
+}
