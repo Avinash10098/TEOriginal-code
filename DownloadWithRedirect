@@ -1,0 +1,30 @@
+<apex:page cache="false" >
+    
+    <iframe id="downloadFrame" style="display:none;"></iframe>
+    
+    
+    <script>
+    
+    
+       
+    
+    function getLeadIdFromUrl() {
+          const params = new URLSearchParams(window.location.search);
+          return params.get('id');
+     }
+
+    
+      window.onload = function() {
+            
+          var BookingId = getLeadIdFromUrl();
+          document.getElementById('downloadFrame').src = '/apex/InternalCSOAXLSX?id='+BookingId;
+            
+          setTimeout(function () {
+       var UrlToRedirect = '/lightning/r/Booking__c/' + BookingId + '/view';          
+                window.location.href = UrlToRedirect;
+                
+              window.location.replace(UrlToRedirect);
+         }, 300);
+       };
+    </script>
+</apex:page>
