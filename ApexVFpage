@@ -1,0 +1,12 @@
+public class ApexVFpage {
+    public List<Lead> leads { get; set; }
+
+    public ApexVFpage(ApexPages.StandardController sc) {
+        Id leadId = sc.getId();
+        leads = [SELECT Name, Email, Phone, Company FROM Lead WHERE Id = :leadId];
+    }
+
+    public String getExcelDownloadUrl() {
+        return '/apex/DownloadWithRedirect?id=' + ApexPages.currentPage().getParameters().get('id');
+    }
+}
