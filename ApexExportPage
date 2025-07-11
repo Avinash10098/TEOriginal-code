@@ -1,0 +1,28 @@
+<apex:page standardController="Lead" extensions="ApexVFpage">
+    <apex:form >
+        <h2>
+             Preview Excel Format
+        </h2>
+        <table border="1" style="width:100%;border-collapse:collapse;">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Company</th>
+            </tr>
+            <apex:repeat value="{!leads}" var="l">
+                <tr>
+                    <td>{!l.Name}</td>
+                    <td>{!l.Email}</td>
+                    <td>{!l.Phone}</td>
+                    <td>{!l.Company}</td>
+                </tr>
+            </apex:repeat>
+        </table>
+
+        <br/><br/>
+        <button type="button" onclick="window.open('{!excelDownloadUrl}', '_blank')">
+             Download
+        </button>
+    </apex:form>
+</apex:page>
