@@ -1,0 +1,114 @@
+@RestResource(urlMapping='/eDesignAPI/*')
+global with sharing class REST_eDesignAPI {
+    public static Map<String,decimal> custDetailsMap = new Map<String,decimal>();
+    @HttpPost
+    global static REST_result eDesignAPI_Method() {
+        REST_result res = new REST_result();
+        
+        RequestWrapper_eDesignAPI requestData = (RequestWrapper_eDesignAPI) JSON.deserialize(RestContext.request.requestBody.toString(), RequestWrapper_eDesignAPI.class);
+        String ProjectCode_UnitNo = requestData.ProjectCode + '_' + requestData.UnitNo;
+        String RevisionNo = requestData.RevisionNo;
+        
+        List<Booking__c> bookingList = [SELECT Id, Quotation__c FROM Booking__c WHERE Project_Unit__c =: ProjectCode_UnitNo LIMIT 1];
+        System.debug('bookingList::' + bookingList);
+        
+        if(!bookingList.isEmpty()){
+            res.returnCode = true;
+            res.message = 'Records inserted successfully.';
+            
+      //      Revision_Number__c rnObj = new Revision_Number__c(Revision_Number__c = RevisionNo,Booking__c = bookingList[0].Id);
+      //      insert rnObj;
+      		List<Revision_Number__c> rnObj = new List<Revision_Number__c>();
+            rnObj = [Select id,Revision_Number__c from Revision_Number__c where Booking__c =: bookingList[0].Id order by createddate desc Limit 1];
+            if(rnObj.size() > 0){
+                String str = rnObj[0].Revision_Number__c;
+                Decimal strDec = decimal.valueOf(str);
+                strDec += 1;
+                Revision_Number__c rnObj1 = new Revision_Number__c(Revision_Number__c = String.valueOf(strDec),Booking__c = bookingList[0].Id);
+      	        insert rnObj1;
+            }
+            else{
+                Revision_Number__c rnObj1 = new Revision_Number__c(Revision_Number__c = '1',Booking__c = bookingList[0].Id);
+      	        insert rnObj1;
+            }
+            
+            Customization_Master__c cm = new Customization_Master__c();
+            List<Customization_Details__c> cdList = new List<Customization_Details__c>();
+            cm = [Select id,Active__c,Tax_Rate__c,Name from Customization_Master__c where Active__c = True];
+            if(cm != null){
+                cdList = [Select Id,Name,Sr_No__c,Description__c,Customization_Master_New__c,Active__c from Customization_Details__c where 
+                               Customization_Master_New__c =: cm.Id];
+            }
+            for(Customization_Details__c cd : cdList){
+                custDetailsMap.put(cd.Name,cd.Sr_No__c);
+            }
+         
+            
+            
+            Map<String, Decimal> designItems = new Map<String, Decimal>{
+    'Concrete & RCC' => requestData.ConcreteAndRCC != null ? requestData.ConcreteAndRCC.Amount : null,
+    'Steel Fabrication' => requestData.SteelFabrication != null ? requestData.SteelFabrication.Amount : null,
+    'Masonry & Plaster' => requestData.MasonryAndPlaster != null ? requestData.MasonryAndPlaster.Amount : null,
+    'Building Protection' => requestData.BuildingProtection != null ? requestData.BuildingProtection.Amount : null,
+    'Fenestration' => requestData.Fenestration != null ? requestData.Fenestration.Amount : null,
+    'Flooring | Dado | Paviour' => requestData.FlooringDadoPaviour != null ? requestData.FlooringDadoPaviour.Amount : null,
+    'False Ceiling | Dry Wall | Partitions' => requestData.FalseCeilingDryWallPartitions != null ? requestData.FalseCeilingDryWallPartitions.Amount : null,
+    'Specialised Fabrication Works' => requestData.SpecialisedFabricationWorks != null ? requestData.SpecialisedFabricationWorks.Amount : null,
+    'Wall Finish' => requestData.WallFinish != null ? requestData.WallFinish.Amount : null,
+    'Power Supply' => requestData.PowerSupply != null ? requestData.PowerSupply.Amount : null,
+    'Electrical' => requestData.Electrical != null ? requestData.Electrical.Amount : null,
+    'Communication & Networking' => requestData.CommunicationAndNetworking != null ? requestData.CommunicationAndNetworking.Amount : null,
+    'Water Supply' => requestData.WaterSupply != null ? requestData.WaterSupply.Amount : null,
+    'Drainage' => requestData.Drainage != null ? requestData.Drainage.Amount : null,
+    'Sanitary Fixtures and Fittings' => requestData.SanitaryFixturesAndFittings != null ? requestData.SanitaryFixturesAndFittings.Amount : null,
+    'Garbage Disposal' => requestData.GarbageDisposal != null ? requestData.GarbageDisposal.Amount : null,
+    'Fire Safety' => requestData.FireSafety != null ? requestData.FireSafety.Amount : null,
+    'HVAC' => requestData.HVAC != null ? requestData.HVAC.Amount : null,
+    'Reticulated Gas' => requestData.ReticulatedGas != null ? requestData.ReticulatedGas.Amount : null,
+    'Central Vacuum' => requestData.CentralVacuum != null ? requestData.CentralVacuum.Amount : null,
+    'Vertical Transportation' => requestData.VerticalTransportation != null ? requestData.VerticalTransportation.Amount : null,
+    'Furniture & Cabinetry' => requestData.FurnitureAndCabinetry != null ? requestData.FurnitureAndCabinetry.Amount : null,
+    'Kitchen, Wet Kitchen, Appliances' => requestData.KitchenWetKitchenAppliances != null ? requestData.KitchenWetKitchenAppliances.Amount : null,
+    'Smart Home | Automation' => requestData.SmartHomeAutomation != null ? requestData.SmartHomeAutomation.Amount : null,
+    'Lighting' => requestData.Lighting != null ? requestData.Lighting.Amount : null,
+    'Landscaping' => requestData.Landscaping != null ? requestData.Landscaping.Amount : null,
+    'Water Bodies and Water Features' => requestData.WaterBodiesAndWaterFeatures != null ? requestData.WaterBodiesAndWaterFeatures.Amount : null,
+    'Specialised Works' => requestData.SpecialisedWorks != null ? requestData.SpecialisedWorks.Amount : null,
+    'Roads, Pavements, Bridges' => requestData.RoadsPavementsBridges != null ? requestData.RoadsPavementsBridges.Amount : null,
+    'Signage' => requestData.Signage != null ? requestData.Signage.Amount : null,
+    'Store' => requestData.Store != null ? requestData.Store.Amount : null,
+    'Render Charges' => requestData.RenderCharges != null ? requestData.RenderCharges.Amount : null,
+    'Price Protection Fee' => requestData.PriceProtectionFee != null ? requestData.PriceProtectionFee.Amount : null,
+    'Additional Design Fee' => requestData.AdditionalDesignFee != null ? requestData.AdditionalDesignFee.Amount : null,
+    'Miscellaneous' => requestData.Miscellaneous != null ? requestData.Miscellaneous.Amount : null
+        };
+   			Decimal serialNumber = 0;
+            for(String key : designItems.keySet()) {
+                serialNumber = serialNumber + 1;
+                createInteriorDesignMasterLineItem(key, bookingList[0].Id, bookingList[0].Quotation__c, true, designItems.get(key), serialNumber, rnObj[0].Id);
+            }
+        } else {
+            res.returnCode = false;
+            res.message = 'Booking does not exist for the given Project Code and Unit Code.';
+        }
+        
+        return res;
+    }
+    
+    public static void createInteriorDesignMasterLineItem(String Name, String BookingId, String QuotationId, Boolean isActive, Decimal Amount, Decimal Sr_No, String RevisionNumberId){
+        Customization_Master_Line_Items__c obj = new Customization_Master_Line_Items__c();
+        obj.Name = Name;
+        obj.Booking__c = BookingId;
+        obj.Quotation__c = QuotationId;
+        obj.Active__c = isActive;
+        obj.Amount__c = Amount;
+        obj.Revision_Number__c = RevisionNumberId;
+        obj.Sr_No__c = custDetailsMap.containskey(Name) ? custDetailsMap.get(Name) : 0;
+        insert obj;
+    }
+    
+    global class REST_result {
+        webservice Boolean returnCode = false;
+        webservice String message = 'Unexpected error occurred.';
+    }
+}
