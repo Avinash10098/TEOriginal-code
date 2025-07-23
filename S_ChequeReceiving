@@ -1,0 +1,316 @@
+public class S_ChequeReceiving {
+   public List < rMainWrapper > rwList {
+    get;
+    set;
+   }
+   public List < Receipt__C > lstReceipt {
+    get;
+    set;
+   }
+    public List < Receipt__C > tempRecList {
+    get;
+    set;
+   }
+   public Boolean error {
+    get;
+    set;
+   }
+    public Boolean approveALL{get;set;}
+    public string receiptUnit {get;set;}
+    public string receiptNumber {get;set;}
+   
+   public S_ChequeReceiving() {
+     error = false;
+      getlist();
+      approveALL = false;
+   }
+    
+   private integer counter=0;  //keeps track of the offset
+   private integer list_size=20; //sets the page size or number of rows
+   public integer total_size=1000; //used to show user the total size of the list
+//OwnerId,
+   public void getlist() {
+       rwList = new List<rMainWrapper>();
+        
+       if(String.isBlank(receiptUnit)  && String.isBlank(receiptNumber)){
+           lstReceipt = new list < Receipt__c > ([select Receipt_Number__c, id, Physically_Cheque_Received__c, Total_Amount__c, 
+        Cheque_DD__c, Cheque_DD_Date__c, Mode__c,Drawn_in_favour_of__c, Cheque_DD_Amount_Rs__c,Project_Unit__c,
+         PAN_no_of_TDS_Deductor__c,  Project_Unit__r.Project__r.name, Project_Unit__r.Name, Currency__c,
+         Opportunity__c, Reason__c, Opportunity__r.name, Sub_Type_Credit_Note__c,
+       Opportunity__r.Primary_Name__c,Opportunity__r.Other_Applicants_Name__c,SAP_Customer_Number__c,
+       name, Amount_Rs__c, DraweeBank__c, Reason_for_rejection_new__c, Receipt_Status__c, Banking__c, FOREX__c
+       from Receipt__c
+       where Receipt_Status__c NOT IN('Dishonored', 'Cleared', 'Physical Verification Rejected', 'Cancelled') AND Booking__c != null and Approval_Status_Credit_Note__c = 'Accepted'
+       and Booking__r.Is_Zero_FSOA_generated__c != True                                           
+       Order By CreatedDate DESC limit :list_size offset :counter]);
+           system.debug('List Receipt' +lstReceipt.size());
+           //------------------------------------------------------------------------------------------------------------------------
+           tempRecList = [select Receipt_Number__c, id from Receipt__c where Receipt_Status__c NOT IN
+                          ('Dishonored', 'Cleared', 'Physical Verification Rejected', 'Cancelled') AND Booking__c != null and 
+                          Approval_Status_Credit_Note__c = 'Accepted'and Booking__r.Is_Zero_FSOA_generated__c != True Order By CreatedDate DESC];
+           //------------------------------------------------------------------------------------------------------------------------
+       }
+       else if(receiptUnit != Null || receiptNumber != Null){
+           lstReceipt = new list < Receipt__c > ([select Receipt_Number__c, id, Physically_Cheque_Received__c, Total_Amount__c, 
+        Cheque_DD__c, Cheque_DD_Date__c, Mode__c,Drawn_in_favour_of__c, Cheque_DD_Amount_Rs__c,Project_Unit__c,
+         PAN_no_of_TDS_Deductor__c,  Project_Unit__r.Project__r.name, Project_Unit__r.Name, Currency__c,
+         Opportunity__c, Reason__c, Opportunity__r.name, Sub_Type_Credit_Note__c,
+       Opportunity__r.Primary_Name__c,Opportunity__r.Other_Applicants_Name__c,SAP_Customer_Number__c,
+       name, Amount_Rs__c, DraweeBank__c, Reason_for_rejection_new__c, Receipt_Status__c, Banking__c, FOREX__c
+       from Receipt__c
+       where Receipt_Status__c NOT IN('Dishonored', 'Cleared', 'Physical Verification Rejected', 'Cancelled') AND Booking__c != null and Approval_Status_Credit_Note__c = 'Accepted'
+       AND Project_Unit__r.Name LIKE: '%'+receiptUnit+'%' AND Receipt_Number__c  LIKE: '%'+receiptNumber+'%' and Booking__r.Is_Zero_FSOA_generated__c != True                                  
+       Order By CreatedDate DESC limit :list_size offset :counter]);
+           system.debug('List Receipt' +lstReceipt.size());
+           //------------------------------------------------------------------------------------------------------------------------
+           tempRecList = [select Receipt_Number__c, id from Receipt__c where Receipt_Status__c NOT IN('Dishonored', 'Cleared', 'Physical Verification Rejected', 'Cancelled') AND Booking__c != null and Approval_Status_Credit_Note__c = 'Accepted'
+       AND Project_Unit__r.Name LIKE: '%'+receiptUnit+'%' AND Receipt_Number__c  LIKE: '%'+receiptNumber+'%' and Booking__r.Is_Zero_FSOA_generated__c != True                                  
+                          Order By CreatedDate DESC]; 
+           //------------------------------------------------------------------------------------------------------------------------
+       }
+  //     system.debug('List Receipt' +lstReceipt);
+      if (lstReceipt.size() > 0) {
+         for (Receipt__c r: lstReceipt) {
+           if (String.isNotBlank(r.Receipt_Status__c) && r.Receipt_Status__c.equalsIgnoreCase('UnProcessed') && !r.Physically_Cheque_Received__c) {
+               r.Receipt_Status__c = 'UnProcessed';
+            } 
+            String applicantNames;
+            if(String.isNotBlank(r.Opportunity__r.Primary_Name__c)) 
+                  applicantNames = r.Opportunity__r.Primary_Name__c;
+                if(String.isNotBlank(r.Opportunity__r.Other_Applicants_Name__c) && string.IsnotBlank(applicantNames))
+                  applicantNames += ',' + r.Opportunity__r.Other_Applicants_Name__c;
+                else if(String.isNotBlank(r.Opportunity__r.Other_Applicants_Name__c))
+                  applicantNames = r.Opportunity__r.Other_Applicants_Name__c;
+          rMainWrapper rw = new rMainWrapper(r, applicantNames);
+          rwList.add(rw);
+           }
+      }
+   }
+	
+    public PageReference Beginning() { //user clicked beginning
+      counter = 0;
+        getlist();
+      return null;
+   }
+
+   public PageReference Previous() { //user clicked previous button
+      counter -= list_size;
+       getlist();
+      return null;
+   }
+
+   public PageReference Next() { //user clicked next button
+      counter += list_size;
+       getlist();
+      return null;
+   }
+
+   public PageReference End() { //user clicked end
+   //   counter = total_size - math.mod(total_size, list_size);
+  //     counter = (lstReceipt.size()/list_size)+1;
+       
+       counter = tempRecList.size() > 20 ? tempRecList.size() - 20 : 0 ;
+       getlist();
+      return null;
+   }
+
+   public Boolean getDisablePrevious() { 
+      //this will disable the previous and beginning buttons
+      if (counter>0) return false; else return true;
+   }
+
+   public Boolean getDisableNext() { //this will disable the next and end buttons
+      if (counter < tempRecList.size() - 20) return false; else return true;
+   }  
+
+    
+   public void Save() {
+         error = false;
+         
+      for (rMainWrapper rw: rwList) {
+        rw.style0='';
+        rw.style1='';
+        rw.style2='';
+        System.debug('RECEIPT DATA:' + rw);
+        // throw an error if physical verification is checked but the status of verification is blank
+         if (rw.rCloned.Physically_Cheque_Received__c == true && 
+             String.isnotBlank(rw.r.Receipt_status__c) && 
+             rw.r.Receipt_status__c.equalsIgnoreCase('UnProcessed') && 
+             String.isBlank(rw.rCloned.Reason_for_rejection_new__c)
+           ) {
+            rw.style0 = 'error';
+            error = true;
+            // throw an error if Foreign Curreny payment is accepted but forex amt is not filled
+         } else if (rw.rCloned.Physically_Cheque_Received__c == true && 
+             String.isnotBlank(rw.r.Receipt_status__c) && 
+             rw.r.Receipt_status__c.equalsIgnoreCase('Processed-Sent for Banking') && 
+             String.isNotBlank(rw.rCloned.Banking__c) &&
+             rw.rCloned.Banking__c.equalsIgnoreCase('Payment Successful') && 
+             String.isNotBlank(rw.r.Currency__c) &&
+             !(rw.r.Currency__c.equalsIgnoreCase('Indian Rupee') || rw.r.Currency__c.equalsIgnoreCase('RUPEES')) &&
+             rw.rCloned.Forex__c == null
+           ) {
+            rw.style2 = 'error';
+            error = true;
+         }
+      }
+      System.debug('out of loop1');
+      List<Receipt__c> updateReceiptList = new List<Receipt__c>();
+      List<Task> lstTask = new List<Task>();
+      if (error) {
+        System.debug('In error');
+        ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR,'Please correct the errors below'));
+        return;
+      }else{
+        for (rMainWrapper rw: rwList) {
+           rw.style0='';
+           rw.style1='';
+           rw.style2='';
+           // physical verification is accepted or rejected, store the status in the receipt
+           System.debug('List of receipts for processing:' + rw);
+           if (rw.rCloned.Physically_Cheque_Received__c == true && 
+           String.isNotBlank(rw.r.Receipt_status__c) && 
+           rw.r.Receipt_status__c.equalsIgnoreCase('UnProcessed') && 
+           String.isNotBlank(rw.rCloned.Reason_for_rejection_new__c)
+           ) {
+             
+            if (rw.rCloned.Reason_for_rejection_new__c.equalsIgnoreCase('Accepted')) {
+               rw.r.Receipt_status__c = 'Processed-Sent for Banking';
+               rw.r.Physically_Cheque_Received__c = true;
+               rw.r.Reason_for_rejection_new__c = rw.rCloned.Reason_for_rejection_new__c;
+            } else {
+               rw.r.Receipt_status__c = 'Physical Verification Rejected';
+               rw.r.Physically_Cheque_Received__c = true;
+               rw.r.Reason_for_rejection_new__c = rw.rCloned.Reason_for_rejection_new__c;
+               Task objTask = new Task();
+               objTask.Subject = rw.r.Cheque_DD__c + ' ' + 'is rejected by Finance Team for ' + rw.r.Reason_for_rejection_new__c;
+               objTask.WhatId = rw.r.Id;
+               //objTask.OwnerId = rw.r.OwnerId;
+               objTask.Description = rw.r.Reason__c;
+               lstTask.add(objTask);
+            }
+            rw.r.status_change_date__c = system.today();
+            updateReceiptList.add(rw.r);
+            // if banking is completed, store the payment received /rejected status
+         } else if (rw.rCloned.Physically_Cheque_Received__c == true && 
+             String.isnotBlank(rw.r.Receipt_status__c) && 
+             rw.r.Receipt_status__c.equalsIgnoreCase('Processed-Sent for Banking') && 
+             String.isNotBlank(rw.rCloned.Banking__c)
+           ) {
+            if (rw.rCloned.Banking__c.equalsIgnoreCase('Payment Successful')) {
+             rw.r.Receipt_status__c = 'Cleared';
+             rw.r.Banking__c = rw.rCloned.Banking__c;
+             if(rw.rCloned.Forex__c != null && !(rw.r.Currency__c.equalsIgnoreCase('Indian Rupee') || rw.r.Currency__c.equalsIgnoreCase('RUPEES'))) {
+               rw.r.Forex__c = rw.rCloned.Forex__c;
+               rw.r.Amount_Rs__c = rw.r.Forex__c;
+               rw.r.Currency__c = 'Indian Rupee';
+               rw.r.Total_Amount__c = rw.r.Forex__c;
+               rw.r.On_Account_Money__c = rw.r.Forex__c;
+             }
+            } else {
+              System.debug('Inside Dishonored loop:' + rw);
+             rw.r.Receipt_status__c = 'Dishonored';
+             rw.r.Banking__c = rw.rCloned.Banking__c;
+             Task objTask = new Task();
+             objTask.Subject = rw.r.Cheque_DD__c + ' ' + 'is rejected by Finance Team for ' + rw.r.Banking__c;
+             objTask.WhatId = rw.r.Id;
+             //objTask.OwnerId = rw.r.OwnerId;
+             objTask.Description = rw.r.Reason__c;
+             lstTask.add(objTask);
+            }
+            rw.r.status_change_date__c = system.today();
+            updateReceiptList.add(rw.r);
+           }
+        }
+      }
+       if(updateReceiptList.size() > 10){
+           System.debug('In error');
+        ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR,'You cannot clear more than 10 Receipts at once, please refresh the page and try again'));
+       }
+       else{
+       		try{  
+           if(updateReceiptList.size() > 0){
+               System.debug('In Update:' + updateReceiptList);
+               update updateReceiptList;
+           }
+           if(lstTask.size() > 0) {
+               System.debug('In Task creation:');
+               insert lstTask;
+           }
+       }
+       catch(Exception Ex){             
+           ApexPages.addMessages(Ex); 
+           return;
+       } 
+       getlist();
+       return;    
+       }
+       
+  }
+
+  public pagereference Back() {
+     return new pagereference('/home/home.jsp');
+  }
+  
+  public void checkALL(){
+      system.debug('approveALL:: '+approveALL);
+      for (rMainWrapper rw: rwList) {
+          //system.debug('ISTRUE::: '+ rw.rCloned.Physically_Cheque_Received__c);
+          if(approveALL){
+              if(rw.rCloned.Physically_Cheque_Received__c){
+                  rw.rCloned.Reason_for_rejection_new__c = 'Accepted';
+              }
+          }else{
+              if(rw.rCloned.Physically_Cheque_Received__c){
+                  rw.rCloned.Reason_for_rejection_new__c = '';
+              }
+          }
+      }
+  }
+  
+  public class rMainWrapper {
+     public Receipt__c r {
+      get;
+      set;
+     }
+     public Receipt__c rCloned {
+      get;
+      set;
+     }
+     public String style0 {
+      get;
+      set;
+     }
+     public String applicantNames {
+      get;
+      set;
+     }
+     public String style1 {
+      get;
+      set;
+     }
+     public String style2 {
+      get;
+      set;
+     }
+     
+     public rMainWrapper(Receipt__c r, String applicantNames) {
+      this.r = r;
+      this.applicantNames = applicantNames;
+      this.rCloned = new Receipt__c();
+      this.rCloned.Physically_Cheque_Received__c = r.Physically_Cheque_Received__c;
+      if(r.Banking__c != null)
+        this.rCloned.Banking__c = r.Banking__c;
+      
+      if(r.Reason_for_rejection_new__c != null)
+        this.rCloned.Reason_for_rejection_new__c = r.Reason_for_rejection_new__c;
+      
+      if(r.Forex__c != null)
+        this.rCloned.Forex__c = r.Forex__c;
+      
+      this.style0 = '';
+      this.style1 = '';
+      this.style2 = '';
+     }
+  }
+}
