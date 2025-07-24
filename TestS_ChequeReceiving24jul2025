@@ -1,0 +1,659 @@
+@isTest
+public class TestS_ChequeReceiving {
+	@isTest
+     private static void chequeReceiving() {
+    
+ //     Map<String, Id> recordMap = TestDataFactory.createMasterProject('Test Project');
+ //     PageReference pRef = Page.CreateQuote;
+ //     Test.setCurrentPage(pRef);
+ //     ApexPages.currentPage().getParameters().put('oppId',recordMap.get('OPPORTUNITY'));
+ //     ApexPages.currentPage().getParameters().put('Id',recordMap.get('UNIT'));
+     
+    /*  CreateQuote qController = new CreateQuote();
+     // qController.startQuote();
+      qController.selectedPlan = recordMap.get('PLAN');
+      qController.planSelect();
+	  qController.saveQuote();*/
+         
+   //    Id oppId  =   recordMap.get('OPPORTUNITY');
+   //   Id unitId = recordMap.get('UNIT');
+   //   Id projectId = recordMap.get('PROJECT');
+         
+         Account objac = new Account();
+        objac.FirstName = 'name';
+        objac.LastName = 'Test';
+        objac.Correspondence_Address__c = 'Delhi';
+        objac.Phone = '1655246165' ;
+        objac.PersonEmail = 'test12322@stetig.in';
+        objac.PersonMobilePhone = '7875225343';
+        objac.Category__c = 'General';
+        //  objac.Unit__c = objPU1.Id;
+        insert objac;
+         
+         // Project Creation
+        Project__c objpr = new Project__c();
+        objpr.Project_Code__c = 'T351';
+        objpr.Name = 'pname1';
+        objpr.Start_Date__c = System.today().addDays(-5);
+        objpr.Project_Stage__c='Launch1';
+        objpr.Address__c = '14013, Fantasy Land, Utopia, Planet Mars, OUTERWORLD CODE -11011';
+        objpr.Project_Property_Type__c = 'Residential';                      
+        objpr.NPV__c = 12;    
+        objpr.Future_NPV__c = 12;
+        objpr.Car_Park_Type_1__c = 'Open';
+        objpr.Charge_Value_1__c = 100000; 
+     //   objpr.Promoter__c = promo.Id;
+        objpr.City__c = 'abcd';
+        objpr.State__c = 'test';
+     //   objpr.Land_Owner__c = land.Id;
+        objpr.Schedule_F_Property__c = 'Schdule F';
+        objpr.IDSA_Preamble__c = 'preamble {!Booking__c.Date_of_Agreement_AFS__c}';
+        objpr.IDSA_Preamble_Landowner__c = 'preamble {!Booking__c.Date_of_Agreement_AFS__c}';
+        objpr.Company_Code__c = 37283;
+        objpr.Official_Email_IDs__c = 'abcd@stetig.in';
+        objpr.Is_Landowner_Required_In_AFS__c = true;
+        objpr.Deduction_Amount__c = 100;
+       	insert objpr;
+ //       land.Project__c = objpr.id;
+  //      update land;
+        End_Time_for_Event__c ed = new End_Time_for_Event__c();
+        ed.Name = 'End Time Minutes';
+        ed.End_Minutes__c = 120;
+        insert ed;
+         
+         
+          Unit__c objPU1 = new Unit__c();    
+        objPU1.Name = 'TestFive';      
+        objPU1.Project__c = objpr.Id;
+        objPU1.Unit_status__c='Available';
+        //objPU1.Chargeable_Area__c = 936;
+       // objPU1.Carpet_Area__c = 452;
+     //   objPU1.Tower__c = t.Id;
+        objPU1.Active_Inactive__c = 'Active';
+        //objPU1.Carpet_Area_in_Sq_Mts__c = 45.02;
+        //objPU1.Cupboard_Area_in_Sq_Mtrs__c = 3.95;
+        //objPU1.Enclosed_Balcony_in_Sq_Mtrs__c = 2.66;
+        objPU1.Floor__c = 2;
+    //    objPU1.Product_Type__c = sb.id; 
+        objPU1.Floor__c = 2;
+        objPU1.Configuration__c = '1 BHK';
+    //    objPU1.TE_Product__c = pd.id;
+        objPU1.Additional_Land__c = 150;
+        objPU1.Default_Specification_new__c = 'Green';
+        //objPU1.Default_Customisation__c = 'Online';
+        objPU1.Floor_Rise_PSF__c = 250;
+        objPU1.Customization_Charge_PSF__c = 0;
+        objPU1.Additional_Land_PSF__c = 100;
+        objPU1.Premium_1__c = 'View Premium';
+        objPU1.Premium_2__c = 'Ground Level Premium';
+        objPU1.View_Premium_PSF__c = 10;
+        objPU1.Vastu_Premium_PSF__c = 10;
+        objPU1.MBR_Premium_Garden_Orientation_PSF__c= 19;
+        objPU1.Ground_Level_Premium_PSF__c = 10;
+        objPU1.Permitted_Use__c = 'Commercial';
+        objPU1.Parent_Carpet_Area__c = 123;
+        objPU1.Parent_Saleable_Area__c = 234;
+        objPU1.Parent_Unit__c = 'Parent Unit';
+        objPU1.Parent_Unit_Plan__c = 'Unit Plan';
+    //    objPU1.TE_Product__c = pd.Id;
+        objPU1.Default_Specification_new__c = 'Green';
+      //  objPU1.Builtup_Area_Sub_Product__c = 2345;
+      //  objPU1.Carpet_Area_Sub_Product__c = 4567;
+       // objPU1.Outdoor_Area_Sub_Product__c = 2345;
+        objPU1.Floor__c = 4;
+        objPU1.Unit_Ownership__c = 'TE';
+  //      objPU1.Type_Master__c = type1.Id;
+        objPU1.Unit_Status__c = 'Sold';
+  //      objPU1.Customers__c = opp.Id;
+         
+        insert objPU1;
+         
+         Opportunity opp = new Opportunity();
+        opp.Name = 'Test';
+        opp.CloseDate = System.today();
+        opp.AccountId = objac.Id;           
+        opp.StageName = 'Qualification'; 
+        opp.Project__c = objpr.Id;
+        opp.Date_of_Agreement__c = System.today();
+        opp.Freebies_Selected__c = 'abcd,xyz';
+         opp.StageName = 'Booking confirmed';
+        opp.S_Active__c = true;
+        opp.unit__c = objPU1.Id;
+        insert opp;
+         
+      Quotation__c qController = new Quotation__c();
+        qController.Opportunity__c = opp.Id;
+        qController.Unit__c = objPU1.id;
+        qController.Quote_Status__c = 'Valid';
+        insert qController;
+      
+      Quotation__c q = [Select Id, Name from Quotation__c];
+     
+         
+        Booking__c b = new Booking__c();
+        b.Booking_Date__c = system.today();
+        b.Project__c = objpr.Id;
+        b.Opportunity__c = opp.Id;
+        b.Unit__c = objPU1.id;
+        
+        b.status__c = 'Processed';
+        b.Quotation__c = q.Id;
+        b.Primary_Applicant_Email__c = 'abc.abc@abc.com';
+        b.Future_Correspondence_Contact__c = 'First Applicant';
+        insert b;
+         
+         Applicant_Details__c a2 = new Applicant_Details__c();
+        a2.Salutation__c = 'Mr.';
+        a2.Name = 'First Man1';
+        a2.Booking__c = b.id;
+        a2.Applicant_Number__c = 'Primary Applicant';
+        a2.Date_of_incorporation__c = System.today();
+        a2.DOB__c = system.today();
+        a2.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a2.Pincode__c = 444344;
+        a2.Country__c = 'India';
+        a2.State__c = 'Maharashtra';
+        a2.Preferred_address_for_all_correspondence__c = 'Permanent';
+        a2.City__c = 'Nagpur';
+        a2.Mailing_Country__c= null;
+        a2.Mailing_Address__c = 'abccc';
+        a2.Mailing_City__c = 'amravati';
+        a2.Mailing_Pincode__c= null;
+        a2.Mobile_Number__c = '9090909031';
+        a2.Email_Address__c = 'newman1@justnow3.com';
+        a2.Nationality__c = 'Indian';
+        a2.Type_Of_Applicant__c  = 'Individual Buyer';
+        a2.Subtype_Of_Applicant__c = 'Indian National';
+        a2.Pancard__c = true;
+        a2.Address_Proof__c = true;
+        a2.Address_Proof_Document__c = 'xyz';
+        a2.Address_Proof_Number__c = 'pqr';
+        a2.One_Passport_Size_Color_Photograph__c = true;
+        a2.Other_Details_Remarks__c = 'abcd';
+        a2.Of_Ownership__c = 100;
+        a2.street__c = 'a';
+        a2.Street_2__c = 'b';
+        a2.Street_3__c = 'c';
+        a2.Street_4__c = 'd';
+        a2.Street_5__c = 'e';
+        insert a2;
+          
+        Receipt__c r1 = new Receipt__c();
+        r1.Cheque_DD_Amount_Rs__c = 200000;
+        r1.Cheque_DD__c = '903567';
+        r1.Cheque_DD_Date__c = system.today();
+        r1.Project__c = objpr.Id;
+        r1.Project_Unit__c = objPU1.Id;
+        r1.Opportunity__c = opp.Id;
+        r1.CheckReceipt__c = true;
+        r1.Token_Amount_Receipt__c = true;
+        r1.Physically_Cheque_Received__c = true;
+        r1.FOREX__c = 123413;
+         r1.Currency__c = 'Indian Rupee';
+        r1.Approval_Status__c = 'Approved';
+        r1.Receipt_Date__c = system.today();
+        r1.DraweeBank__c = 'Axis Bank';
+        r1.Total_Amount__c = 200000;
+        r1.Amount_Rs__c = 200000;
+        r1.Amount_Advanced__c = 0;
+        r1.Booking__c = b.Id; 
+        r1.Approval_Status_Credit_Note__c = 'Accepted'; 
+        insert r1;
+        
+        Receipt__c r2 = new Receipt__c();
+        r2.Cheque_DD_Amount_Rs__c = 8400;
+        r2.Cheque_DD__c = '908255';
+        r2.Cheque_DD_Date__c = system.today();
+        r2.Project__c = objpr.Id;
+        r2.Project_Unit__c = objPU1.Id;
+        r2.Opportunity__c = opp.Id;
+        r2.CheckReceipt__c = true;
+        r2.Physically_Cheque_Received__c = true;
+        r2.Approval_Status__c = 'Approved';
+        r2.Receipt_Date__c = system.today();
+        r2.DraweeBank__c = 'CITI';
+        r2.Total_Amount__c = 8400;
+        r2.Amount_Rs__c = 8400;
+        r2.Amount_Advanced__c  = 0;
+        r2.Booking__c = b.Id;
+        r2.Approval_Status_Credit_Note__c = 'Accepted';
+        insert r2;
+        
+        b.Receipts__c = r1.Id;
+        update b;
+       
+        
+        Applicant_Details__c a1 = new Applicant_Details__c();
+        a1.Name = 'Third Man1';
+        a1.Applicant_Number__c = 'Third Applicant';
+        a1.DOB__c = system.today();
+        a1.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a1.Pincode__c = 444444;
+        a1.Country__c = 'India';
+        a1.City__c = 'Nagpur';
+        a1.Mailing_Country__c= null;
+        a1.Mailing_Pincode__c= null;
+        a1.Mobile_Number__c = '909090903';
+        a1.Email_Address__c = 'newman@justnow3.com';
+        a1.Nationality__c = 'Indian';
+        a1.Type_Of_Applicant__c  = 'Individual Buyer';
+        a1.Subtype_Of_Applicant__c = 'Indian National';
+        a1.Pancard__c = true;
+        a1.Address_Proof__c = true;
+        a1.Address_Proof_Document__c = 'xyz';
+        a1.Address_Proof_Number__c = 'pqr';
+        a1.One_Passport_Size_Color_Photograph__c = true;
+        insert a1;
+                
+        q.Booking__c = b.Id;
+        update q;
+        
+        
+        objPU1.Booking__c = b.Id;
+        update objPU1;
+         
+        
+        test.startTest();
+        PageReference cPageNew = Page.S_ReceiptDashboard;
+        S_ReceiptDashboardClass recDash = new S_ReceiptDashboardClass();
+         recDash.search(); 
+         recDash.Next();
+         recDash.Beginning();
+         recDash.Next();
+         recDash.Previous();
+         recDash.End();
+        integer j = recDash.getPageNumber();
+        integer k = recDash.getTotalPages();
+        Integer i = recDash.getTotal_size();
+        boolean g = recDash.getDisablePrevious();
+        boolean h = recDash.getDisableNext();
+        recDash.openNewReceiptPage();
+        recDash.openNewDebitNotePage();
+        
+        
+        PageReference cPage = Page.ChequeReceiving;
+        Test.setCurrentPage(cPage);
+        System.debug(Logginglevel.ERROR, '1. Total Number of SOQL Queries allowed in this apex code context: ' +  Limits.getLimitQueries());
+        System.debug(Logginglevel.ERROR, '1. Number of Queries used in this apex code so far: ' + Limits.getQueries());
+        
+        S_ChequeReceiving recv = new S_ChequeReceiving();
+        recv.getlist();
+		
+        recv.rwList[0].rCloned.Physically_Cheque_Received__c = true;
+        recv.rwList[0].rCloned.Opportunity__c = opp.Id;
+        recv.rwList[0].rCloned.Booking__c = b.id;
+        recv.rwList[0].rCloned.Receipt_Status__c = 'PDC'; 
+        recv.rwList[0].rCloned.Reason_for_rejection_new__c = 'Rejected-Over writing';
+        recv.save();
+        
+         recv.getlist();
+         
+        recv.rwList[1].rCloned.Physically_Cheque_Received__c = true;
+        recv.rwList[1].rCloned.Reason_for_rejection_new__c = 'Accepted';
+        recv.save();
+        
+        Receipt__c r3 = new Receipt__c();
+        r3.Cheque_DD_Amount_Rs__c = 400000;
+        r3.Cheque_DD__c = '908354';
+        r3.Cheque_DD_Date__c = system.today();
+        r3.Project__c = objpr.Id;
+        r3.Project_Unit__c = objPU1.Id;
+        r3.Opportunity__c = opp.Id;
+        r3.CheckReceipt__c = true;
+        r3.Physically_Cheque_Received__c = true;
+        r3.Approval_Status__c = 'Approved';
+        r3.Receipt_Date__c = system.today();
+        r3.DraweeBank__c = 'CITI';
+        r3.Receipt_status__c = 'Processed-Sent for Banking';
+        r3.Total_Amount__c = 400000; 
+         r3.Booking__c = b.Id;
+        r3.Approval_Status_Credit_Note__c = 'Accepted'; 
+        insert r3;
+        
+        recv.getlist(); 
+        recv.selectedRowIndex = 0;
+        
+        recv.rwList[0].rCloned.Receipt_Status__c = 'Payment Successful'; 
+        recv.rwList[0].rCloned.Banking__c = 'Payment Successful'; 
+        recv.rwList[0].r.Currency__c = 'US Dollars'; 
+        recv.rwList[0].rCloned.Forex__c = 100;
+        
+        recv.Beginning();         
+        recv.Next(); 
+        recv.Previous(); 
+        recv.End(); 
+        
+        recv.save(); // Should now run validations correctly
+        recv.checkALL();  
+        
+        test.stopTest();
+
+     }
+    
+    @isTest
+     private static void chequeReceiving1() {
+    
+    //  Map<String, Id> recordMap = TestDataFactory.createMasterProject('Test Project');
+    //  PageReference pRef = Page.CreateQuote;
+    //  Test.setCurrentPage(pRef);
+    //  ApexPages.currentPage().getParameters().put('oppId',recordMap.get('OPPORTUNITY'));
+//      ApexPages.currentPage().getParameters().put('Id',recordMap.get('UNIT'));
+     
+     /*  CreateQuote qController = new CreateQuote();
+     // qController.startQuote();
+      qController.selectedPlan = recordMap.get('PLAN');
+      qController.planSelect();
+	  qController.saveQuote();*/
+         
+   //    Id oppId  =   recordMap.get('OPPORTUNITY');
+   //   Id unitId = recordMap.get('UNIT');
+   //   Id projectId = recordMap.get('PROJECT');
+         
+         Account objac = new Account();
+        objac.FirstName = 'name';
+        objac.LastName = 'Test';
+        objac.Correspondence_Address__c = 'Delhi';
+        objac.Phone = '1655246165' ;
+        objac.PersonEmail = 'test12322@stetig.in';
+        objac.PersonMobilePhone = '7875225343';
+        objac.Category__c = 'General';
+        //  objac.Unit__c = objPU1.Id;
+        insert objac;
+         
+         // Project Creation
+        Project__c objpr = new Project__c();
+        objpr.Project_Code__c = 'T351';
+        objpr.Name = 'pname1';
+        objpr.Start_Date__c = System.today().addDays(-5);
+        objpr.Project_Stage__c='Launch1';
+        objpr.Address__c = '14013, Fantasy Land, Utopia, Planet Mars, OUTERWORLD CODE -11011';
+        objpr.Project_Property_Type__c = 'Residential';                      
+        objpr.NPV__c = 12;    
+        objpr.Future_NPV__c = 12;
+        objpr.Car_Park_Type_1__c = 'Open';
+        objpr.Charge_Value_1__c = 100000; 
+     //   objpr.Promoter__c = promo.Id;
+        objpr.City__c = 'abcd';
+        objpr.State__c = 'test';
+     //   objpr.Land_Owner__c = land.Id;
+        objpr.Schedule_F_Property__c = 'Schdule F';
+        objpr.IDSA_Preamble__c = 'preamble {!Booking__c.Date_of_Agreement_AFS__c}';
+        objpr.IDSA_Preamble_Landowner__c = 'preamble {!Booking__c.Date_of_Agreement_AFS__c}';
+        objpr.Company_Code__c = 37283;
+        objpr.Official_Email_IDs__c = 'abcd@stetig.in';
+        objpr.Is_Landowner_Required_In_AFS__c = true;
+        objpr.Deduction_Amount__c = 100;
+       	insert objpr;
+ //       land.Project__c = objpr.id;
+  //      update land;
+        End_Time_for_Event__c ed = new End_Time_for_Event__c();
+        ed.Name = 'End Time Minutes';
+        ed.End_Minutes__c = 120;
+        insert ed;
+         
+         
+          Unit__c objPU1 = new Unit__c();    
+        objPU1.Name = 'TestFive';      
+        objPU1.Project__c = objpr.Id;
+        objPU1.Unit_status__c='Available';
+        //objPU1.Chargeable_Area__c = 936;
+       // objPU1.Carpet_Area__c = 452;
+     //   objPU1.Tower__c = t.Id;
+        objPU1.Active_Inactive__c = 'Active';
+        //objPU1.Carpet_Area_in_Sq_Mts__c = 45.02;
+        //objPU1.Cupboard_Area_in_Sq_Mtrs__c = 3.95;
+        //objPU1.Enclosed_Balcony_in_Sq_Mtrs__c = 2.66;
+        objPU1.Floor__c = 2;
+    //    objPU1.Product_Type__c = sb.id; 
+        objPU1.Floor__c = 2;
+        objPU1.Configuration__c = '1 BHK';
+    //    objPU1.TE_Product__c = pd.id;
+        objPU1.Additional_Land__c = 150;
+        objPU1.Default_Specification_new__c = 'Green';
+        //objPU1.Default_Customisation__c = 'Online';
+        objPU1.Floor_Rise_PSF__c = 250;
+        objPU1.Customization_Charge_PSF__c = 0;
+        objPU1.Additional_Land_PSF__c = 100;
+        objPU1.Premium_1__c = 'View Premium';
+        objPU1.Premium_2__c = 'Ground Level Premium';
+        objPU1.View_Premium_PSF__c = 10;
+        objPU1.Vastu_Premium_PSF__c = 10;
+        objPU1.MBR_Premium_Garden_Orientation_PSF__c= 19;
+        objPU1.Ground_Level_Premium_PSF__c = 10;
+        objPU1.Permitted_Use__c = 'Commercial';
+        objPU1.Parent_Carpet_Area__c = 123;
+        objPU1.Parent_Saleable_Area__c = 234;
+        objPU1.Parent_Unit__c = 'Parent Unit';
+        objPU1.Parent_Unit_Plan__c = 'Unit Plan';
+    //    objPU1.TE_Product__c = pd.Id;
+        objPU1.Default_Specification_new__c = 'Green';
+      //  objPU1.Builtup_Area_Sub_Product__c = 2345;
+      //  objPU1.Carpet_Area_Sub_Product__c = 4567;
+       // objPU1.Outdoor_Area_Sub_Product__c = 2345;
+        objPU1.Floor__c = 4;
+        objPU1.Unit_Ownership__c = 'TE';
+  //      objPU1.Type_Master__c = type1.Id;
+        objPU1.Unit_Status__c = 'Sold';
+  //      objPU1.Customers__c = opp.Id;
+         
+        insert objPU1;
+         
+         Opportunity opp = new Opportunity();
+        opp.Name = 'Test';
+        opp.CloseDate = System.today();
+        opp.AccountId = objac.Id;           
+        opp.StageName = 'Qualification'; 
+        opp.Project__c = objpr.Id;
+        opp.Date_of_Agreement__c = System.today();
+        opp.Freebies_Selected__c = 'abcd,xyz';
+         opp.StageName = 'Booking confirmed';
+        opp.S_Active__c = true;
+        opp.unit__c = objPU1.Id;
+        insert opp;
+         
+      Quotation__c qController = new Quotation__c();
+        qController.Opportunity__c = opp.Id;
+        qController.Unit__c = objPU1.Id;
+        qController.Quote_Status__c = 'Valid';
+        insert qController;
+      
+      Quotation__c q = [Select Id, Name from Quotation__c];
+        Booking__c b = new Booking__c();
+        b.Booking_Date__c = system.today();
+        b.Project__c = objpr.Id;
+        b.Opportunity__c = opp.Id;
+        b.Unit__c = objPU1.Id;
+        
+        b.status__c = 'Processed';
+        b.Quotation__c = q.Id;
+        b.Primary_Applicant_Email__c = 'abc.abc@abc.com';
+        b.Future_Correspondence_Contact__c = 'First Applicant';
+        insert b;
+         
+         Applicant_Details__c a2 = new Applicant_Details__c();
+        a2.Salutation__c = 'Mr.';
+        a2.Name = 'First Man1';
+        a2.Booking__c = b.id;
+        a2.Applicant_Number__c = 'Primary Applicant';
+        a2.Date_of_incorporation__c = System.today();
+        a2.DOB__c = system.today();
+        a2.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a2.Pincode__c = 444344;
+        a2.Country__c = 'India';
+        a2.State__c = 'Maharashtra';
+        a2.Preferred_address_for_all_correspondence__c = 'Permanent';
+        a2.City__c = 'Nagpur';
+        a2.Mailing_Country__c= null;
+        a2.Mailing_Address__c = 'abccc';
+        a2.Mailing_City__c = 'amravati';
+        a2.Mailing_Pincode__c= null;
+        a2.Mobile_Number__c = '9090909031';
+        a2.Email_Address__c = 'newman1@justnow3.com';
+        a2.Nationality__c = 'Indian';
+        a2.Type_Of_Applicant__c  = 'Individual Buyer';
+        a2.Subtype_Of_Applicant__c = 'Indian National';
+        a2.Pancard__c = true;
+        a2.Address_Proof__c = true;
+        a2.Address_Proof_Document__c = 'xyz';
+        a2.Address_Proof_Number__c = 'pqr';
+        a2.One_Passport_Size_Color_Photograph__c = true;
+        a2.Other_Details_Remarks__c = 'abcd';
+        a2.Of_Ownership__c = 100;
+        a2.street__c = 'a';
+        a2.Street_2__c = 'b';
+        a2.Street_3__c = 'c';
+        a2.Street_4__c = 'd';
+        a2.Street_5__c = 'e';
+        insert a2;
+          
+        Receipt__c r1 = new Receipt__c();
+        r1.Cheque_DD_Amount_Rs__c = 200000;
+        r1.Cheque_DD__c = '903567';
+        r1.Cheque_DD_Date__c = system.today();
+        r1.Project__c = objpr.Id;
+        r1.Project_Unit__c = objPU1.Id;
+        r1.Opportunity__c = opp.Id;
+        r1.CheckReceipt__c = true;
+        r1.Token_Amount_Receipt__c = true;
+        r1.Physically_Cheque_Received__c = true;
+        r1.Receipt_Status__c = 'Processed-Sent for Banking';
+        r1.Banking__c = 'Payment Successful';
+        r1.FOREX__c = 123413;
+        r1.Currency__c = 'Indian Rupee';
+        r1.Approval_Status__c = 'Approved';
+        r1.Receipt_Date__c = system.today();
+        r1.DraweeBank__c = 'Axis Bank';
+        r1.Total_Amount__c = 200000;
+        r1.Amount_Rs__c = 200000;
+        r1.Amount_Advanced__c = 0;
+        r1.Booking__c = b.Id;
+        r1.Approval_Status_Credit_Note__c = 'Accepted'; 
+        insert r1;
+        
+        Receipt__c r2 = new Receipt__c();
+        r2.Cheque_DD_Amount_Rs__c = 8400;
+        r2.Cheque_DD__c = '908255';
+        r2.Cheque_DD_Date__c = system.today();
+        r2.Project__c = objpr.Id;
+        r2.Project_Unit__c = objPU1.Id;
+        r2.Opportunity__c = opp.Id;
+        r2.CheckReceipt__c = true;
+        r2.Physically_Cheque_Received__c = true;
+        r2.Receipt_Status__c = 'Processed-Sent for Banking';
+        r2.Banking__c = 'PDC';
+        r2.FOREX__c = 123413;
+        r2.Currency__c = 'Indian Rupee';
+        r2.Approval_Status__c = 'Approved';
+        r2.Receipt_Date__c = system.today();
+        r2.DraweeBank__c = 'CITI';
+        r2.Total_Amount__c = 8400;
+        r2.Amount_Rs__c = 8400;
+        r2.Amount_Advanced__c  = 0;
+        r2.Booking__c = b.Id;
+        r2.Approval_Status_Credit_Note__c = 'Accepted'; 
+        insert r2;
+    
+       b.Receipts__c = r1.Id;
+         update b;
+       
+        
+        
+        Applicant_Details__c a1 = new Applicant_Details__c();
+        a1.Name = 'Third Man1';
+        a1.Applicant_Number__c = 'Third Applicant';
+        a1.DOB__c = system.today();
+        a1.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a1.Pincode__c = 444444;
+        a1.Country__c = 'India';
+        a1.City__c = 'Nagpur';
+        a1.Mailing_Country__c= null;
+        a1.Mailing_Pincode__c= null;
+        a1.Mobile_Number__c = '909090903';
+        a1.Email_Address__c = 'newman@justnow3.com';
+        a1.Nationality__c = 'Indian';
+        a1.Type_Of_Applicant__c  = 'Individual Buyer';
+        a1.Subtype_Of_Applicant__c = 'Indian National';
+        a1.Pancard__c = true;
+        a1.Address_Proof__c = true;
+        a1.Address_Proof_Document__c = 'xyz';
+        a1.Address_Proof_Number__c = 'pqr';
+        a1.One_Passport_Size_Color_Photograph__c = true;
+        insert a1;
+                
+        q.Booking__c = b.Id;
+        update q;
+        
+        objPU1.Booking__c = b.Id;
+        update objPU1;
+         
+       
+        test.startTest();
+        PageReference cPageNew = Page.S_ReceiptDashboard;
+        S_ReceiptDashboardClass recDash = new S_ReceiptDashboardClass();
+         recDash.search(); 
+         recDash.Next();
+         recDash.Previous();
+         recDash.Beginning();
+        integer j = recDash.getPageNumber();
+        integer k = recDash.getTotalPages();
+        Integer i = recDash.getTotal_size();
+        boolean g = recDash.getDisablePrevious();
+        boolean h = recDash.getDisableNext();
+        recDash.openNewReceiptPage();
+        recDash.openNewDebitNotePage();
+        
+        
+        PageReference cPage = Page.ChequeReceiving;
+        Test.setCurrentPage(cPage);
+        System.debug(Logginglevel.ERROR, '1. Total Number of SOQL Queries allowed in this apex code context: ' +  Limits.getLimitQueries());
+        System.debug(Logginglevel.ERROR, '1. Number of Queries used in this apex code so far: ' + Limits.getQueries());
+        
+        S_ChequeReceiving recv = new S_ChequeReceiving();
+        recv.getlist();
+		
+        recv.rwList[0].rCloned.Physically_Cheque_Received__c = true;
+        recv.rwList[0].rCloned.Opportunity__c = opp.Id;
+        recv.rwList[0].rCloned.Booking__c = b.id;
+        recv.rwList[0].rCloned.Receipt_Status__c = 'PDC'; 
+        recv.rwList[0].rCloned.Reason_for_rejection_new__c = 'Rejected-Over writing';
+        recv.save();
+            
+        //recv.rwList[1].rCloned.Physically_Cheque_Received__c = true;
+        //recv.rwList[1].rCloned.Reason_for_rejection_new__c = 'Accepted';
+        recv.save();
+        
+        Receipt__c r3 = new Receipt__c();
+        r3.Cheque_DD_Amount_Rs__c = 400000;
+        r3.Cheque_DD__c = '908354';
+        r3.Cheque_DD_Date__c = system.today();
+        r3.Project__c = objpr.Id;
+        r3.Project_Unit__c = objPU1.Id;
+        r3.Opportunity__c = opp.Id;
+        r3.CheckReceipt__c = true;
+        r3.Physically_Cheque_Received__c = true;
+        r3.Approval_Status__c = 'Approved';
+        r3.Receipt_Date__c = system.today();
+        r3.DraweeBank__c = 'CITI';
+        r3.Receipt_status__c = 'Processed-Sent for Banking';
+        r3.Total_Amount__c = 400000; 
+         r3.Booking__c = b.Id;
+         
+        r3.Approval_Status_Credit_Note__c = 'Accepted'; 
+        insert r3;
+        
+        recv.getlist();
+        recv.rwList[0].rCloned.Receipt_Status__c = 'Payment Successful'; 
+        recv.rwList[0].rCloned.banking__c = 'Payment Successful'; 
+        recv.rwList[0].r.Currency__c = 'US Dollars'; 
+        recv.rwList[0].rCloned.Forex__c = 100;
+        recv.Beginning();        
+        recv.Next();
+        recv.Previous();
+        recv.End();
+        //recv.rwList[1].rCloned.Receipt_Status__c = 'Payment Successful'; 
+        recv.save();
+        
+        test.stopTest();
+     }
+   
+}
