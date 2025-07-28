@@ -1,0 +1,79 @@
+public class CopyAppttoBooking{
+    public static void updateBooking(Applicant_Details__c[] lstApp){
+        Map<Id, List<Applicant_Details__c>> bookAppListMap = new Map<Id, List<Applicant_Details__c>>();
+        Set<Id> bookIds = new Set<Id>();
+        List<Applicant_Details__c> AppList;
+        
+        for(Applicant_Details__c App : lstApp){
+            if (App.Booking__c != null){
+                bookIds.add(App.Booking__c);
+            }
+        }
+        if(bookIds != Null && bookIds.size() > 0){
+            
+            AppList = [SELECT Id, Booking__c,Applicant_Number__c,Email_Address__c,Mobile_Number__c,Name,Salutation__c 
+                       FROM Applicant_Details__c WHERE Booking__c IN: bookIds order by Sr_No__c asc];
+            
+            for(Applicant_Details__c app : AppList){
+                List<Applicant_Details__c> apList = bookAppListMap.get(app.Booking__c);
+                if(apList == null){
+                    apList = new List<Applicant_Details__c>();
+                    bookAppListMap.put(app.Booking__c, apList);
+                }
+                apList.add(app);
+            }
+            
+            List<Booking__c> bookList = new List<Booking__c>();
+            for(Id bid: bookIds){
+                List<Applicant_Details__c> applicants = bookAppListMap.get(bid);
+                Booking__c objBooking = new Booking__c();
+                objBooking.id = bid;
+                
+                for(Applicant_Details__c a : applicants){
+                    if(a.Applicant_Number__c == 'Primary Applicant'){
+                        objBooking.Primary_Applicant_Email__c = a.Email_Address__c;
+                        objBooking.PrimaryMobileNumber__c = a.Mobile_Number__c;
+                        String fullName = String.isNotBlank(a.Salutation__c) ? a.Salutation__c + ' ' + a.Name : a.Name;
+                        objBooking.Primary_Applicant_Name__c = fullName;
+                    }
+                }
+                
+                List<String> applicantNames = new List<String>();
+                for (Applicant_Details__c a : applicants) {
+                    applicantNames.add(a.Name);
+                }
+                String allApplicantNamesforBooking = String.join(applicantNames, ', ');
+                Integer lastCommaIndex = allApplicantNamesforBooking.lastIndexOf(',');
+                if (lastCommaIndex != -1) {
+                    allApplicantNamesforBooking = allApplicantNamesforBooking.substring(0, lastCommaIndex) +
+                        ', and' + allApplicantNamesforBooking.substring(lastCommaIndex + 1);
+                }
+                //objBooking.Applicant_Names__c = allApplicantNamesforBooking;
+                
+                bookList.add(objBooking);
+            }
+            if (!bookList.isEmpty()) {
+                update bookList;
+            }
+            
+        }
+    }
+}
+
+ /*      String allApplicantNamesforBooking;
+                if(applicants.size() == 1){
+                    allApplicantNamesforBooking = applicants[0].Name; 
+                }
+                else if(applicants.size() == 2){
+                    allApplicantNamesforBooking = applicants[0].Name+' and '+applicants[1].Name;
+                }
+                else if(applicants.size() == 3){
+                    allApplicantNamesforBooking = applicants[0].Name+', '+applicants[1].Name+' and '+applicants[2].Name;
+                }
+                else if(applicants.size() == 4){
+                    allApplicantNamesforBooking = applicants[0].Name+', '+applicants[1].Name+', '+applicants[2].Name+' and '+applicants[3].Name;
+                }
+                else if(applicants.size() == 5){
+                    allApplicantNamesforBooking = applicants[0].Name+', '+applicants[1].Name+', '+applicants[2].Name+', '+applicants[3].Name+' and '+applicants[4].Name;
+                }
+                objBooking.Applicant_Names__c = allApplicantNamesforBooking; */
