@@ -1,0 +1,139 @@
+  @future(callout=true)
+    public static void createCustomerInSAPNew(Id bId) {
+        System.debug('Create Customer via REST');
+        
+        // Get applicant details
+        List<Applicant_Details__c> appDetails = [SELECT Id, Name, Booking__r.Project__r.Company_Code__c, 
+                                               Salutation__c, Booking__r.Customer_Number__c,
+                                               street__c, Street_2__c, Street_3__c, Street_4__c, 
+                                               Street_5__c, Mobile_Number__c, Country__c, city__c, 
+                                               Pincode__c, Applicant_Unique_No__c, Booking__r.Project_Unit__c
+                                               FROM Applicant_Details__c 
+                                               WHERE booking__c = :bId 
+                                               AND Applicant_Number__c = 'Primary Applicant'];
+        
+        if(appDetails.isEmpty()) {
+            System.debug('No applicant details found');
+            return;
+        }
+        
+        // Initialize objects
+        Booking__c bk = new Booking__c(Id = bId);
+        API_Log__c api = new API_Log__c();
+        String CustomerNo = '';
+        
+        if(appDetails[0].Booking__r.Customer_Number__c != null) {
+            CustomerNo = String.valueOf(appDetails[0].Booking__r.Customer_Number__c);
+        }
+        
+        Map<String, Country_Code__c> countrycode = Country_Code__c.getAll();
+        
+        // Build REST payload
+        Map<String, Object> payload = new Map<String, Object>();
+        for(Applicant_details__c ap : appDetails) {
+            payload.put('CUSTOMERNO', CustomerNo);
+            payload.put('ACCGRP', '0001');
+            payload.put('COMPCODE', String.valueOf(ap.Booking__r.Project__r.Company_Code__c));
+            payload.put('SALESORG', String.valueOf(ap.Booking__r.Project__r.Company_Code__c));
+            payload.put('DISTCHANNEL', '10');
+            payload.put('DIV', '10');
+            
+            // Handle salutation mapping
+            Map<String, String> salutationMap = new Map<String, String>{
+                'Mr.' => '0002',
+                'Ms.' => '0001',
+                'Company' => '0003',
+                'Mrs.' => '0006',
+                'Dr.' => '0007',
+                'Prof.' => '0008',
+                'M/s.' => '0006',
+                'Mr and Mrs.' => '0005'
+            };
+            payload.put('TITLE', salutationMap.get(ap.Salutation__c));
+            
+            payload.put('NAME', ap.Name);
+            payload.put('SEARCHTERM', ap.Booking__r.Project_Unit__c);
+            payload.put('FUGUECUS', ap.Applicant_Unique_No__c);
+            payload.put('STREET', ap.street__c);
+            payload.put('STREET2', ap.Street_2__c);
+            payload.put('STREET3', ap.Street_3__c);
+            payload.put('STREET4', ap.Street_4__c);
+            payload.put('STREET5', ap.Street_5__c);
+            payload.put('CITY', ap.city__c);
+            payload.put('POSTALCODE', String.valueOf(ap.Pincode__c));
+            
+            String countryCodes = countrycode.containsKey(ap.Country__c) ? countrycode.get(ap.Country__c).Country_Code__c : '';
+            payload.put('COUNTRY', countryCodes);
+            
+            payload.put('TELEPH1', ap.Mobile_Number__c);
+            payload.put('FAXNUMBER', '');
+            payload.put('RECACCOUNT', '0000123100');
+            payload.put('CURRENCY_x', 'INR');
+            payload.put('CUSTSTATGRP', '1');
+            payload.put('CUSTPRICPROC', '1');
+            payload.put('ACCTASSGGR', '01');
+            payload.put('PAYTTERMS', '0001');
+            payload.put('DELIPLANT', '');
+            payload.put('SORTKEY', '076');
+            payload.put('SALESGRP', '');
+            payload.put('SALESOFC', '');
+            payload.put('Field1', '');
+            payload.put('Field2', '');
+            payload.put('Field3', '');
+            payload.put('Field4', '');
+            payload.put('Field5', '');
+            payload.put('STCD3', '');
+            payload.put('REGION', '');
+            payload.put('FUGUEID', '');
+            payload.put('ALAND', '');
+            payload.put('TATYP', '');
+            payload.put('TAKLD', '');
+        }
+        
+        // Make REST callout
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(endpoint());
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setHeader('Authorization', authorization()); 
+            
+            // Convert payload to JSON
+            req.setBody(JSON.serialize(payload));
+            
+            Http http = new Http();
+            HttpResponse res;
+            
+            try {
+                res = http.send(req);
+                System.debug('Response Status: ' + res.getStatusCode());
+                System.debug('Response Body: ' + res.getBody());
+                
+                // Parse JSON response
+                Map<String, Object> responseMap = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
+                
+                
+                if(responseMap.containsKey('CUSTOMERNO') && responseMap.get('RET_CODE') != '1') {
+                    bk.Customer_Number__c = Integer.valueOf((String)responseMap.get('CUSTOMERNO'));
+                    update bk;
+                }
+                
+                
+                api.API_Name__c = 'Customer Number API (REST)';
+                api.Message__c = (String)responseMap.get('MESSAGE');
+                api.Response_Code__c = (String)responseMap.get('RET_CODE');
+                api.Booking__c = bId;
+                api.Response__c = res.getBody();
+                api.Request__c = JSON.serializePretty(payload);
+                insert api;
+                
+            } catch(Exception e) {
+                System.debug('Exception: ' + e.getMessage());
+                // Log error
+                api.API_Name__c = 'Customer Number API (REST) - Error';
+                api.Message__c = e.getMessage();
+                api.Booking__c = bId;
+                api.Response__c = res != null ? res.getBody() : 'No response';
+                api.Request__c = JSON.serializePretty(payload);
+                insert api;
+            }
+    }
