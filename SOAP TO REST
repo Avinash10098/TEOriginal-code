@@ -1,0 +1,205 @@
+//Test Class ---> TestSAPIntegrationAPIRest
+public class SAPIntegrationAPI {
+    
+    public static String authorization() {
+            String authHeader;
+            SAP_Credential__mdt sapSetting;
+            sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                                from SAP_Credential__mdt 
+                                where QualifiedApiName = 'Receipt_Recording'];
+            authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+            return authHeader;
+    }
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Receipt_Recording'];
+        return fiSetting.Endpoint__c;
+    }
+
+    public class SAPReceiptResponseWrapper {
+        public String BELNR; 
+        public String RETCODE; 
+        public String MESSAGE; 
+        
+    }
+
+    public static SAPReceiptResponseWrapper parse(String json) {
+        return (SAPReceiptResponseWrapper) System.JSON.deserialize(json, SAPReceiptResponseWrapper.class);
+    }
+    
+    ////////////////////////////////////////receipt Bulk API////////////////////////////////////
+	//createReceiptInSAPNew Rest Method
+    @future(callout = true)
+    public static void createReceiptInSAP(set<Id> setId)
+    {
+        system.debug('SETID::'+setId);
+        List<Receipt__c> ReceiptList= new List<Receipt__c>();
+        String BankHouseCode = '';
+        List<String> BankSeperate = new List<String>();
+        ReceiptList = [Select id,Name,Cheque_DD__c,Cheque_DD_Date__c,Receipt_Unique_ID__c,Project__r.Project_Code__c,Receipt_Date__c,Currency__c,Receipt_Number__c,
+                       Amount_Rs__c,Accounting_Document_Number__c,Booking__r.Customer_Number__c,Project__r.Company_Code__c,Booking__r.Sales_Order_Number__c,Drawn_in_favour_of__c,
+                       Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_EOI__c,
+                       Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c,Project_Unit__r.Tower__r.Cluster__r.EOI_House_Bank_Code__c,
+                       Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c,TDS_Credit_Note_Number__c,Mode__c,Sub_Type_Credit_Note__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Interim_Bank_Account__c,
+                       Project_Unit__r.Tower__r.Cluster__r.Interim_Bank_Account_House_Bank_Code__c,Is_Back_Dated__c,Back_Date_Posting_Date__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_EscrowAccount2__c,
+                       Project_Unit__r.Tower__r.Cluster__r.House_Bank_Code_EscrowAccount2__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Tax2__c,
+                       Project_Unit__r.Tower__r.Cluster__r.Tax2_House_Bank_Code__c,Receipt_temp_status__c
+                       from Receipt__c where id =: setId];
+        
+        
+       
+        
+        List<Receipt__c> receiptUpdate = new List<Receipt__c>();
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        for(Receipt__c r :ReceiptList ){
+            String chequeDate;
+            String todaysDate;
+            If(r.Is_Back_Dated__c == True){
+                chequeDate = DateFormate(r.Cheque_DD_Date__c);
+                todaysDate = DateFormate(r.Back_Date_Posting_Date__c);
+            }else{
+                chequeDate = DateFormate(r.Cheque_DD_Date__c);
+                todaysDate = DateFormate(Date.today());
+            }
+            system.debug('Inside For SAP@');
+            If(r.Drawn_in_favour_of__c != null){
+                BankSeperate = r.Drawn_in_favour_of__c.split('\\|');
+                system.debug('Bank Seperate:'+ BankSeperate);
+            }
+
+            If(r.Drawn_in_favour_of__c != null){
+                if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_EscrowAccount2__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.House_Bank_Code_EscrowAccount2__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_EOI__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.EOI_House_Bank_Code__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Interim_Bank_Account__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Interim_Bank_Account_House_Bank_Code__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Tax2__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax2_House_Bank_Code__c;
+                }
+            }
+            system.debug('House Bank Code:'+BankHouseCode);
+
+            Map<String, Object> payload = new Map<String, Object>{
+                'BELNR' => '',
+                'BLDAT' => chequeDate,
+                'BLART' => 'DZ',
+                'BUKRS' => String.valueOf(r.Project__r.Company_Code__c),
+                'BUDAT' => todaysDate, // r.Receipt_Date__c
+                'WAERS' => 'INR',
+                'XBLNR' => (r.Mode__c == 'Credit Note' && r.Sub_Type_Credit_Note__c == 'TDS') 
+                           ? r.TDS_Credit_Note_Number__c 
+                           : r.Cheque_DD__c,
+                'BKTXT' => r.Receipt_Unique_ID__c,
+                'WRBTR' => String.valueOf(r.Amount_Rs__c),
+                'KUNNR' => String.valueOf(r.Booking__r.Customer_Number__c),
+                'MKOAR' => '',
+                'VBELN' => String.valueOf(r.Booking__r.Sales_Order_Number__c),
+                'POSNR' => r.Booking__r.Sales_Order_Number__c != null ? '000010' : null,
+                'KIDNO' => '',
+                'ZLSCH' => (r.Mode__c == 'Credit Note' && r.Sub_Type_Credit_Note__c == 'TDS') ? 'N' : 'J',
+                'PROJK' => r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,
+                'HBKID' => BankHouseCode
+            };
+            // Make REST callout
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(endpoint());
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setHeader('Authorization', authorization()); 
+            
+            // Convert payload to JSON
+            req.setBody(JSON.serialize(payload));
+            
+            Http http = new Http();
+            HttpResponse res;
+            
+            try{
+                res = http.send(req);
+                system.debug('Response Status'+res.getStatusCode());
+                system.debug('Response Body'+res.getBody());
+                //Map<String, Object> responseMap = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
+                SAPReceiptResponseWrapper response = SAPReceiptResponseWrapper.parse(res.getBody());
+                API_Log__c ap = new API_Log__c();
+                ap.API_Name__c = 'Receipt API';
+               // ap.Request__c = tempRequest;
+                ap.Response__c = res.getBody();
+                ap.Message__c = response.MESSAGE;
+                ap.Response_Code__c =response.RETCODE;
+                ap.Receipt__c = r.id;
+                loglist.add(ap);
+               // listItemElement.clear();
+                r.Receipt_temp_status__c = true; // added temporarily to update bulk receipts one time
+                if(response.BELNR != null && response.BELNR != ''){
+                r.Accounting_Document_Number__c = response.BELNR;
+                    //r.SAP_Posting_Date__c = Date.today();
+                    If(r.Is_Back_Dated__c == True){
+                        r.SAP_Posting_Date__c = r.Back_Date_Posting_Date__c;
+                    }else{
+                        r.SAP_Posting_Date__c = Date.today();
+                    }
+                }
+                receiptUpdate.add(r);
+                
+            }catch(Exception e) {
+                System.debug('Exception: ' + e.getMessage());
+                API_Log__c ap = new API_Log__c();
+                ap.API_Name__c = 'Receipt API ERROR';
+               // ap.Request__c = tempRequest;
+                ap.Response__c = res != null ? res.getBody() : 'No response';
+                ap.Message__c =  e.getMessage();
+                ap.Receipt__c = r.id;
+                loglist.add(ap);
+            }
+            
+            
+           
+            /*
+            API_Log__c ap = new API_Log__c();
+            ap.API_Name__c = 'Receipt API';
+           // ap.Request__c = tempRequest;
+            ap.Response__c = String.valueOf(apiResponse);
+            ap.Message__c = apiResponse[0].MESSAGE;
+            ap.Response_Code__c = apiResponse[0].RETCODE;
+            ap.Receipt__c = r.id;
+            loglist.add(ap);
+            listItemElement.clear();
+            */
+         }
+        
+        if(!loglist.isEmpty()){
+            update receiptUpdate;
+            insert loglist;
+        }
+        /*
+        request_x.BELNR = '';
+        request_x.BLDAT = '17.08.2021';
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = '2000';
+        request_x.BUDAT = '17.08.2021';
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = 'Test-123';
+        request_x.BKTXT = '1234-10';
+        request_x.WRBTR = '1000';
+        request_x.KUNNR = '3917';
+        request_x.MKOAR = 'A';
+        request_x.VBELN = '';
+        request_x.POSNR = '';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = '0059';
+        request_x.HBKID = 'A6426';
+       */
+    
+    }
