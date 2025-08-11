@@ -1,0 +1,86 @@
+@RestResource(urlMapping='/restEdesignAPI/*')
+global with sharing class REST_eDesignAPI3 {
+	 @HttpPost
+    global static void doPost(){
+       system.debug('Body -->' +RestContext.request.requestBody.toString());
+       string jsonString = RestContext.request.requestBody.toString();
+       string responseString;
+       requestWrapper wrapper = requestWrapper.parse(jsonString);
+       system.debug('action-->'+wrapper.action); // Update
+       system.debug('Date--->'+wrapper.data.launchDate); // some debug log
+
+        if(!String.isBlank(wrapper.action) && wrapper.action.equalsIgnoreCase(wrapper.action)){
+              System.debug('first If');
+              if(Wrapper.data != null){
+                  
+                  system.debug('second if');
+                  
+                  Booking__c booking = [Select Id from 	Booking__c where Customer_Number__c =:wrapper.data.customerNumber Limit 1];
+                  system.debug(booking);
+                  Customization_New__c interiorDesign = [Select Id from Customization_New__c where Booking__c =: booking.Id and Approval_Status__c = 'Approved' and IsCanceled__c = false and Status__c  = 'Active' Limit 1 ];
+                  system.debug(interiorDesign);
+            		
+                  // Related to booking fields are update
+                  if(booking != null){
+                      if(wrapper.data.launchDate != null) booking.eDesign_Launch_Date__c = wrapper.data.launchDate;
+                      if(wrapper.data.submissionDate != null) booking.eDesign_Submission_Date__c = wrapper.data.submissionDate;
+                      if(wrapper.data.approvalDate != null) booking.eDesign_Approval_Date__c = wrapper.data.approvalDate;
+                      if(String.isNotBlank(wrapper.data.IDSALink)) booking.eDesign_IDSA_Link__c = wrapper.data.IDSALink;
+                      if(wrapper.data.isUnitLocked != null) booking.eDesign_is_unit_locked__c = wrapper.data.isUnitLocked;
+                      
+                      update booking;
+                  }else{
+                      System.debug('Booking is not present');
+                  }
+                 
+                  
+                  // Related to the Interior Design or Customization object
+                  if(interiorDesign != null){
+                      if(wrapper.data.reopeningDate != null) interiorDesign.eDesign_Reopening_Date__c = wrapper.data.reopeningDate;
+                      if(wrapper.data.IDSASignedDate != null) interiorDesign.IDSA_Signed_Date__c = wrapper.data.IDSASignedDate;
+                      if(wrapper.data.GFCReleasedDate != null) interiorDesign.GFC_Released_Date__c = wrapper.data.GFCReleasedDate;
+                      if(String.isNotBlank(wrapper.data.GFCLink)) interiorDesign.eDesign_GFC_Link__c = wrapper.data.GFCLink;
+                      
+                      update interiorDesign;
+                  }else{
+                      System.debug('Booking is not present 2');
+                  }
+                  
+                  responseString = 'Booking is updated succ '+booking.Id+' And Interior Design is update '+interiorDesign.Id;
+              }else{
+                system.debug('Data is empty');
+                 responseString = 'Data is empty';
+              }
+             
+        }else{
+            system.debug('else block is excuted');
+        }
+
+        // send Responce
+        system.debug(responseString);
+        RestContext.response.addHeader('content-type' , 'application/json');
+        RestContext.response.responseBody = blob.valueOf(responseString);
+    }
+
+
+    public class requestWrapper{
+        public cls_data data;
+        public String action;
+    }
+    public class cls_data {
+        public Integer customerNumber;
+        public Date launchDate;
+        public Date submissionDate;
+        public Date approvalDate;
+        public String IDSALink;
+        public Date reopeningDate;
+        public Date IDSASignedDate;
+        public Date GFCReleasedDate;
+        public String GFCLink;
+        public boolean isUnitLocked;
+    }
+    public static requestWrapper parse(String json){
+         return (requestWrapper) System.JSON.deserialize(json, requestWrapper.class);
+    }
+
+}
