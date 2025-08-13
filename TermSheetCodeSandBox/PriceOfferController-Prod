@@ -1,0 +1,489 @@
+public class PriceOfferController{
+    public Id recordId;
+    public PageReference specificationPage{get;set;}
+    public PageReference termsandconditionPage{get;set;}
+    public List<Quotation__c> q{get;set;}
+    public String dte{get;set;}      
+    //public Map<String, Decimal> earmarkedcpmap {get;set;}
+    public Project__c prj{get;set;}
+    List<Payment_Milestones__c> pmstone{get;set;}
+    public Booking__c bk {get;set;} 
+    public Map<string,List<wrapperClassCP>> earmarkedcpmap {get;set;}
+    public Map<string,List<wrapperClassadditionalCP>> additionalcpmap {get;set;}
+    public Map<string,List<wrapperClass>> chrgMap {get;set;}
+    public Map<string,List<wrapperClassCustomisation>> chrgMapCust {get;set;}
+    public decimal basicCost {get;set;}
+    public String specAmount {get;set;}
+    public Decimal specAmountD {get;set;}
+    public String totalAV{get;set;}
+    public decimal premiumAmt {get;set;}
+    public String earMarkAmt{get;set;}
+    public String addCarparkAmt{get;set;}
+    public String builtUpAmt{get;set;}
+    public String saleableAreaAmt{get;set;}
+    public String totalTax{get;set;}
+    public String avWithTax{get;set;}
+    public List<PaymentScheduleWrapper> pwList {get;set;}
+    public String strTotalAV{get;set;}
+    public String strTotalTax{get;set;}
+    public String strAvWithTax{get;set;}
+    Public Decimal totalconsi {get;set;}
+    Public Decimal totalconsiraised {get;set;}
+    Public Decimal IntTotalTaxraised {get;set;}
+    Public Decimal IntAvWithTaxraised {get;set;}
+    Public Decimal mTAX {get;set;}
+    Public Decimal mAmt {get;set;}
+    public String strtotalconsi{get;set;}
+    public String strtotalconsiInF{get;set;}
+    public string errormsg {get;set;}
+    public Integer isError1 {get;set;}
+    public List<Payment_Milestones__c> pmListold {get;set;}
+    public List<Quotation__c> qlist {get;set;}
+    public Booking__c book {get;set;}
+    public Integer a {get;set;}
+    public Boolean see {get;set;}
+    public Boolean Residentialtype {get;set;}
+    public Boolean Commercialtype {get;set;}
+    public Integer b {get;set;}
+    /*public Decimal IntTotalAV{get;set;}
+public Decimal IntTotalTax{get;set;}
+public Decimal IntAvWithTax{get;set;}*/
+    public String logolink{get;set;}
+    public List<Specification_Copy__c> specList {get;set;} 
+    public Boolean renderSpec {get;set;}
+    
+    public PriceOfferController()
+    {
+        q = new List<Quotation__c>();
+        pmListold = new List<Payment_Milestones__c>(); 
+        qlist = new List<Quotation__c>();
+        recordId = apexpages.currentpage().getparameters().get('id');
+        System.debug('Id'+recordId);
+        dte= Date.today().format();
+        basicCost = 0;
+        specAmount = '';
+        totalAV = '';
+        premiumAmt = 0;
+        earMarkAmt = '';
+        addCarparkAmt = '';
+        builtUpAmt = '';
+        saleableAreaAmt = '';
+        specAmountD = 0;
+        totalTax = '';
+        avWithTax = '';
+        pwList = new List<PaymentScheduleWrapper>();
+        Residentialtype = false;
+        Commercialtype = false;
+        offerdetailmethod(recordId);
+        errormsg = '';
+        isError1 = 0;
+        a=0;
+        //earmarkedcpmap = new Map<String, Decimal>();
+        system.debug('userID::'+userinfo.getProfileId());
+        Profile pro = new Profile();
+        pro = [Select id,Name from Profile where id=:userinfo.getProfileId()];
+        system.debug('ProfileName:'+pro.Name);
+        if(pro.Name.equals('Sales Manager')){
+            if(q[0].Quote_Status__c != 'Valid'){
+                errormsg += 'Quote Status is not Valid <br/>'; 
+                isError1 = 1; 
+            }
+        }
+        
+        
+    }
+    //From Quotation
+    public void offerdetailmethod(string QuoteId)
+    {
+        //---------------------------------------------------------------------------------------------
+        specList = [Select id from Specification_Copy__c where Quotation__c =: QuoteId];
+        if(specList.size() > 0){
+            renderSpec = true;
+        }
+        else{
+            renderSpec = false;
+        }
+        //---------------------------------------------------------------------------------------------
+        chrgMap = new Map<string,List<wrapperClass>>();
+        chrgMapCust = new Map<string,List<wrapperClassCustomisation>>();
+        DescribeSObjectResult describeResult = Quotation__c.getSObjectType().getDescribe(); 
+        List<String> fieldNames = new List<String>( describeResult.fields.getMap().keySet() ); 
+        String query = ' SELECT ' + String.join( fieldNames, ',' ) + ',Unit__r.Project__C,Unit__r.Project__r.State__c,Unit__r.Project__r.Promoter__r.Name,Unit__r.Level__c,Unit__r.Project__r.Promoter__r.Registered_office__c,Unit__r.Project__r.name,Unit__r.name,Unit__r.Floor__C,Unit__r.RERA_Carpet_Area_Sub_Product__c,' 
+            + 'unit__R.Builtup_Area_Sub_Product__c,unit__r.Is_Villa__c,Unit__r.Project__r.Project_Logo_Commercial__c,unit__r.Permitted_Use__c,unit__R.Saleable_Area_Sub_Product__c,Unit__r.Tower__r.Cluster__c,Unit__r.Project__r.Project_Logo__c,Unit__r.Outdoor_Area_Sub_Product__c'+ ' FROM ' + describeResult.getName() + ' where id=' + '\'' + QuoteId + '\''; 
+        q = Database.query( query );
+        system.debug('q::::'+q);
+        if(q[0].unit__r.Permitted_Use__c == 'Residential'){
+            Residentialtype = true;
+        }else{
+            Commercialtype = true;
+        }
+        system.debug('Residentialtype::'+Residentialtype);
+        system.debug('Commercialtype::'+Commercialtype);
+        if(!q.isEmpty()){
+            Map<string,ProjectCharges__c> premiumMap = getPremiumCharges(q[0].Unit__r.Project__c);
+            for(Integer i=1;i<=25;i++){
+                if(string.isNotBlank((string)q[0].get('Charge'+i+'Name__C')) && (string)q[0].get('Charge'+i+'Name__C') != 'Customisation Charge'){
+                    wrapperClass w = new wrapperClass();
+                    w.cName = (string)q[0].get('Charge'+i+'Name__C');
+                    if((Decimal)q[0].get('Charge'+i+'Rate__C') != null){
+                        /* if(w.cName == 'Basic'){
+w.cRate = InventoryCostServices.INFormat((Decimal)q[0].get('Charge'+i+'Rate__C') + q[0].Specification_Rate__c);
+}else{*/
+                        w.cRate = InventoryCostServices.INFormat((Decimal)q[0].get('Charge'+i+'Rate__C'));
+                        // }
+                    }
+                    if((Decimal)q[0].get('Charge'+i+'Area__C') != null)
+                        w.cArea = string.valueOf(((Decimal)q[0].get('Charge'+i+'Area__C')).setscale(0));
+                    if((Decimal)q[0].get('Charge'+i+'Value__C') != null){   
+                        w.cAmount = InventoryCostServices.INFormat((Decimal)q[0].get('Charge'+i+'Value__C'));
+                        w.cAmountD = (Decimal)q[0].get('Charge'+i+'Value__C');
+                    }
+                    if((Decimal)q[0].get('Charge'+i+'CGST__C') != null && (Decimal)q[0].get('Charge'+i+'SGST__C') != null)    
+                        w.cTax = InventoryCostServices.INFormat((Decimal)q[0].get('Charge'+i+'CGST__C') + (Decimal)q[0].get('Charge'+i+'CGST__C'));
+                    w.cBucket = (string)q[0].get('Charge'+i+'Bucket__C');
+                    
+                    if(w.cName == 'Basic')
+                        basicCost = w.cAmountD;
+                    if(premiumMap.containsKey(w.cName))
+                        premiumAmt += w.cAmountD;     
+                    if(chrgMap.containsKey(w.cBucket)){
+                        list<wrapperClass> wl = new List<wrapperClass>();
+                        wl.addAll(chrgMap.get(w.cBucket));
+                        wl.add(w);
+                        chrgMap.put(w.cBucket,wl); 
+                    }else{
+                        list<wrapperClass> wl = new List<wrapperClass>();
+                        wl.add(w);
+                        chrgMap.put(w.cBucket,wl);
+                    }
+                }
+            }
+            
+            //// Added By Aniket For Printing Customization Charge Sepearately////
+            
+            for(Integer i=1;i<=25;i++){
+                if(string.isNotBlank((string)q[0].get('Charge'+i+'Name__C')) && (string)q[0].get('Charge'+i+'Name__C') == 'Customisation Charge'){
+                    wrapperClassCustomisation wc = new wrapperClassCustomisation();
+                 //   wc.cName = (string)q[0].get('Charge'+i+'Name__C');
+                    wc.cName = 'Interior Design Charge';
+                    if((Decimal)q[0].get('Charge'+i+'Rate__C') != null){
+                        /* if(w.cName == 'Basic'){
+w.cRate = InventoryCostServices.INFormat((Decimal)q[0].get('Charge'+i+'Rate__C') + q[0].Specification_Rate__c);
+}else{*/
+                        wc.cRate = InventoryCostServices.INFormat((Decimal)q[0].get('Charge'+i+'Rate__C'));
+                        // }
+                    }
+                    if((Decimal)q[0].get('Charge'+i+'Area__C') != null)
+                        wc.cArea = string.valueOf(((Decimal)q[0].get('Charge'+i+'Area__C')).setscale(0));
+                    if((Decimal)q[0].get('Charge'+i+'Value__C') != null){   
+                        wc.cAmount = InventoryCostServices.INFormat((Decimal)q[0].get('Charge'+i+'Value__C'));
+                        wc.cAmountD = (Decimal)q[0].get('Charge'+i+'Value__C');
+                    }
+                    if((Decimal)q[0].get('Charge'+i+'CGST__C') != null && (Decimal)q[0].get('Charge'+i+'SGST__C') != null)    
+                        wc.cTax = InventoryCostServices.INFormat((Decimal)q[0].get('Charge'+i+'CGST__C') + (Decimal)q[0].get('Charge'+i+'CGST__C'));
+                    wc.cBucket = (string)q[0].get('Charge'+i+'Bucket__C');
+                    
+                    if(wc.cName == 'Basic')
+                        basicCost = wc.cAmountD;
+                    if(premiumMap.containsKey(wc.cName))
+                        premiumAmt += wc.cAmountD;     
+                    if(chrgMapCust.containsKey(wc.cBucket)){
+                        list<wrapperClassCustomisation> w2 = new List<wrapperClassCustomisation>();
+                        w2.addAll(chrgMapCust.get(wc.cBucket));
+                        w2.add(wc);
+                        chrgMapCust.put(wc.cBucket,w2); 
+                    }else{
+                        list<wrapperClassCustomisation> w2 = new List<wrapperClassCustomisation>();
+                        w2.add(wc);
+                        chrgMapCust.put(wc.cBucket,w2);
+                    }
+                }
+            }
+            ///// Calculate basic cost, premium charges cost and specs amount 
+            /*   if(q[0].Specification_Amount__c != null){
+specAmount = InventoryCostServices.INFormat(basicCost + q[0].Specification_Amount__c + premiumAmt);
+specAmountD = basicCost + q[0].Specification_Amount__c + premiumAmt;
+}else{
+specAmount = InventoryCostServices.INFormat(basicCost + premiumAmt);
+specAmountD = basicCost + premiumAmt;
+} */
+            specAmount = InventoryCostServices.INFormat(basicCost + premiumAmt);
+            specAmountD = basicCost + premiumAmt;
+            ////// Super built area and saleable Area amount   
+            Decimal builtUpAmtD = (specAmountD / q[0].Unit__r.Builtup_Area_Sub_Product__c);
+            Decimal saleableAreaAmtD = (specAmountD / q[0].Unit__r.Saleable_Area_Sub_Product__c);
+            builtUpAmt = InventoryCostServices.INFormat(builtUpAmtD);
+            saleableAreaAmt = InventoryCostServices.INFormat(saleableAreaAmtD);
+            
+            if(q[0].Total_Agreement_Value_Bucket__c != null){
+                totalAV = InventoryCostServices.INFormat(q[0].Total_Agreement_Value_Bucket__c);
+            }
+            if(q[0].SGST_on_Total_Agreement_Value_Bucket__c != null && q[0].CGST_on_Total_Agreement_Value_Bucket__c != null){
+                totalTax = InventoryCostServices.INFormat(q[0].CGST_on_Total_Agreement_Value_Bucket__c + q[0].SGST_on_Total_Agreement_Value_Bucket__c);
+            }
+            if(q[0].Total_of_Amount_Taxes_Agreement_Value__c != null){
+                avWithTax = InventoryCostServices.INFormat(q[0].Total_of_Amount_Taxes_Agreement_Value__c);
+            }
+            
+            ///// Parking charges
+            if(q[0].Earmarked_Total_Amount__c != null && q[0].Earmarked_Total_Amount__c > 0){
+                earMarkAmt = InventoryCostServices.INFormat(q[0].Earmarked_Total_Amount__c);
+            }   
+            if(q[0].Additional_CarPark_Amount__c != null && q[0].Additional_CarPark_Amount__c > 0){
+                addCarparkAmt = InventoryCostServices.INFormat(q[0].Additional_CarPark_Amount__c);
+            }
+            
+            ///////////Payment Schedule////////
+            Map<string,Integer> pcSeq = new Map<string,Integer>();
+            Integer seq = 1;
+            for(Integer i=1;i<=25;i++){
+                if(string.isNotBlank((string)q[0].get('Charge'+i+'Name__C')) && string.isNotBlank((string)q[0].get('Charge'+i+'Bucket__C'))
+                   && (string)q[0].get('Charge'+i+'Bucket__C') == 'Agreement Value'){
+                       
+                       pcSeq.put((string)q[0].get('Charge'+i+'Name__C'),i); 
+                   }
+            }
+            DescribeSObjectResult describeResult2 = Payment_Milestones__c.getSObjectType().getDescribe(); 
+            List<String> fieldNames2 = new List<String>( describeResult2.fields.getMap().keySet() ); 
+            String query2 = ' SELECT ' + String.join( fieldNames2, ',' ) + ' FROM ' + describeResult2.getName() + ' where Quotation__c =' + '\'' + QuoteId + '\' ORDER BY Name ASC'; 
+            List<Payment_Milestones__c> pmList = Database.query( query2 );
+            Decimal IntTotalAV = 0;
+            Decimal IntTotalTax = 0;
+            IntTotalTaxraised = 0;
+            Decimal IntAvWithTax = 0;
+            IntAvWithTaxraised = 0;
+            totalconsi = 0;
+            for(Payment_Milestones__c pm : pmList){
+                PaymentScheduleWrapper pw = new PaymentScheduleWrapper();
+                pw.mSeq = seq;
+                pw.milestoneName = pm.Milestone_Name__c;
+                if(pm.Milestone_Date_to_be_Print_On_Documents__c == true){ //|| pm.Is_Unit_Linked__c == true , pm.Milestone_Type_edit__c != 'Construction Linked' || pw.milestoneName == 'On On Virtual Completion [on or before]' || pw.milestoneName == 'On Virtual Completion' || pw.milestoneName == 'On Virtual Completion [on or before]'
+                    pw.milestoneDate = pm.Milestone_Due_Date__c.format();
+                }else{
+                    pw.milestoneDate = '';
+                }
+                mAMT = 0;
+                mTAX = 0;
+                
+                for(Integer i:pcSeq.values()){
+                    if((Decimal)pm.get('C'+i+'_Amount__c') != null)
+                        mAMT += (Decimal)pm.get('C'+i+'_Amount__c');
+                    if((Decimal)pm.get('C'+i+'_CGST__c') != null && (Decimal)pm.get('C'+i+'_SGST__c') != null)    
+                        mTAX += (Decimal)pm.get('C'+i+'_CGST__c') + (Decimal)pm.get('C'+i+'_SGST__c');
+                }
+                mTax = pm.Total_Milestone_CGST__c.setscale(0,RoundingMode.HALF_UP) + pm.Total_Milestone_SGST__c.setscale(0,RoundingMode.HALF_UP);
+                system.debug('mTAX before rounding::'+mTAX);
+                // mTAX = mTAX.setscale(0,RoundingMode.HALF_UP);
+                pw.milestoneAmt = InventoryCostServices.INFormatForDecimal(mAMT.setscale(2,RoundingMode.HALF_UP));
+                system.debug('IntTotalAV ::'+IntTotalAV );
+                system.debug('mAMT::'+mAMT);
+                system.debug('mTAX::'+mTAX);
+                totalconsi += mAMT;
+                strtotalconsi = String.valueOf(totalconsi);
+                system.debug('strtotalconsi'+strtotalconsi);
+                IntTotalAV += mAMT;
+                system.debug('IntTotalAV 2 ::'+IntTotalAV );
+                strtotalconsiInF = InventoryCostServices.INFormat(Decimal.valueOf(strtotalconsi));
+                strTotalAV = InventoryCostServices.INFormat(IntTotalAV );
+                pw.milestoneTax = InventoryCostServices.INFormatForDecimal(mTax);
+                system.debug('milestoneTax::'+pw.milestoneTax );
+                IntTotalTax += mTAX;
+                system.debug('IntTotalTax'+IntTotalTax);
+                
+                pw.milestoneTotal = InventoryCostServices.INFormatForDecimal((mAMT + mTAX).setscale(2,RoundingMode.HALF_UP));
+                IntAvWithTax +=(mAMT + mTAX);
+                system.debug('IntAvWithTax'+IntAvWithTax);
+                
+                
+                pwList.add(pw);
+                seq++;
+            }
+            /**********************************************************************/
+            a = pwList.size();
+            
+            if(recordId != null){
+                qlist = [Select id , name,Opportunity__r.Old_Booking__c,Quotation_Type__c,Booking__r.Is_Tranferred__c from Quotation__c where id =: recordId];
+                system.debug('qlist::'+qlist);
+            }
+            if(!qlist.isEmpty() && qlist[0].Opportunity__r.Old_Booking__c != null){
+                book = [select id , name, Quotation__c,Booking_Date__c,TotalAmountDemanded__c from Booking__c where id =: qlist[0].Opportunity__r.Old_Booking__c]; 
+                if(book != null){
+                    pmListold = [Select id , name ,Milestone_Name__c,Milestone_Due_Date__c,Milestone_Type_edit__c,Total_Amount_in_Milestone__c,TotalMilestoneTax__c,
+                                 TotalMilestoneAmountWIthTax__c,Milestone_Date_to_be_Print_On_Documents__c from Payment_Milestones__c
+                                 where Quotation__c =: book.Quotation__c And is_demand_raised__c = true ];
+                    system.debug('pmlistold::'+pmListold);   
+                }
+                
+                
+                
+            }
+            if((qlist[0].Quotation_Type__c == 'Unit Transfer Quotation' && book.TotalAmountDemanded__c != 0) ||
+               (qlist[0].Quotation_Type__c == 'Unit Transfer Quotation' && qlist[0].Booking__r.Is_Tranferred__c == true)){
+                   b = 2;
+                   see = true;
+               }else{
+                   b=1;
+                   system.debug('else!');
+               }
+            totalconsiraised = 0;
+            IntTotalTaxraised = 0;
+            IntAvWithTaxraised = 0;   
+            
+            /**********************************************************************/
+            if(!pmListold.isEmpty()){
+                for(Payment_Milestones__c p : pmListold){
+                    totalconsi += p.Total_Amount_in_Milestone__c;
+                    totalconsiraised += p.Total_Amount_in_Milestone__c;
+                    IntTotalTax += p.TotalMilestoneTax__c;
+                    IntTotalTaxraised += p.TotalMilestoneTax__c;
+                    IntAvWithTax += p.TotalMilestoneAmountWIthTax__c;
+                    IntAvWithTaxraised += p.TotalMilestoneAmountWIthTax__c;
+                }
+            }
+            if(totalconsiraised == 0){
+                see = false;
+                b = 1;
+            }
+            strtotalconsiInF = InventoryCostServices.INFormat(totalconsi.setscale(0,RoundingMode.HALF_UP));
+            IntTotalTax = IntTotalTax.setscale(0,RoundingMode.HALF_UP);
+            strTotalTax= InventoryCostServices.INFormat(IntTotalTax );
+            IntAvWithTax = IntAvWithTax.setscale(0,RoundingMode.HALF_UP);
+            strAvWithTax =  InventoryCostServices.INFormat(IntAvWithTax);
+            system.debug('strTotalTax'+strTotalTax);
+            system.debug('strAvWithTax'+strAvWithTax);
+            
+        }
+        
+        earmarkedcpmap = new Map<string,List<wrapperClassCP>>();
+        for(Quotation__c quot :q){
+            for(Integer i=1;i<=10;i++){
+                wrapperClassCP w = new wrapperClassCP();
+                list<wrapperClassCP> wl = new List<wrapperClassCP>();
+                if((string)quot.get('Earmarked_Type_'+i+'__c') != null && (decimal)quot.get('Earmarked_Car_Park_Charge_'+i+'__c') != null
+                   && (decimal)quot.get('Earmarked_Count_'+i+'__c') > 0){
+                       w.cName = (string)quot.get('Earmarked_Type_'+i+'__c');
+                       w.cRate = InventoryCostServices.INFormat((decimal)quot.get('Earmarked_Car_Park_Charge_'+i+'__c') * (decimal)quot.get('Earmarked_Count_'+i+'__c'));
+                       w.count = InventoryCostServices.INFormat((decimal)quot.get('Earmarked_Count_'+i+'__c'));
+                       wl.add(w);
+                       system.debug('earmarkedcp::'+quot.get('Earmarked_Type_'+i+'__c'));
+                       system.debug('earmarkedcharges::'+quot.get('Earmarked_Car_Park_Charge_'+i+'__c'));
+                       earmarkedcpmap.put(w.cName,wl);
+                   }
+            }
+        }  
+        system.debug('earmarkedcpmap::'+earmarkedcpmap);
+        
+        additionalcpmap = new Map<string,List<wrapperClassadditionalCP>>();
+        for(Quotation__c quot :q){
+            for(Integer i=1;i<=10;i++){
+                wrapperClassadditionalCP w = new wrapperClassadditionalCP();
+                list<wrapperClassadditionalCP> wl = new List<wrapperClassadditionalCP>();
+                if((string)quot.get('Car_Park_Type_'+i+'__c') != null && (decimal)quot.get('Car_Park_Charge_'+i+'__c') != null
+                   && (decimal)quot.get('Car_Park_Count_'+i+'__c') > 0){
+                       w.cName = (string)quot.get('Car_Park_Type_'+i+'__c');
+                       w.cRate = InventoryCostServices.INFormat((decimal)quot.get('Car_Park_Charge_'+i+'__c') * (decimal)quot.get('Car_Park_Count_'+i+'__c'));
+                       w.count = InventoryCostServices.INFormat((decimal)quot.get('Car_Park_Count_'+i+'__c'));
+                       wl.add(w);
+                       system.debug('earmarkedcp::'+quot.get('Car_Park_Type_'+i+'__c'));
+                       system.debug('earmarkedcharges::'+quot.get('Car_Park_Charge_'+i+'__c'));
+                       additionalcpmap.put(w.cName,wl);
+                   }
+            }
+        }  
+        if(q[0].Unit__r.Project__r.Project_Logo_Commercial__c != null){
+        System.debug('logourl: ' + q[0].Unit__r.Project__r.Project_Logo_Commercial__c);
+        String firstSubString = q[0].Unit__r.Project__r.Project_Logo_Commercial__c.substringBetween('<img', 'img>');
+        System.debug('First substring: ' + firstSubString);
+        
+        String secondSubString = firstSubString.substringBetween('src="', '"');
+        System.debug('Second substring: ' + secondSubString);
+        
+        logolink = secondSubString.replace('amp;', '');
+        System.debug('logolink: ' + logolink);
+        }
+    }
+    
+    public Map<string,ProjectCharges__c> getPremiumCharges(string pId){
+        Map<string,ProjectCharges__c> premiumMap = new Map<string,ProjectCharges__c>();
+        List<ProjectCharges__c> projCharges = [Select Id, Name, 
+                                               Active__c,
+                                               Calculatedas__c,
+                                               ChargeBucket__c,
+                                               Taxable__c,Premium_Charge__c,
+                                               SGST__c,
+                                               CGST__c,
+                                               IGST__c,
+                                               Tax_Rate__c,
+                                               Agreement_Value_Percentage__c,
+                                               editable__c,Default_Value__c,
+                                               Discount_Applicable__c,Discount_Limit__c
+                                               from 
+                                               ProjectCharges__c where Project__c =:pId
+                                               and active__c = true and Premium_Charge__c = true
+                                               order by Code_Formula__c asc];
+        
+        if(projCharges != null && !projCharges.isEmpty()){
+            for(ProjectCharges__c pc : projCharges){
+                premiumMap.put(pc.name,pc); 
+            }
+        }
+        return premiumMap;
+    }  
+    
+    public class wrapperClass{
+        public string cName{get;set;}
+        public string cRate{get;set;}
+        public string cArea{get;set;}
+        public string cAmount{get;set;}
+        public string cTax{get;set;}
+        public string cBucket{get;set;}
+        public Decimal cAmountD{get;set;}
+        
+        public wrapperClass(){
+        }
+    }
+    public class wrapperClassCP{
+        public string cName{get;set;}
+        public string cRate{get;set;}
+        public string count{get;set;}
+        
+        
+        public wrapperClassCP(){
+        }
+    }
+        public class wrapperClassadditionalCP{
+        public string cName{get;set;}
+        public string cRate{get;set;}
+        public string count{get;set;}
+        
+        
+        public wrapperClassadditionalCP(){
+        }
+    }
+    public class wrapperClassCustomisation{
+        public string cName{get;set;}
+        public string cRate{get;set;}
+        public string cArea{get;set;}
+        public string cAmount{get;set;}
+        public string cTax{get;set;}
+        public string cBucket{get;set;}
+        public Decimal cAmountD{get;set;}
+        
+        public wrapperClassCustomisation(){
+        }
+    }
+    
+    public class PaymentScheduleWrapper{
+        public Integer mSeq{get;set;}
+        public string milestoneName{get;set;}
+        public string milestoneDate{get;set;}
+        public string milestoneAmt{get;set;}
+        public string milestoneTax{get;set;}
+        public string milestoneTotal{get;set;}
+        
+        public PaymentScheduleWrapper(){
+            
+        }
+        
+    }
+}
