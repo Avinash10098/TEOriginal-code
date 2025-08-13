@@ -1,0 +1,537 @@
+// Test class: TestTermsheetQuotationPageController
+public class TermsheetPageQuotationController{
+    public Id recordId;
+    public Map<string,List<wrapperClassCP>> earmarkedcpmap {get;set;}
+    public Map<string,List<wrapperClassACP>> additionalcpmap {get;set;}
+    public PageReference specificationPage{get;set;}
+    public PageReference termsandconditionPage{get;set;}
+    public Quotation__c Quote{get;set;}
+    public User u{get;set;}
+    public String dte{get;set;}
+    public Promoter__c promoter{get;set;}
+    public Unit__c unit{get;set;}
+    List<Applicant_Details__c> adc{get;set;}
+    public string andSepratedList{get;set;}
+    public List<Payment_Milestones__c> pmList {get;set;}
+    public List<Payment_Milestones__c> pmListold {get;set;}
+    public List<Quotation__c> qcp {get;set;}
+    public List<Quotation__c> qAddcp {get;set;}
+    public List<Quotation__c> qlist {get;set;}
+    public List<PMWrapper> pmwList {get;set;} 
+    public List<OCWrapper> ocwList {get;set;}    
+    public Project__c prj{get;set;}
+    public List <Unit__c> uList{get;set;}
+    List<Payment_Milestones__c> pmstone{get;set;}
+    public Quotation__c qt {get;set;} 
+    public Decimal carparkcount{get;set;}
+    public string additionoftax{get;set;}
+    public String earMarkAmt{get;set;}
+    public String addCarparkAmt{get;set;}
+    public String ConsiderationValue{get;set;}
+    public String TotalAmtwithtax{get;set;}
+    public String strConsiderationValue {get;set;} 
+    public String stradditionoftax {get;set;} 
+    public String strTotalAmtwithtax {get;set;} 
+    public Boolean isResidential {get;set;} 
+    public Boolean isCommercial {get;set;}
+    public Boolean see {get;set;} 
+    public string errormsg {get;set;}
+    public Integer isError1 {get;set;}
+    public Integer a {get;set;}
+    public Integer b {get;set;}
+    public Decimal totalAmt{get;set;}
+    public String totalAmtstr{get;set;}
+    public Decimal totalTax{get;set;}
+    public Decimal gtotal{get;set;}
+    public String totalTaxstr{get;set;}
+    public String gtotalstr{get;set;}
+    public Decimal overalltotal{get;set;}
+    public Booking__c book {get;set;}
+    public Decimal amountraised{get;set;}
+    public Decimal taxraised{get;set;}
+    public Decimal amounttaxraised{get;set;}
+    Public List<String> splitted{get;set;}
+    Public Map<Decimal,String> splitted1{get;set;}
+    public String colorcode {get;set;} 
+    public List<Specification_Copy__c> specList {get;set;} 
+    public Boolean renderSpec {get;set;} 
+    public decimal excAccessRight {get;set;}
+    
+    public static string customDateFormat(Date dt){
+        system.debug('inside CusomDateFormat Method:: '+dt);
+        string stDate = '';
+        if(dt != Null){
+            string stMonth = '';
+            string stDay = '';
+            Integer day = dt.Day();
+            Integer month = dt.month();
+            Integer year = dt.year();
+            string stYear = string.valueof(year);
+            
+            stDay = day+'-';
+            
+            if(month == 1){ stMonth = 'Jan';}
+            else if(month == 2) { stMonth = 'Feb'; }
+            else if(month == 3) { stMonth = 'Mar'; }
+            else if(month == 4) { stMonth = 'Apr'; }
+            else if(month == 5) { stMonth = 'May'; }
+            else if(month == 6) { stMonth = 'Jun'; }
+            else if(month == 7) { stMonth = 'Jul'; }
+            else if(month == 8) { stMonth = 'Aug'; }
+            else if(month == 9) { stMonth = 'Sep'; }
+            else if(month == 10) { stMonth = 'Oct'; }
+            else if(month == 11) { stMonth = 'Nov'; }
+            else if(month == 12) { stMonth = 'Dec'; }
+            
+            stDate = stDay + '' + stMonth + '-' + stYear; 
+            
+        }
+        return stDate;
+    }
+    
+    
+    public class PMWrapper {
+        public String milestoneName  {get;set;}
+        public String amount        {get;set;}
+        public String tax           {get;set;}
+        public String grandtotal    {get;set;}
+        public string mdate         {get;set;}
+        public Integer srno         {get;set;}
+        Public String milestonetype {get;set;}
+        Public String Milestonedate {get;set;}
+        public Boolean Datetoprint         {get;set;}
+        public PMWrapper(String msName,Boolean Datetoprint, String amt, String tAmt, String gtotal, Date pdate, Integer serial,String mstype) {
+            this.milestoneName = msName;
+            this.Datetoprint   = Datetoprint;
+            this.amount        = amt;                     //InventoryCostServices.InFormatR(amt);
+            this.tax           = tAmt;                     //InventoryCostServices.InFormatR();
+            this.grandtotal    = gtotal;
+            //if(pdate != null && mstype == 'Date Linked')
+            this.mdate         = customDateFormat(pdate);
+            this.srno          = serial;
+            this.milestonetype = mstype;
+            
+        }
+    }
+    public class OCWrapper{
+        public String milestoneName  {get;set;}
+        public String amount        {get;set;}
+        public String tax           {get;set;}
+        public String grandtotal    {get;set;}
+        public string mdate         {get;set;}
+        public Integer srno         {get;set;}
+        
+        
+        
+        public OCWrapper(String msName, Decimal amt, Decimal tAmt, Decimal gtotal, Date pdate, Integer serial) {
+            this.milestoneName = msName;
+            this.amount        = InventoryCostServices.InFormat(amt);
+            this.tax           = InventoryCostServices.InFormat(tAmt);
+            this.grandtotal    = InventoryCostServices.InFormat(gtotal);
+            if(pdate != null)
+                this.mdate         = customDateFormat(pdate);
+            
+            this.srno          = serial;
+        }
+    }
+    
+    
+    public TermsheetPageQuotationController()
+    {
+        pmwList= new List<PMWrapper>(); 
+        ocwList= new List<OCWrapper>();
+        pmListold = new List<Payment_Milestones__c>(); 
+        qlist = new List<Quotation__c>();
+        qt = new Quotation__c();
+        u = new User();
+        splitted1 = new Map<Decimal,String>();
+        recordId = apexpages.currentpage().getparameters().get('id');
+        termsheetmethod(recordId);
+        dte= customDateFormat(Date.today());
+        errormsg = '';
+        isError1 = 0;
+        overalltotal = 0;
+        
+        Id ProId = [Select id,Name  from Profile where Name = 'Sales Manager'].id;
+        if(qt.Applicant_Name__c == null){
+            errormsg += 'Please Enter Applicant Name'; 
+            isError1 = 1; 
+        }
+        if(qt.Quote_Status__c != 'Valid'  &&  ProId == UserInfo.getProfileId()){
+            errormsg += 'Quote Status is Not Valid'; 
+            isError1 = 1; 
+        }
+        if(unit.Unit_Ownership__c == 'JD' && ( unit.Tower__r.Cluster__r.JD_Signatory__c == ' ' || unit.Tower__r.Cluster__r.JD_Signatory__c == Null)){
+            errormsg += 'JD Signatory Field on Phase is mandatory if Unit Ownership equals JD'; 
+            isError1 = 1; 
+        }
+    }
+    
+    //From Booking.
+    public void termsheetmethod(Id quotid)
+    { 
+        qt = [SELECT Name,TotalEarmarkedCarpark__c,Sales_Consultant_Formula__c, TotalAdditionalCarpark__c,Car_Park_Type_1__c,Quote_Status__c, Unit__r.Project__c,Opportunity__r.name,Opportunity__r.Sales_Manager_lookup__r.name,
+              Id,Applicant_Name__c,Opportunity__r.Old_Booking__r.Quotation__c,Quotation_Type__c,Specific_Terms_and_Condition__c,Customization_Credit__c FROM Quotation__c WHERE id =:quotid];
+        //Total car park
+        
+        system.debug('Quotation::'+qt);
+        specList = [Select id from Specification_Copy__c where Quotation__c =: qt.Id];
+        if(specList.size() > 0){
+            renderSpec = true;
+        }
+        else{
+            renderSpec = false;
+        }
+        prj = [SELECT Id,Name, Address__c, Project_Logo__c,Project_CEO_for_Termsheet__r.Name,Promoter__c,State__c FROM Project__c WHERE id=:qt.Unit__r.Project__c];
+        system.debug('Project::'+prj);
+        u = [Select id, FirstName,LastName from User where id =: prj.Project_CEO_for_Termsheet__c];
+      //  uList = [Select Id,Name,Tower__r.Phase__r.JD_Signatory__c from Unit__c where id=:Quote.Unit__c];
+       // System.debug('phase:::'+phase);
+        promoter = [select Id, name, PAN__c, Registered_office__c, Authorised_Signatory__c, Photograph__c from Promoter__c where id=:prj.Promoter__c];
+        /**********************************************************************/
+        
+        if(recordId != null){
+            qlist = [Select id , name,Opportunity__r.Old_Booking__c,Quotation_Type__c,Booking__r.Is_Tranferred__c from Quotation__c where id =: recordId];
+        }
+        System.debug('qlist::'+qlist);
+        if(!qlist.isEmpty() && qlist[0].Opportunity__r.Old_Booking__c != null){
+            book = [select id , name, Quotation__c,Booking_date__c,TotalAmountDemanded__c from Booking__c where id =: qlist[0].Opportunity__r.Old_Booking__c];
+            
+            system.debug('Book::'+book);
+            pmListold = [Select id , name ,Milestone_Name__c,Milestone_Due_Date__c,Milestone_Type_edit__c,Total_Amount_in_Milestone__c,TotalMilestoneTax__c,
+                         TotalMilestoneAmountWIthTax__c,Milestone_Date_to_be_Print_On_Documents__c from Payment_Milestones__c
+                         where Quotation__c =: book.Quotation__c And is_demand_raised__c = true ];
+            system.debug('pmlistold::'+pmListold);
+        }
+        if((qlist[0].Quotation_Type__c == 'Unit Transfer Quotation' && book.TotalAmountDemanded__c != 0) ||
+           (qlist[0].Quotation_Type__c == 'Unit Transfer Quotation' && qlist[0].Booking__r.Is_Tranferred__c == true)){
+               b = 2;
+               see = true;
+           }else{
+               b=1;
+           }
+        if(qlist[0].Quotation_Type__c == 'Change Request Quotation'){
+            b = 1;
+            see = false;
+        }
+        
+        /**********************************************************************/
+        String queryString1 = '';
+        for(Integer i = 1; i<=17; i++) {
+            queryString1 += 'Charge' + i + 'Bucket__c'   + ',';
+            queryString1 += 'Charge' + i + 'Name__c'  + ',';
+        }
+        
+        queryString1 = 'Select ' + queryString1  + 'Total_of_Amount_Taxes_Agreement_Value__c, CGST_on_Total_Agreement_Value_Bucket__c, SGST_on_Total_Agreement_Value_Bucket__c, Selected_Specification__c,Total_Agreement_Value_Bucket__c, Unit__c, Selected_Customisation__c,Specification_Id__c,Scheme__c,Final_Customisation__c From Quotation__c where id = \'' + recordId + '\'' ;
+        system.debug('Query String :'+queryString1);
+        Quote = Database.Query(queryString1); 
+        
+        colorcode = Quote.Selected_Specification__c.replaceAll('[^a-zA-Z0-9\\s]', '');
+        system.debug('colorcode:'+colorcode);
+        
+        ConsiderationValue = InventoryCostServices.InFormat(Quote.Total_Agreement_Value_Bucket__c);
+        //   earMarkAmt  = InventoryCostServices.InFormatR();
+        //  addCarparkAmt = InventoryCostServices.InFormatR();
+        
+        //  String additionoftax;
+        additionoftax = InventoryCostServices.InFormat(Quote.CGST_on_Total_Agreement_Value_Bucket__c +  Quote.SGST_on_Total_Agreement_Value_Bucket__c);
+        system.debug('Addition Of Tax :'+additionoftax  );
+        TotalAmtwithtax = InventoryCostServices.InFormat(Quote.Total_of_Amount_Taxes_Agreement_Value__c);
+        unit = [SELECT Name,Project__c,Premium_1__c,Premium_2__c,Premium_3__c,Premium_4__c,Premium_5__c,Premium_6__c, Tower__r.Cluster__c, Floor__c, Unit_No__c,Is_Villa__c, Builtup_Area_Sub_Product__c,	Level__c, Outdoor_Area_Sub_Product__c, RERA_Carpet_Area_Sub_Product__c,Saleable_Area_Sub_Product__c,Permitted_Use__c,Project__r.name,Additional_Land__c,
+                Unit_Ownership__c,Tower__r.Cluster__r.JD_Signatory__c,Land_Owner__r.JD_Signatory__c,Parent_Saleable_Area__c,Parent_Unit__c,Villa_Plot_Area_Sub_Product__c,Tower__r.Cluster__r.New_Phase__c,Tower__r.Cluster__r.Name  FROM Unit__c WHERE id=:Quote.Unit__c];
+        if(unit.Permitted_Use__c == 'Residential'){
+            isResidential = true;
+            
+        } else{
+            isCommercial = True;
+        }
+        string prjPhaseConcatString = prj.Name +' '+ unit.Tower__r.Cluster__r.Name;
+        if(unit.Tower__r.Cluster__r.New_Phase__c == true && prjPhaseConcatString != 'After the Rain Phase 2c'){
+            excAccessRight = unit.Is_Villa__c == true ? unit.Additional_Land__c != null ? unit.Additional_Land__c + unit.Villa_Plot_Area_Sub_Product__c : unit.Villa_Plot_Area_Sub_Product__c : unit.Additional_Land__c;
+        }
+        else{
+            excAccessRight = unit.Additional_Land__c;
+        }
+        
+        String nameofapplicant;
+        List<String> applicantName = new List<String>();
+        
+        /* adc = [SELECT Salutation__c, Name FROM Applicant_Details__c WHERE Booking__c =: bk.id];
+for(Applicant_Details__c  adce : adc)
+{
+nameofapplicant = adce.Name;
+applicantName.add(nameofapplicant);
+
+}
+andSepratedList='';
+for(String str : applicantName)
+{
+andSepratedList += str + ' and ' ;
+}
+system.debug('Applicant length' +andSepratedList.length() + 'Applicant' +andSepratedList);
+andSepratedList = andSepratedList.subString(0,andSepratedList.length()-4);
+*/
+        Map<String,Integer> AVChargesSeqMap = new Map<String, Integer>();
+        Map<String,Integer> OCSeqMap        = new Map<String, Integer>();
+        Integer Seq = 1;
+        String chgName = '';
+        
+        //creating a list of all charges that are part of the agreement value their field location, to identify whether they are stored in Charge1, Charge2, Charge3, etc.,
+        for(Integer i=1;i<=17;i++)
+        {
+            if((string)Quote.get('charge'+i+'Name__c') != null){  
+                if((string)Quote.get('charge'+i+'Bucket__c') == 'agreement value'){
+                    AVChargesSeqMap.put((string)Quote.get('charge'+i+'Name__c'),seq);
+                }
+                if((string)Quote.get('charge'+i+'Bucket__c') == 'Other Charges'){
+                    OCSeqMap.put((string)Quote.get('charge'+i+'Name__c'),seq);
+                }
+            }
+            
+            seq++;
+        }
+        
+        
+        // String to query all charges on that payment milestone.
+        String queryString2 = '';
+        for(Integer i = 1; i<=15; i++) {
+            queryString2 += 'Charge' + i + 'Name__c'   + ',';
+            queryString2 += 'Charge' + i + 'Percentage__c'  + ',';
+            queryString2 += 'C' + i + '_Amount__c' + ',';                    
+            queryString2 += 'C' + i + '_CGST__c'   + ','; 
+            queryString2 += 'C' + i + '_SGST__c'   + ','; 
+        }
+        
+        queryString2 = 'Select ' + queryString2  + ' Id, Milestone_Due_Date__c,Total_Milestone_CGST__c,Total_Milestone_SGST__c, Name,Milestone_Name__c,Milestone_Date_to_be_Print_On_Documents__c, Milestone_Complete_At_Booking__c,Demand_Raised__c,Milestone_Type_edit__c from Payment_Milestones__c where Quotation__c = \'' + Quote.id + '\'ORDER BY Name ASC' ;
+        system.debug('Query String :'+queryString2);
+        pmList = Database.Query(queryString2); 
+        System.debug('Payment Plan Milestone : '+pmList);
+        Integer serialno = 1;
+        System.debug('Payment Plan Milestone : '+pmList[0].Milestone_Type_edit__c);
+        Decimal addTotalAmt = 0;
+        Decimal addTotalTax  = 0;
+        Decimal addGtotal  = 0;
+        Decimal octotalAmt = 0;
+        Decimal octotalTax = 0;
+        Decimal ocgtotal = 0;
+        for(Payment_Milestones__c pm : pmList) 
+        {
+            
+            // check all the values in Agreement value bucket and sum total its amount and taxes
+            totalAmt = 0;
+            totalTax = 0;
+            gtotal = 0;
+            
+            
+            system.debug('AVChargesSeqMap'+AVChargesSeqMap.values());
+            
+            // For Agreement Value
+            for(Integer i : AVChargesSeqMap.values()) 
+            {
+                if((Decimal)pm.get('C' +i + '_Amount__c' ) != null){
+                    totalAmt += (Decimal)pm.get('C' +i + '_Amount__c' );                      
+                    
+                    system.debug('addTotalAmt::'+i+':'+addTotalAmt );
+                }
+                
+                if((Decimal)pm.get('C' + i + '_CGST__c' ) != null && (Decimal)pm.get('C' + i + '_SGST__c' ) != null){
+                    totalTax += (Decimal)pm.get('C' + i + '_CGST__c' ) + (Decimal)pm.get('C' + i + '_SGST__c' );
+                    
+                    system.debug('addTotalTax ::'+i+':'+addTotalTax );
+                }
+                
+            }
+            totalTax = pm.Total_Milestone_CGST__c.setscale(0,RoundingMode.HALF_UP) + pm.Total_Milestone_SGST__c.setscale(0,RoundingMode.HALF_UP);
+            totalAmt = totalAmt.setscale(2,RoundingMode.HALF_UP);
+            totalTax = totalTax.setscale(0,RoundingMode.HALF_UP);
+            system.debug('totalTax::-'+totalTax);
+            gtotal = gtotal.setscale(2,RoundingMode.HALF_UP);
+            gtotal = totalAmt + totalTax; 
+            addTotalAmt += totalAmt; 
+            addTotalTax += totalTax ;   
+            System.debug('addTotalTax inside for::-'+addTotalTax);                
+            addGtotal +=gtotal; 
+            
+            system.debug('addGtotal ::'+addGtotal );
+            totalAmtstr = InventoryCostServices.INFormatForDecimal(totalAmt);
+            totalTaxstr = InventoryCostServices.INFormatForDecimal(totalTax);
+            gtotalstr = InventoryCostServices.INFormatForDecimal(gtotal);
+            pmWrapper pmw = new pmWrapper(pm.Milestone_Name__c,pm.Milestone_Date_to_be_Print_On_Documents__c, totalAmtstr, totalTaxstr, gtotalstr, pm.Milestone_Due_Date__c, serialno, pm.Milestone_Type_edit__c);
+            System.debug(pmw);
+            pmwList.add(pmw);
+            system.debug(pmwList);
+            
+            //For Other Chanrges
+            /*   Decimal octotalAmt = 0;
+Decimal octotalTax = 0;
+Decimal ocgtotal = 0;*/
+            
+            system.debug('OCSeqMap'+OCSeqMap.values());
+            
+            
+            for(Integer i : OCSeqMap.values()) 
+            {
+                
+                octotalAmt += (Decimal)pm.get('C' +i + '_Amount__c' );
+                octotalTax += (Decimal)pm.get('C' + i + '_CGST__c' ) + (Decimal)pm.get('C' + i + '_SGST__c' );
+            }
+            
+            ocgtotal = octotalAmt + octotalTax;
+            OCWrapper ocw = new OCWrapper(pm.Milestone_Name__c, octotalAmt, octotalTax, ocgtotal, pm.Milestone_Due_Date__c, serialno);
+            System.debug(ocw);
+            ocwList.add(ocw);
+            system.debug(ocwList);   
+            
+            serialno++;
+            
+        }
+        overalltotal = 0;
+        amountraised = 0;
+        taxraised = 0;
+        amounttaxraised = 0;
+        
+        for(Payment_Milestones__c p : pmListold){
+            
+            addTotalAmt += p.Total_Amount_in_Milestone__c;
+            amountraised += p.Total_Amount_in_Milestone__c;
+            addTotalTax += p.TotalMilestoneTax__c;
+            taxraised += p.TotalMilestoneTax__c;
+            overalltotal += p.TotalMilestoneAmountWIthTax__c;
+            amounttaxraised += p.TotalMilestoneAmountWIthTax__c;
+        }
+        
+        a = pmwList.size();
+        addTotalAmt = addTotalAmt.setscale(0,RoundingMode.HALF_UP);
+        addTotalTax = addTotalTax.setscale(0,RoundingMode.HALF_UP);
+        overalltotal = addTotalAmt + addTotalTax;
+        overalltotal = overalltotal.setscale(0,RoundingMode.HALF_UP);
+        System.debug('addTotalTax::-'+addTotalTax);
+        strConsiderationValue = InventoryCostServices.InFormat(addTotalAmt );
+        stradditionoftax = InventoryCostServices.InFormat(addTotalTax);
+        strTotalAmtwithtax = InventoryCostServices.InFormat(overalltotal);
+        
+        system.debug('strConsiderationValue ::'+ strConsiderationValue );
+        system.debug('stradditionoftax ::'+ stradditionoftax );
+        system.debug('strTotalAmtwithtax  ::'+ strTotalAmtwithtax );
+        
+        earmarkedcpmap = new Map<string,List<wrapperClassCP>>();
+        qcp = new List<Quotation__c>();
+        String tempQuery = '';
+        For(Integer i=1;i<=10; i++) {
+            tempQuery += 'Earmarked_Type_'+i+ '__c,';
+            tempQuery += 'Earmarked_Count_'+i+ '__c,';
+            tempQuery += 'Earmarked_Car_Park_Charge_'+i+ '__c,';
+        }
+        // remove the    character only if its a comma.
+        if(tempQuery.length() > 0 && tempQuery.substring(tempQuery.length() -1).equals(','))
+            tempQuery = tempQuery.substring(0,tempQuery.length() -1);
+         system.debug('TempQury::'+tempQuery);
+        String queryString = 'Select Id, name,'
+            + tempQuery  + ' from Quotation__c where  Id =' + '\'' + quotid + '\'' ;
+        System.debug('Query formed in chrges:' + queryString);
+        qcp = Database.Query(queryString);
+        for(Quotation__c quot :qcp){
+            for(Integer i=1;i<=10;i++){
+                wrapperClassCP w = new wrapperClassCP();
+                list<wrapperClassCP> wl = new List<wrapperClassCP>();
+                if((string)quot.get('Earmarked_Type_'+i+'__c') != null && (decimal)quot.get('Earmarked_Car_Park_Charge_'+i+'__c') != null
+                   && (decimal)quot.get('Earmarked_Count_'+i+'__c') > 0){
+                       w.cName = (string)quot.get('Earmarked_Type_'+i+'__c');
+                       w.cRate = (decimal)quot.get('Earmarked_Car_Park_Charge_'+i+'__c');
+                       w.count = (decimal)quot.get('Earmarked_Count_'+i+'__c');
+                       wl.add(w);
+                       system.debug('earmarkedcp::'+quot.get('Earmarked_Type_'+i+'__c'));
+                       system.debug('earmarkedcharges::'+quot.get('Earmarked_Car_Park_Charge_'+i+'__c'));
+                       earmarkedcpmap.put(w.cName,wl);
+                   }
+            }
+        }  
+        system.debug('earmarkedcpmap::'+earmarkedcpmap);
+        
+       // Code for Additional CarPark
+       // ***************************************************************************************************	
+        	additionalcpmap = new Map<string,List<wrapperClassACP>>();
+        	qAddcp = new List<Quotation__c>();
+        	String tQuery = '';
+            For(Integer i=1;i<=10; i++) {
+                tQuery += 'Car_Park_Type_'+i+ '__c,';
+                tQuery += 'Car_Park_Charge_'+i+ '__c,';
+                tQuery += 'Car_Park_Count_'+i+ '__c,';
+            }
+            if(tQuery.length() > 0 && tQuery.substring(tQuery.length() -1).equals(','))
+                tQuery = tQuery.substring(0,tQuery.length() -1);
+             system.debug('tQuery::'+tQuery);
+            String qString = 'Select Id, name,'
+                + tQuery  + ' from Quotation__c where  Id =' + '\'' + quotid + '\'' ;
+             System.debug('Query formed in chrges:' + qString);
+        	qAddcp=Database.Query(qString);
+        	for(Quotation__c q :qAddcp){
+            	for(Integer i=1;i<=10;i++){
+                    wrapperClassACP w = new wrapperClassACP();
+                    list<wrapperClassACP> wl = new List<wrapperClassACP>();
+                    if((string)q.get('Car_Park_Type_'+i+'__c') != null && (decimal)q.get('Car_Park_Charge_'+i+'__c') != null
+                       && (decimal)q.get('Car_Park_Count_'+i+'__c') > 0){
+                           w.cAName = (string)q.get('Car_Park_Type_'+i+'__c');
+                           w.cARate = (decimal)q.get('Car_Park_Charge_'+i+'__c');
+                           w.addcount = (decimal)q.get('Car_Park_Count_'+i+'__c');
+                           wl.add(w);
+                           system.debug('additionalcp::'+q.get('Car_Park_Type_'+i+'__c'));
+                           system.debug('additionalcharges::'+q.get('Car_Park_Charge_'+i+'__c'));
+                           additionalcpmap.put(w.cAName,wl);
+                       }
+                }
+            }
+        	system.debug('additionalcpmap::'+additionalcpmap);  
+       //****************************************************************************************************
+       
+        //For Specification Page
+        system.debug('Specification : '+Quote.Specification_Id__c);
+        specificationPage = new PageReference('/apex/SpecificationPage?specId='+Quote.Specification_Id__c);
+        
+        //For Terms and Condition Page
+        
+        termsandconditionPage = new PageReference('/apex/TermsAndConditionsPDF?unitId='+unit.id+'&phaseId='+unit.Tower__r.Cluster__c+'&ProjectId='+prj.id); 
+       //--------------------------------Special Conditions from Quotation-------------------------------------------------- 
+        Decimal ii=1.1;
+        String cust;
+        List<String> dummySTC = new List<String>();
+        if(qt.Specific_Terms_and_Condition__c != Null){
+            dummySTC = qt.Specific_Terms_and_Condition__c.split('#');
+        }
+        if(qt.Customization_Credit__c != null){
+            cust = 'An Interior Upgrade Credit of INR '+InventoryCostServices.INFormatR(qt.Customization_Credit__c)+' ('+ S_NumberToWord.convertNumbertoWords(qt.Customization_Credit__c) +' Only) may be availed against the Interior Upgrade of the Unit as per the terms of the Credit Note issued.';
+        }
+			dummySTC.add(cust);
+        if(dummySTC != Null){
+            for(string st:dummySTC){
+                system.debug('st1::'+st);
+                if(string.isNotBlank(st)){
+                    splitted1.put(ii,st);
+                    ii += 0.1;
+                }
+                system.debug('st2::'+st);
+            } 
+        }
+        //------------------------------------------------------------------------------------------------------------------
+    }
+    public class wrapperClassCP{
+        public string cName{get;set;}
+        public Decimal cRate{get;set;}
+        public Decimal count{get;set;}
+        
+        
+        public wrapperClassCP(){
+        }
+    }
+                
+     public class wrapperClassACP{
+        public string cAName{get;set;}
+        public Decimal cARate{get;set;}
+        public Decimal addcount{get;set;}
+        
+        
+        public wrapperClassACP(){
+        }
+    }           
+    
+}
