@@ -1,0 +1,648 @@
+<apex:page controller="PriceOfferController" renderAs="PDF" docType="html-5.0"  showHeader="true" standardStylesheets="false" sidebar="false" applyHtmlTag="true" applyBodyTag="false">
+    <head>          
+        <style type="text/css" media="print">
+            @page {
+            
+            @top-center {
+            content: element(header);
+            }
+            @bottom-left {
+            content: element(footer);
+            }
+            size:4in 4in;
+            margin:20mm 20mm 62px 20mm;
+            
+            }
+            body{
+            margin:0;
+            padding:0;
+            font-family: Tahoma, Geneva, sans-serif;
+            }
+            @page {
+            size: 8.87in 10.0in;
+            } 
+            .maintable {
+            
+            border-collapse: collapse;
+            
+            }
+            
+            .maintable tr td {
+            border:1px solid #DCDCDC;
+            border-collapse: collapse;
+            }
+            .subtable{
+            width:100%;
+            border-collapse: collapse;
+            }
+            .subtable tr td {
+            
+            padding:5px;
+            }
+            
+            .specification{
+            background-color:#696969;   
+            text-align: center !important;
+            border-collapse: collapse;
+            font-size: 20px;
+            color:white;            
+            height:50px;
+            width:70% !important;
+            font-weight: bold;
+            }
+            
+            .speccolor{
+            font-weight: bold;
+            color:white;
+            transform: rotate(90deg) !important;
+            text-transform: uppercase;
+            font-size: 12px;
+            }
+            
+            .category{
+            background-color:#A9A9A9;
+            font-weight: bold;
+            color:white;
+            font-size: 12px;
+            padding:5px;
+            cell-padding:10px;
+            }
+            
+            .subcategory{
+            width:15%;
+            text-align:right !important;
+            padding:5px;
+            font-size: 10px;
+            }
+            
+            .testcss1{
+            
+            text-align:left !important;
+            padding:5px;
+            font-size: 11px;
+            
+            
+            }
+            .termAndCond{
+            text-align:left !important;
+            padding:5px;
+            font-size: 11px;
+            
+            }
+            
+            .testcss3{
+            
+            text-align:right !important;
+            padding:5px;
+            font-size: 11px;
+            
+            }
+            
+            .testcss2{
+            
+            text-align:center !important;
+            padding:5px;
+            font-size: 11px;
+            font-weight:bold;
+            }
+            .testcss10{
+            width : 100%;
+            text-align:center !important;
+            padding:5px;
+            font-size: 11px;
+            font-weight:bold;
+            }
+            .sfdc_richtext img{
+            width:90px;
+            position:relative;
+            left:110px;
+            }
+            
+            .testcss4{
+            
+            text-align:right !important;
+            padding:5px;
+            font-size: 11px;
+            font-weight:bold;
+            }
+            .library{
+            font-size:10px;
+            padding:5px;
+            }
+            .specapplicable{
+            text-align:center !important;
+            }
+            .header{
+            
+            }
+            .footer{
+            display:block;
+            position: running(footer);
+            margin: 0px auto !Important;
+            height:40% !Important;
+            
+            
+            }
+            @page{
+            .rotate{
+            /* Safari */
+            -webkit-transform: rotate(-90deg);
+            
+            /* Firefox */
+            -moz-transform: rotate(-90deg);
+            
+            /* IE */
+            -ms-transform: rotate(-90deg);
+            
+            /* Opera */
+            transform: rotate(-90deg);
+            }
+            }
+        </style>
+    </head>
+    <body>
+        <div class= "errormsg1">
+            <!-- <apex:pagemessages id="pgmsg"></apex:pagemessages> -->
+            <apex:outputLabel value="{!errormsg}" id="pgmsg1" escape="false">
+            </apex:outputLabel>
+        </div>
+        <!-----------------------------------------------Residential Start-------------------------------------------------------------------->
+        <apex:outputPanel rendered="{!IF(isError1 == 0 && q[0].unit__r.Permitted_Use__c == 'Residential',true,false)}">
+            <apex:form >
+                
+                
+                <!-------------------------------------------------------First Page------------------------------------------------->
+                
+                <div class="header">      
+                    <table width="100%">
+                        <tr>
+                            <td align="left" width="70%">
+                                
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <apex:image url="{!$Resource.TEHomesLogo}" width="220" height="50"/>
+                                        </td>  
+                                    </tr> 
+                                    <tr>
+                                        <td style="font-size: 11px;margin-bottom:0px;">{!q[0].Unit__r.Project__r.Promoter__r.Name}<br/>{!q[0].Unit__r.Project__r.Promoter__r.Registered_office__c}</td>
+                                    </tr>
+                                    
+                                </table>
+                            </td>
+                            <td align="right" width="30%">
+                                <table class="projectLogo" width="100%">
+                                    <tr>
+                                        <td align="right" style="text-align:right;">  <apex:outputField value="{!q[0].Unit__r.Project__r.Project_Logo__c}"/></td>
+                                    </tr>
+                                </table>
+                            </td>  
+                        </tr>
+                    </table>  
+                </div>
+                <div class="footer">
+                    <p style="text-align:right" class="library">Quotation : {!q[0].Name}&nbsp;Generated on: {!dte}</p>
+                </div>
+                <table width="100%" Style="margin-bottom:-28px;margin-top:-35px">
+                    <tr><!-- <td colspan="2" style="background-color:#696969; color:white;text-align:center;"> PRICE OFFER</h3>  </td> -->
+                        <td colspan="2"> <Center>
+                            <div>
+                                <h3 style="background-color:#696969; color:white; padding: 5px 10px;">PRICE OFFER</h3><br/>
+                            </div>
+                            </Center> </td>
+                    </tr> 
+                </table>
+                <table>
+                    
+                    <tr>
+                        <td colspan="2">
+                            <table class ="maintable">                    
+                                <tr style="display:{!if(q[0].Unit__r.Project__r.State__c != 'Maharashtra','table-row','none')}">
+                                    <td style="width:1%;"></td>
+                                    <td class="testcss2">Date</td>
+                                    <td class="testcss2">Level/Floor</td>                            
+                                    <td class="testcss2"> <apex:outputPanel rendered="{!q[0].unit__r.Permitted_Use__c == 'Residential'}">Unit</apex:outputPanel>
+                                    </td>
+                                    <td class="testcss2"><apex:outputPanel rendered="{!q[0].unit__r.Permitted_Use__c == 'Residential'}">Area</apex:outputPanel>
+                                    </td>
+                                    <td class="testcss2">Rate</td>
+                                    <td class="testcss2">Consideration</td>
+                                </tr>
+                                <tr style="display:{!if(q[0].Unit__r.Project__r.State__c == 'Maharashtra','table-row','none')}">
+                                    <td style="width:1%;"></td>
+                                    <td class="testcss2">Date</td>
+                                    <td class="testcss2">Level/Floor</td>                            
+                                    <td class="testcss2"> <apex:outputPanel rendered="{!q[0].unit__r.Permitted_Use__c == 'Residential'}">Unit</apex:outputPanel>
+                                    </td>
+                                    <td class="testcss2"><apex:outputPanel rendered="{!q[0].unit__r.Permitted_Use__c == 'Residential'}">Carpet Area</apex:outputPanel>
+                                    </td>
+                                    <td class="testcss2">Outdoor Area</td>
+                                    <td class="testcss2">Consideration</td>
+                                </tr>
+                                <tr style="display:{!if(q[0].Unit__r.Project__r.State__c != 'Maharashtra','table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td class="testcss2"><b>{!dte}</b></td>
+                                    <td class="testcss2"><b><apex:outputText value="{!q[0].Unit__r.Level__c}/{!q[0].Unit__r.Floor__c}" rendered="{!q[0].Unit__r.Is_Villa__c == false}"></apex:outputText>
+                                        <apex:outputText value="0/0" rendered="{!q[0].Unit__r.Is_Villa__c == true}"></apex:outputText></b></td>
+                                    <td class="testcss2"><b>{!q[0].Unit__r.Name}</b></td> 
+                                    <td class="testcss2"><b >
+                                        <apex:outputText value="{!TEXT(q[0].Unit__r.RERA_Carpet_Area_Sub_Product__c)}" rendered="{!q[0].unit__r.Permitted_Use__c == 'Residential'}"></apex:outputText><!--{!TEXT(q[0].Unit__r.RERA_Carpet_Area_Sub_Product__c) }-->
+                                        </b>
+                                    </td>
+                                    <td class="testcss2"><b></b></td>
+                                    <td class="testcss4"><b>{!strtotalconsiInF}</b></td>
+                                </tr>
+                                <tr style="display:{!if(q[0].Unit__r.Project__r.State__c == 'Maharashtra','table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td class="testcss2"><b>{!dte}</b></td>
+                                    <td class="testcss2"><b><apex:outputText value="{!q[0].Unit__r.Level__c}/{!q[0].Unit__r.Floor__c}" rendered="{!q[0].Unit__r.Is_Villa__c == false}"></apex:outputText>
+                                        <apex:outputText value="0/0" rendered="{!q[0].Unit__r.Is_Villa__c == true}"></apex:outputText></b></td>
+                                    <td class="testcss2"><b>{!q[0].Unit__r.Name}</b></td> 
+                                    <td class="testcss2"><b >
+                                        <apex:outputText value="{!TEXT(q[0].Unit__r.RERA_Carpet_Area_Sub_Product__c)}" rendered="{!q[0].unit__r.Permitted_Use__c == 'Residential'}"></apex:outputText><!--{!TEXT(q[0].Unit__r.RERA_Carpet_Area_Sub_Product__c) }-->
+                                        </b>
+                                    </td>
+                                    <td class="testcss2"><b>{!q[0].Unit__r.Outdoor_Area_Sub_Product__c}</b></td>
+                                    <td class="testcss4"><b>{!strtotalconsiInF}</b></td>
+                                </tr>
+                                <tr style="display:{!if(q[0].Unit__r.Project__r.State__c != 'Maharashtra','table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1"> Basic Unit Cost and Specification </td>
+                                    <td class="testcss2" style="background-color:{!q[0].Selected_Specification__c};color:white">{!q[0].Selected_Specification__c}</td>
+                                    <td>&nbsp;</td>
+                                    <td>&nbsp;</td>
+                                    <td class="testcss3">{!specAmount}</td>
+                                </tr>
+                                <tr style="display:{!if(q[0].Unit__r.Project__r.State__c == 'Maharashtra','table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1"> Basic Unit Cost and Specification </td>
+                                    <td class="testcss2" style="background-color:{!q[0].Selected_Specification__c};color:white">{!q[0].Selected_Specification__c}</td>
+                                    <td>&nbsp;</td>
+                                    <td>&nbsp;</td>
+                                    <td class="testcss3">{!strtotalconsiInF}</td>
+                                </tr>
+                                <apex:repeat value="{!chrgMap}" var="c">
+                                    <apex:repeat value="{!chrgMap[c]}" var="ch">
+                                        <tr style="display:{!IF(ch.cBucket != 'Stamp Duty and Registration' && ch.cName != 'Car Parking Charges' && q[0].Unit__r.Project__r.State__c != 'Maharashtra','table-row','none')}">
+                                            <td>&nbsp;</td>
+                                            <td class="testcss1" colspan="2"> {!ch.cName} </td>
+                                            <td class="testcss2"><apex:outputText value="{!q[0].Final_Customisation__c }" rendered="{!ch.cName == 'Customisation Charge'  }" ></apex:outputText></td>
+                                            <td class="testcss3">{!ch.cArea}</td>
+                                            <td class="testcss3">{!ch.cRate}</td>
+                                            <td class="testcss3">{!ch.cAmount}</td>
+                                        </tr>
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <apex:repeat value="{!chrgMapCust}" var="c">
+                                    <apex:repeat value="{!chrgMapCust[c]}" var="ch">
+                                        <tr style="display:{!IF(ch.cBucket != 'Stamp Duty and Registration' && ch.cName != 'Car Parking Charges' && q[0].Final_Customisation__c != 'No Customisation' && q[0].Unit__r.Project__r.State__c != 'Maharashtra','table-row','none')}">
+                                            <td>&nbsp;</td>
+                                            <td class="testcss1" colspan="2"> {!ch.cName} </td>
+                                            <td class="testcss2"><apex:outputText value="{!q[0].Final_Customisation__c }" rendered="{!ch.cName == 'Customisation Charge' || ch.cName == 'Interior Design Charge' }" ></apex:outputText></td>
+                                            <td class="testcss3">{!ch.cArea}</td>
+                                            <td class="testcss3">{!ch.cRate}</td>
+                                            <td class="testcss3">{!ch.cAmount}</td>
+                                        </tr>
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <apex:repeat value="{!earmarkedcpmap}" var="cp">
+                                    <apex:repeat value="{!earmarkedcpmap[cp]}" var="ch">
+                                <tr style="display:{!if(q[0].TotalEarmarkedCarpark__c > 0 && q[0].unit__r.Permitted_Use__c == 'Residential' && q[0].Unit__r.Project__r.State__c != 'Maharashtra','table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1">{!ch.cName}</td>
+                                    <td class="testcss1"> &nbsp;</td>
+                                    <td class="testcss3">{!ch.count}</td>
+                                    <td>&nbsp;</td>
+                                    <td class="testcss3">{!ch.cRate}</td>
+                                </tr>
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <apex:repeat value="{!additionalcpmap}" var="acp">
+                                    <apex:repeat value="{!additionalcpmap[acp]}" var="ach">
+                                <tr style="display:{!if(q[0].TotalAdditionalCarpark__c > 0 && q[0].unit__r.Permitted_Use__c == 'Residential' && q[0].Unit__r.Project__r.State__c != 'Maharashtra','table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1">Additional&nbsp;{!ach.cName}</td>
+                                    <td class="testcss1"> &nbsp;</td>
+                                    <td class="testcss3">{!ach.count}</td>
+                                    <td>&nbsp;</td>
+                                    <td class="testcss3">{!ach.cRate}</td>
+                                </tr>
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <!--tr style="display:{!if(q[0].TotalAdditionalCarpark__c > 0,'table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1"> Additional Car-Park/s </td>
+                                    <td class="testcss1">&nbsp;</td>
+                                    <td class="testcss3">{!q[0].TotalAdditionalCarpark__c}</td>
+                                    <td>&nbsp;</td>
+                                    <td class="testcss3">{!addCarparkAmt}</td> 
+                                </tr-->
+                                <tr style="display: {!IF(q[0].unit__r.Permitted_Use__c == 'Residential' && q[0].Unit__r.Project__r.State__c != 'Maharashtra', 'table-row', 'none')}">
+                                    <td style="border-top: 2px solid black;">&nbsp;</td>
+                                    <td style="border-top: 2px solid black;" colspan="2" class="testcss1"> Basic Unit Cost on Builtup Area </td>
+                                    <td style="border-top: 2px solid black;" class="testcss1">&nbsp;</td>
+                                    <td style="border-top: 2px solid black;" class="testcss3">{!TEXT(q[0].Unit__r.Builtup_Area_Sub_Product__c)}</td>
+                                    <td style="border-top: 2px solid black;" class="testcss3">{!builtUpAmt}</td>
+                                    <td style="border-top: 2px solid black;" class="testcss3">{!specAmount}</td>
+                                </tr>
+                                <tr style="display:{!if(q[0].Unit__r.Project__r.State__c != 'Maharashtra','table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1"> Basic Unit Cost on Reference Saleable Area </td>
+                                    <td class="testcss1">&nbsp;</td>
+                                    <td class="testcss3">{!TEXT(q[0].Unit__r.Saleable_Area_Sub_Product__c)}</td>
+                                    <td class="testcss3">{!saleableAreaAmt}</td>
+                                    <td class="testcss3">{!specAmount}</td>
+                                </tr>
+                                <tr >
+                                    <td colspan="7" Style="border:none;height:20px">  </td>
+                                </tr>
+                                <tr >
+                                    <td colspan="7" Style="border:none;height:20px">  </td>
+                                </tr>
+                                <tr >
+                                    <td colspan="7" Style="border:none;height:20px" >  </td>
+                                </tr>
+                                <tr style="display:{!if(q[0].Unit__r.Project__r.State__c != 'Maharashtra','table-row','none')}">
+                                    <td colspan="7" Style="border:none;height:20px"> <div style="page-break-after:always;"></div> </td>
+                                </tr> 
+                                
+                           
+                                <tr>
+                                    <td> &nbsp; </td>
+                                    <td colspan="2" class="testcss2"> <b>Payment Schedule</b> </td>
+                                    <td class="testcss2"> Date </td>
+                                    <td class="testcss2"> Consideration </td>
+                                    <td class="testcss2"> Estimated Tax </td>
+                                    <td class="testcss2"> Total Consideration</td>
+                                </tr>
+                                <tr>
+                                    <td> &nbsp; </td>
+                                    <td colspan="2" class="testcss2">&nbsp; </td>
+                                    <td class="testcss2"> &nbsp;</td>
+                                    <td class="testcss4"> {!strtotalconsiInF} </td>
+                                    <td class="testcss4"> {!strTotalTax} </td>
+                                    <td class="testcss4"> {!strAvWithTax}</td>
+                                </tr>
+                                <!----------------------Raised Milestone----------------------------------->
+                                <apex:variable value="{!1}" rendered="{!see}" var="count" >
+                                    <tr>
+                                        <td class="testcss1">{!count}</td>
+                                        <td colspan="2" class="testcss1">Special Installment</td>
+                                        <td class="testcss3"><apex:outputText value="{0,date,dd/MM/yyyy}" ><apex:param value="{!book.Booking_Date__c}"/></apex:outputText> </td>
+                                        <td class="testcss3"><apex:outputText value="{!totalconsiraised}"></apex:outputText> </td>
+                                        <td class="testcss3">{!IntTotalTaxraised}</td>
+                                        <td class="testcss3">{!IntAvWithTaxraised}</td>     
+                                    </tr>
+                                </apex:variable>
+                                <!--------------------------------------------------------------------------------------->
+                                <apex:variable value="{!b}" var="count" />
+                                <apex:repeat value="{!pwList}" var="pw">
+                                    <tr>
+                                        <td class="testcss1"> {!count} </td><apex:variable value="{!count+1}" var="count" />
+                                        <td colspan="2" class="testcss1">{!pw.milestoneName} </td>
+                                        <td class="testcss3"> {!pw.milestoneDate}</td>
+                                        <td class="testcss3"> {!pw.milestoneAmt} </td>
+                                        <td class="testcss3"> {!pw.milestoneTax} </td>
+                                        <td class="testcss3"> {!pw.milestoneTotal}</td>
+                                    </tr>
+                                </apex:repeat>
+                                
+                            </table> 
+                        </td> 
+                    </tr>   
+                </table>
+            </apex:form>
+            
+            <!--------------------------------   Terms and Condition ----------------------------------------------------------->
+            <div style="page-break-before:always;">
+                <c:TermANDCondition_C unitd="{!q[0].Unit__c}" documentType="PostLaunchPriceOffer"  schemeId="{!q[0].Scheme__c}" quotationId="{!q[0].Id}" />
+                <!--      <c:TermANDCondition_C unitd="{!q[0].Unit__c}" phaseId="{!q[0].Unit__r.Tower__r.Cluster__C}" projectId="{!q[0].unit__R.Project__c}"/ --> 
+                
+            </div>
+            
+            <!----------------------------------- Specification Page ----------------------------------------------------------->          
+            <div style="page-break-before:always;"> 
+                <c:ViewSpecification_C SpecsId="{!q[0].Specification_Id__c}"/>
+            </div>
+        </apex:outputPanel>
+        <!------------------------------------------------------------Residential End-------------------------------------------------------->
+        
+        <!------------------------------------------------------------Commercial Start-------------------------------------------------------->
+        <apex:outputPanel rendered="{!IF(isError1 == 0 && q[0].unit__r.Permitted_Use__c == 'Commercial',true,false)}">
+            <apex:form >
+                
+                
+                <!-------------------------------------------------------First Page------------------------------------------------->
+                
+                <div class="header">      
+                    <table width="100%">
+                        <tr>
+                            <td align="left" width="70%">
+                                
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <apex:image url="{!logolink}" width="260" height="50"/>
+                                            
+                                        </td>  
+                                    </tr> 
+                                    <tr>
+                                        <td style="font-size: 11px;margin-bottom:0px;">{!q[0].Unit__r.Project__r.Promoter__r.Name}<br/>{!q[0].Unit__r.Project__r.Promoter__r.Registered_office__c}</td>
+                                    </tr>
+                                    
+                                </table>
+                            </td>
+                            <td align="right" width="30%">
+                                <table class="projectLogo" width="100%">
+                                    <tr>
+                                        <td align="right" style="text-align:right;">  <apex:outputField value="{!q[0].Unit__r.Project__r.Project_Logo__c}"/></td>
+                                    </tr>
+                                </table>
+                            </td>  
+                        </tr>
+                    </table>  
+                </div>
+                <table width="100%" Style="margin-bottom:-28px;margin-top:-35px">
+                    <tr><!-- <td colspan="2" style="background-color:#696969; color:white;text-align:center;"> PRICE OFFER</h3>  </td> -->
+                        <td colspan="2"> <Center>
+                            <div>
+                                <h3 style="background-color:#696969; color:white; padding: 5px 10px;">PRICE OFFER</h3><br/>
+                            </div>
+                            </Center> </td>
+                    </tr> 
+                </table>
+                <table>
+                    
+                    <tr>
+                        <td colspan="2">
+                            <table class ="maintable">                    
+                                <tr>
+                                    <td style="width:1%;"></td>
+                                    <td class="testcss2">Date</td>
+                                    <td class="testcss2">Level/Floor</td>                            
+                                    <td class="testcss2"> 
+                                        <apex:outputPanel rendered="{!q[0].unit__r.Permitted_Use__c == 'Commercial'}">Saleable Area Id</apex:outputPanel>	
+                                    </td>
+                                    <td class="testcss2">
+                                        <apex:outputPanel rendered="{!q[0].unit__r.Permitted_Use__c == 'Commercial'}">Saleable Area(Sq. ft.)</apex:outputPanel>
+                                    </td>
+                                    <td class="testcss2">Rate</td>
+                                    <td class="testcss2">Consideration</td>
+                                </tr>
+                                <tr>
+                                    <td>&nbsp;</td>
+                                    <td class="testcss2"><b>{!dte}</b></td>
+                                    <td class="testcss2"><b><apex:outputText value="{!q[0].Unit__r.Level__c}/{!q[0].Unit__r.Floor__c}" rendered="{!q[0].Unit__r.Is_Villa__c == false}"></apex:outputText>
+                                        <apex:outputText value="0/0" rendered="{!q[0].Unit__r.Is_Villa__c == true}"></apex:outputText></b></td>
+                                    <td class="testcss2"><b>{!q[0].Unit__r.Name}</b></td> 
+                                    <td class="testcss2"><b >
+                                        <!--{!TEXT(q[0].Unit__r.RERA_Carpet_Area_Sub_Product__c) }-->
+                                        <apex:outputText value="{!TEXT(q[0].Unit__r.Saleable_Area_Sub_Product__c)}" rendered="{!q[0].unit__r.Permitted_Use__c == 'Commercial'}"></apex:outputText></b>
+                                    </td>
+                                    <td class="testcss2"><b></b></td>
+                                    <td class="testcss4"><b>{!strtotalconsiInF}</b></td>
+                                </tr>
+                                <tr>
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1"> Basic Unit Cost and Specification </td>
+                                    <td class="testcss2" style="background-color:#974706;color:white">{!q[0].Selected_Specification__c}</td>
+                                    <td>&nbsp;</td>
+                                    <td>&nbsp;</td>
+                                    <td class="testcss3">{!specAmount}</td>
+                                </tr>
+                                <apex:repeat value="{!chrgMap}" var="c">
+                                    <apex:repeat value="{!chrgMap[c]}" var="ch">
+                                        <!--tr style="display:{!IF(ch.cBucket != 'Stamp Duty and Registration' && ch.cName != 'Car Parking Charges','table-row','none')}">
+                                            <td>&nbsp;</td>
+                                            <td class="testcss1" colspan="2"> {!ch.cName} </td>
+                                            <td class="testcss2"><apex:outputText value="{!q[0].Final_Customisation__c }" rendered="{!ch.cName == 'Customisation Charge'  }" ></apex:outputText></td>
+                                            <td class="testcss3">{!ch.cArea}</td>
+                                            <td class="testcss3">{!ch.cRate}</td>
+                                            <td class="testcss3">{!ch.cAmount}</td>
+                                        </tr-->
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <apex:repeat value="{!chrgMapCust}" var="c">
+                                    <apex:repeat value="{!chrgMapCust[c]}" var="ch">
+                                        <!--tr style="display:{!IF(ch.cBucket != 'Stamp Duty and Registration' && ch.cName != 'Car Parking Charges' && q[0].Final_Customisation__c != 'No Customisation' ,'table-row','none')}">
+                                            <td>&nbsp;</td>
+                                            <td class="testcss1" colspan="2"> {!ch.cName} </td>
+                                            <td class="testcss2"><apex:outputText value="{!q[0].Final_Customisation__c }" rendered="{!ch.cName == 'Customisation Charge'  }" ></apex:outputText></td>
+                                            <td class="testcss3">{!ch.cArea}</td>
+                                            <td class="testcss3">{!ch.cRate}</td>
+                                            <td class="testcss3">{!ch.cAmount}</td>
+                                        </tr-->
+                                    </apex:repeat>
+                                </apex:repeat>
+                                <!--apex:repeat value="{!earmarkedcpmap}" var="cp">
+                                    <apex:repeat value="{!earmarkedcpmap[cp]}" var="ch">
+                                <tr style="display:{!if(q[0].TotalEarmarkedCarpark__c > 0 && q[0].unit__r.Permitted_Use__c == 'Residential','table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1">{!ch.cName}</td>
+                                    <td class="testcss1"> &nbsp;</td>
+                                    <td class="testcss3">{!ch.count}</td>
+                                    <td>&nbsp;</td>
+                                    <td class="testcss3">{!ch.cRate}</td>
+                                </tr>
+                                    </apex:repeat>
+                                </apex:repeat-->
+                                <!--tr style="display:{!if(q[0].TotalAdditionalCarpark__c > 0,'table-row','none')}">
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1"> Additional Car-Park/s </td>
+                                    <td class="testcss1">&nbsp;</td>
+                                    <td class="testcss3">{!q[0].TotalAdditionalCarpark__c}</td>
+                                    <td>&nbsp;</td>
+                                    <td class="testcss3">{!addCarparkAmt}</td> 
+                                </tr-->
+                                <!--tr style="display: {!IF(q[0].unit__r.Permitted_Use__c == 'Residential', 'table-row', 'none')}">
+                                    <td style="border-top: 2px solid black;">&nbsp;</td>
+                                    <td style="border-top: 2px solid black;" colspan="2" class="testcss1"> Basic Unit Cost on Builtup Area </td>
+                                    <td style="border-top: 2px solid black;" class="testcss1">&nbsp;</td>
+                                    <td style="border-top: 2px solid black;" class="testcss3">{!TEXT(q[0].Unit__r.Builtup_Area_Sub_Product__c)}</td>
+                                    <td style="border-top: 2px solid black;" class="testcss3">{!builtUpAmt}</td>
+                                    <td style="border-top: 2px solid black;" class="testcss3">{!specAmount}</td>
+                                </tr-->
+                                <tr >
+                                    <td>&nbsp;</td>
+                                    <td colspan="2" class="testcss1"> Basic Unit Cost on Saleable Area </td>
+                                    <td class="testcss1">&nbsp;</td>
+                                    <td class="testcss3">{!TEXT(q[0].Unit__r.Saleable_Area_Sub_Product__c)}</td>
+                                    <td class="testcss3">{!saleableAreaAmt}</td>
+                                    <td class="testcss3">{!specAmount}</td>
+                                </tr>
+                            </table><br/><br/>
+                        	<table class ="maintable">
+                                
+                            
+                                <tr>
+                                    <td> &nbsp; </td>
+                                    <td colspan="2" class="testcss10" style="width:40%;"> <b>Payment Schedule</b> </td>
+                                    <td class="testcss10" style="width:15%;"> Due Date </td>
+                                    <td class="testcss10" style="width:15%;"> Consideration </td>
+                                    <td class="testcss10" style="width:15%;"> Estimated Tax </td>
+                                    <td class="testcss10" style="width:15%;"> Total Consideration</td>
+                                </tr>
+                                <tr>
+                                    <td> &nbsp; </td>
+                                    <td colspan="2" class="testcss2">&nbsp; </td>
+                                    <td class="testcss2"> &nbsp;</td>
+                                    <td class="testcss4"> {!strtotalconsiInF} </td>
+                                    <td class="testcss4"> {!strTotalTax} </td>
+                                    <td class="testcss4"> {!strAvWithTax}</td>
+                                </tr>
+                                <!----------------------Raised Milestone----------------------------------->
+                                <apex:variable value="{!1}" rendered="{!see}" var="count" >
+                                    <tr>
+                                        <td class="testcss1">{!count}</td>
+                                        <td colspan="2" class="testcss1">Special Installment</td>
+                                        <td class="testcss3"><apex:outputText value="{0,date,dd/MM/yyyy}" ><apex:param value="{!book.Booking_Date__c}"/></apex:outputText> </td>
+                                        <td class="testcss3"><apex:outputText value="{!totalconsiraised}"></apex:outputText> </td>
+                                        <td class="testcss3">{!IntTotalTaxraised}</td>
+                                        <td class="testcss3">{!IntAvWithTaxraised}</td>     
+                                    </tr>
+                                </apex:variable>
+                                <!--------------------------------------------------------------------------------------->
+                                <apex:variable value="{!b}" var="count" />
+                                <apex:repeat value="{!pwList}" var="pw">
+                                    <tr>
+                                        <td class="testcss1"> {!count} </td><apex:variable value="{!count+1}" var="count" />
+                                        <td colspan="2" class="testcss1">{!pw.milestoneName} </td>
+                                        <td class="testcss3"> {!pw.milestoneDate}</td>
+                                        <td class="testcss3"> {!pw.milestoneAmt} </td>
+                                        <td class="testcss3"> {!pw.milestoneTax} </td>
+                                        <td class="testcss3"> {!pw.milestoneTotal}</td>
+                                    </tr>
+                                </apex:repeat>
+                                
+                            </table> 
+                        </td> 
+                    </tr>   
+                </table>
+            </apex:form>
+            
+            <!--------------------------------   Terms and Condition ----------------------------------------------------------->
+            <!--div style="page-break-before:always;">
+                <c:TermANDCondition_C unitd="{!q[0].Unit__c}" documentType="PostLaunchPriceOffer"  schemeId="{!q[0].Scheme__c}" quotationId="{!q[0].Id}" />
+                
+            </div-->
+            
+            <!----------------------------------- Specification Page ----------------------------------------------------------->          
+            <apex:outputPanel rendered="{!q[0].unit__r.Permitted_Use__c == 'Residential'}">
+                <div style="page-break-before:always;">
+                    <br/><br/>
+                 <!--   <c:ViewSpecification_C SpecsId="{!q[0].Specification_Id__c}"/> -->
+                    <div style='border:1px solid #D3D3D3;font-family:SansSerif;'>
+                        <apex:outputPanel rendered="{!renderSpec}">
+                            <c:ViewSpecificationCopy specsId="{!specList[0].id}"/> 
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!NOT(renderSpec)}">
+                            <c:ViewSpecification_C specsId="{!q[0].Specification_Id__c}"/> 
+                        </apex:outputPanel>
+                    </div>
+                </div>
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'>*It is our earnest endeavour to use the same brands, products and materials as mentioned above, however, if there are situations that compel us to change some items, rest assured that all changes shall always be of an equivalent brand, product or material. </p>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <!------------------------------------------------------------Commercial End-------------------------------------------------------->
+    </body>   
+</apex:page>
