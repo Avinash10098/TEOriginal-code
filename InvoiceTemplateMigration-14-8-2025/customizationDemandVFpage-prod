@@ -1,0 +1,644 @@
+<apex:page controller="showCustomizationDemandPreview" showHeader="false" sidebar="false" standardStylesheets="false" applyBodyTag="false" applyHtmlTag="false" renderAs="Pdf">
+    <head>        
+        <style>
+            @page {
+            size: A4;
+            margin: 8mm;
+            size: 8.26in 11.69in;
+            @bottom-center {
+            content: "Page " counter(page) " of " counter(pages);
+            }
+            }
+            
+            .page-break {
+            display:block;
+            page-break-after:always;
+            }
+            body {
+            font-family: 'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', Tahoma, sans-serif; 
+            font-weight:normal; 
+            font-size:11px; 
+            mso-line-height-rule: exactly;
+            width: 700px;
+            margin:2px;
+            }
+            .infobox {
+            font-size: 100%;
+            }
+            .sfdc_richtext img {
+            border: 0;
+            width: 100px;
+            height:90px;
+            }
+            .RMStyle {
+            border-collapse: collapse;
+            border-width: 1px;
+            border-style: solid;
+            border-color: #104E8B;
+            }
+            .RMStyle th {
+            border-width: 1px;
+            border-style: solid;
+            border-color: #104E8B;
+            background-color:#E2DDD9;
+            align:center;
+            valign:bottom;
+            }
+            /* Padding and font style */
+            .RMStyle {
+            border-style: solid;
+            border-width: .5px;
+            border-color: #CAD1C3;
+            }
+            .paymenttoStyle th {
+            border-style: solid;
+            border-color: #CAD1C3;
+            background-color:#FFD8D8;
+            align:center;
+            valign:bottom;
+            }
+            .paymenttoStyle {
+            border-width: 1px;
+            border-style: solid;
+            border-color: #CAD1C3B;
+            }
+            .demandStyle th {
+            border-width: 1px;
+            border-style: solid;
+            border-color: #CAD1C3;
+            background-color:#fff7f8;
+            padding: 0px;
+            align:center;
+            valign:bottom;
+            }
+            /* Padding and font style */
+            .demandStyle  {
+            border-style: solid;
+            border-width: .5px;
+            border-color: #CAD1C3;
+            padding: 2px;
+            }
+            .demandStyle {
+            border-collapse: collapse;
+            border-width: 1px;
+            border-style: solid;
+            border-color: #CAD1C3;
+            }
+            .header{
+            
+            }
+            .a{
+            font-size:14px;
+            font-weight:bold;
+            }
+            .b{
+            font-size:14px;
+            font-weight:bold;
+            text-align: center;
+            }
+            
+            .table1{border: 0px solid black;}
+            .table2{border: 0px solid black;}
+            
+            th {
+            border: 0.1px solid gray;
+            border-spacing: 0px;
+            font-weight:normal;
+            bordercolor:#b3b3b3;
+            }
+            th {
+            padding: 5px;
+            width: 300px;
+            height: 30px;
+            font-weight:normal;
+            bordercolor:#b3b3b3;
+            }
+            th {
+            background: #ffffff;
+            font-weight:normal;
+            bordercolor:#b3b3b3;
+            }
+            .even {
+            background: #ffffff;
+            }
+            .odd {
+            background: #ffffff;
+            }      
+            .even1 {
+            background: #ffffff;
+            }
+            
+            #color th{background-color: #737373;}
+            
+            
+        </style>
+        
+        
+        
+    </head>
+    
+    <body >
+        
+        <div>      
+            <table class="table1" width="100%" border="0">
+                <tr>
+                    <td align="left" width="200%">
+                        
+                        <table class="table1" border="0">
+                            <tr>
+                                <td>
+                                    <apex:image url="{!$Resource.TEHomesLogo}" width="220" height="50"/>
+                                </td>  
+                            </tr> 
+                            <tr>
+                                <td style="font-size: 11px;color:#333333">{!Booking.Unit__r.Project__r.Promoter__r.Name}</td> </tr>
+                            <tr><td style="font-size: 11px;color:#333333">{!Booking.Unit__r.Project__r.Promoter__r.Registered_office__c}</td></tr>
+                            <tr><td style="font-size: 11px;color:#333333">CIN No:{!Booking.Unit__r.Project__r.Promoter__r.CIN_NO__c}&nbsp;GSTIN:{!Booking.Unit__r.Project__r.Promoter__r.GSTIN__c}</td></tr>
+                            
+                        </table>
+                    </td>
+                    <td align="right" width="30%">
+                        <table class="table1" height="20px" align="right" width="100%" border="0">
+                            <tr>
+                                <td align="right" style="text-align:right;"><apex:outputField value="{!Booking.Unit__r.Project__r.Project_Logo__c}" ></apex:outputField></td> 
+                            </tr>
+                        </table>
+                    </td>  
+                </tr>
+            </table>  
+            
+        </div>
+        <div>
+            <Center>
+                
+                <h3 style="background-color:#696969; color:white; padding: 5px 10px; margin:0;font-size: 20px;">INVOICE</h3>
+                
+            </Center>
+        </div>
+        <br/>
+        <table class="table1" width="100%" border="0">
+            <tr>
+                <td><apex:outputText ><lable style = "color:#333333;"> Invoice No:</lable><b><apex:outputText value="{!invoiceNumber}"/></b></apex:outputText></td>
+                <td><apex:outputText ><lable style = "color:#333333;">Customer GSTIN:</lable><b><apex:outputText value="{!applist[0].GSTIN__c}"/></b></apex:outputText></td>
+                <td style = "font-weight: bold;text-align: right !important; padding:2px;">{!todaysDate}</td>
+            </tr>
+            
+            <tr>
+                <td><apex:outputText ><lable style = "color:#333333;">Customer:</lable><b><apex:outputText value="{!Booking.Primary_Applicant_Name__c}"/></b></apex:outputText></td>
+                <td><lable style = "color:#333333;">Unit No:</lable> <b><apex:outputText value="{!Booking.Unit__r.Name}"/></b></td>
+                <td style = "text-align: right !important; padding:2px;"><lable style = "color:#333333;">Project:</lable> <b><apex:outputText value="{!Booking.Unit__r.Project__r.Name}"/></b></td>
+            </tr>  
+        </table>
+        <br/>
+        <table  width="100%" border="background-color:#969696;border-collapse: collapse; border: 1px solid gray;">
+            <tbody style = "color:#333333">
+                <tr >
+                    <th rowspan="2" style="padding:0px;text-align:center;width:1%"></th>
+                    <th rowspan="2" style="padding:0px;text-align:center;width:1250px">Particular</th>
+                    <th rowspan="2" style="padding:0px;text-align:center;width:600px">HSN Code</th>
+                    <th rowspan="2" style="padding:0px;text-align:center">Consideration</th>
+                    <th colspan="2" style="padding:0px;text-align:center">SGST</th>
+                    <th colspan="2" style="padding:0px;text-align:center">CGST</th>
+                    <th rowspan="2" style="padding:0px;text-align:center">Total</th>
+                </tr>
+                <tr >
+                    <th style="padding:0px;text-align:center">Rate(% ) </th>
+                    <th style="padding:0px;text-align:center">Amount</th>
+                    <th style="padding:0px;text-align:center">Rate(% ) </th>
+                    <th style="padding:0px;text-align:center">Amount</th>
+                </tr>
+                    <tr>
+                        <th style="text-align:left;"></th>
+                        <th style="text-align:left"><b>Customisation</b></th>
+                        <th style="text-align:right"></th>
+                        <th style="text-align:right"><b><apex:outputText value=" {!CPM.Amount__c}" /></b></th>
+                        <th style="text-align:right"></th>
+                        <th style="text-align:right"><b><apex:outputText value=" ₹ {!CPM.CGST__c}" /></b></th>
+                        <th style="text-align:right"></th>
+                        <th style="text-align:right"><b><apex:outputText value=" ₹ {!CPM.SGST__c}" /></b></th>
+                        <th style="text-align:right"><b>{!CPM.Total_Rs__c}</b></th>
+                    </tr>
+                <tr>
+                    <th style="text-align:left;">1</th>
+                    <th style="text-align:left">{!CPM.Milestone_Name__c}</th>
+                    <th style="text-align:right">9954</th>
+                    <th style="text-align:right">{!CPM.Amount__c}</th>
+                    <th style="text-align:right">9%</th>
+                    <th style="text-align:right">{!CPM.CGST__c}</th>
+                    <th style="text-align:right">9%</th>
+                    <th style="text-align:right">{!CPM.CGST__c}</th>
+                    <th style="text-align:right">{!CPM.Total_Rs__c}</th>
+                </tr>
+                <tr style="text-align:right;">
+                    <th colspan="9"><b>{!NoToWord} Only</b></th>
+                </tr>
+            </tbody>
+        </table>
+        <br/><br/>
+        <table width="100%" border="background-color:#969696;border-collapse: collapse;" >
+            <tbody style = "color:#333333">
+                <tr id="color" style="text-align: center; color:white;">
+                    <th style="width:3500px">Payable To</th>
+                    <th>Bank </th>
+                    <th>Account No.</th>
+                    <th>IFSC Code</th>
+                    <th>Value</th>
+                    <th>Towards</th>
+                </tr>
+                <tr>
+                    <th style="width:3500px">Income Tax Department</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th style="text-align:right">{!Taxvalue}</th>
+                    <th style="text-align:center">1% TDS</th>
+                </tr>
+                <tr>
+                    <th style="width:3500px">{!Booking.Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c}</th>
+                    <th>{!Booking.Unit__r.Tower__r.Cluster__r.Bank_Name_Tax__c}</th>
+                    <th>{!Booking.Unit__r.Tower__r.Cluster__r.Bank_Account_No_Tax__c}</th>
+                    <th>{!Booking.Unit__r.Tower__r.Cluster__r.IFSC_Code_Tax__c}</th>
+                    <th style="text-align:right">{!TaxPayment}</th>
+                    <th style="text-align:center">Tax Payment</th>
+                </tr>
+                <tr>
+                    <th style="width:3500px">{!Booking.Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c}</th>
+                    <th>{!Booking.Unit__r.Tower__r.Cluster__r.Bank_Name_Escrow__c}</th>
+                    <th>{!Booking.Unit__r.Tower__r.Cluster__r.Bank_Account_No_Escrow__c}</th>
+                    <th>{!Booking.Unit__r.Tower__r.Cluster__r.IFSC_Code_Escrow__c}</th>
+                    <th style="text-align:right">{!ConsiderationPrint}</th>
+                    <th style="text-align:center">Consideration</th>
+                </tr>
+            </tbody>
+        </table>
+        <br/>     
+        <h3>Payment Notes:</h3>
+        <ol style="font-size:12px;font-weight:normal;color:#333333">
+            <li>You are required to pay <b>1 %</b> TDS to the Income Tax Department and provide us with Form 16B thereafter. The PAN of <b>{!Booking.Unit__r.Project__r.Promoter__r.Name}</b>. is <b sttle="font-weight:bold;">{!Booking.Unit__r.Project__r.Promoter__r.PAN__c}</b>. Once we receive the Form 16B, we will credit your account with the TDS
+                Amount deposited in our favour.Please note that failure to do so will result in non- compliance from your side attracting interest
+                and penalty.</li>
+            <li>The due date for completion of payment is <b>7</b> days from the date of this invoice. Interest is applicable from the due date till the date 
+                of payment as per the Agreement for Sale.</li>
+            <li>*Deemed Land value only for the purpose of calculation of GST</li>
+            <li>Any extra amount received shall automatically be appropriated and adjusted as an advance paid towards future milestone/s as
+                per the Payment Schedule and shall not attract any pre-payment rebate or bene􀁅t as per the terms of the AfS. Any such amount
+                shall not be eligible for refund except in case of refund consequent to cancellation.
+                This</li>
+        </ol>  
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <div style="font-size:12px;" align="center">This is an electronically generated invoice and does not require signature.</div> 
+        <hr size="1" width="100%" color="black"/>       
+        <!--    <table id="main" border="0" cellspacing="0" cellpadding="0" align="center" border-collapse="collapse">
+
+<tr>
+<td>
+<table width="100%"  border-collapse="collapse">
+<tr width="100%">
+<td colspan="3" align="center">
+<h2>TAX INVOICE</h2>
+</td>
+<td colpsan="1" width="5%" align="right" valign="top" >
+<apex:outputField value="{!Customer.Unit__r.Project__r.Project_Logo__c}" rendered="{!letterH}"></apex:outputField>
+
+</td>
+</tr>
+<tr>
+<td colspan="4">
+<table  border-collapse="collapse" width="100%">
+<tr width="100%">
+<td colspan="1" align="left" width="30%" valign="top">
+<apex:panelGrid columns="1" styleClass="infobox">
+<b> To,</b> <apex:outputText value="{!Customer.Primary_Name__c},"/>
+<apex:outputPanel >
+<apex:outputText value="Address: {!Customer.Permanent_Address__c}"/>
+</apex:outputPanel>
+<apex:outputText value="Contact No: {!Customer.Primary_Phone__c}"/>
+<apex:outputText value="Email Id: {!Customer.Primary_Email__c}"/>
+</apex:panelGrid>
+</td>
+
+<td colspan="2" width="40%" valign="top">&nbsp;&nbsp;</td>
+<td colspan="1" align="left" valign="top">
+<table class="RMStyle" width="100%">
+<tr> <th colspan="2" align="center">Your Booking Details</th></tr>
+<tr> <td><apex:outputText value="Project"/></td>  <td><b><apex:outputText value="{!Customer.Unit__r.Project__r.Name}"/></b></td> </tr>
+<tr> <td><apex:outputText value="Invoice Number"/></td>  <td><b><apex:outputText value="{!invoiceNumber}"/></b></td> </tr>
+<tr> <td><apex:outputText value="Cluster - Wing"/></td>  <td><b><apex:outputText value="{!Customer.Unit__r.Tower__r.Name} - {!Customer.Unit__r.Tower__r.Cluster__r.Name}"/></b></td> </tr>
+<tr> <td><apex:outputText value="Flat No./Unit No."/></td>  <td><b><apex:outputText value="{!Customer.Unit__r.Name}"/></b></td> </tr>
+<tr> <td><apex:outputText value="Unit Configuration"/></td>  <td><b><apex:outputText value="{!Customer.Unit__r.Configuration__c}"/></b></td> </tr>
+<tr> <td><apex:outputText value="GST No."/></td>  <td><b><apex:outputText value="27AAOCS9607A1Z7"/></b></td> </tr>
+<tr> <td><apex:outputText value="SAC No."/></td>  <td><b><apex:outputText value="995411"/></b></td> </tr>
+<!-- <tr> <td><apex:outputText value="Invoice Date"/></td>  <td><b><apex:outputText value="1/1/2017"/></b></td> </tr> -->
+        <!--                            </table>  
+</td>
+</tr>
+<tr>
+<td width="100%" colspan="4" >
+Dear {!Customer.Name},
+<br/>
+Greetings from Salesforce
+<br/>
+<br/>
+Subject: Demand Letter of the Milestone on - First Demand
+<!-- <br/>
+<br/>
+We refer to your booking of Flat {!Customer.UNit__r.Name} in {!Customer.UNit__R.Project__r.Name}. We would like to inform you that as per the agreed payment schedule, payment on "first demand" 
+is  due on {!invoiceDueDate}. Following is your current demand and account summary:
+<br/> -->
+        <!--                    </td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td width="100%" colspan="4">
+<table align ="center" width="100%">
+<tr>
+<td valign="top">
+1.
+</td>
+<td>&nbsp;</td>
+<td style="padding-left:5px;line-height:17px;">
+We refer to our Agreement for Sale dated <b>{!bookingDate}</b> for Flat bearing No. <b>{!Customer.Unit__r.Name}</b> in the building  known as <b>“{!Customer.Unit__r.Tower__r.Name} - {!Customer.Unit__r.Tower__r.Cluster__r.Name}”.</b> <!-- on Land bearing Survey No. 24/1, 24/2 of village Ghodbunder, Taluka and District Thane within the limits of Mira Bhayander Nagar Palika situated at Mira Bhayander Road, Near GCC Club, Mira Road, Thane. --> 
+        <!--                                </td>
+</tr>
+<!-- <tr>
+<td valign="top">
+2.
+</td>
+<td>&nbsp;</td>
+<td style="padding-left:5px;line-height:17px;font-weight:bold;">
+Please note, the account numbers have been changed as per RERA regulations, hence we request you to refrain from transferring any payments to old account number available with you.
+</td>
+</tr>
+<tr>
+<td valign="top">
+3.
+</td>
+<td>&nbsp;</td>
+<td style="padding-left:5px;line-height:17px;">
+As per the schedule of payments, <b>“On Completion of 11th Floor Slab”</b> Milestone Installment is due and payable on or before <b>19-Oct-17</b>.
+</td>
+</tr> -->
+        <!--                        </table>
+</td>
+</tr>
+<!-- <tr>
+<td> <br/> <br/> </td>
+</tr> -->
+        <!--                <tr>
+<td width="100%" colspan="4" >
+<table class="RMStyle" align ="center" width="100%">
+<tr><th align="center">Particulars</th><th align="center">Amount (Rs.)</th></tr>
+<tr><td><b>Consideration/Agreement Value</b></td><td align="right"><b>₹ {!CVStr}</b></td></tr>
+<tr><td>Amount Received (Excluding Taxes) (A)</td><td align="right">₹ {!CVPaidStr}</td></tr>
+<tr><td>Previous Outstanding / (Excess )(B)</td><td align="right">₹ {!CVBalanceStr}</td></tr>
+<tr>
+<th colspan="2" align="center">Current Demand</th>
+</tr>
+<tr>
+<td colspan="2">
+<table width="100%" class="demandStyle">
+<tr>
+<th align="center"> Milestone Name</th>
+<th align="center"> Invoice Date</th>
+<th align="center"> Due Date</th>
+<th align="center"> Amount (Rs.)</th>
+<th align="center" style="display:{!isTds}"> TDS (Rs.)</th> 
+<th align="center"> SGST @ 6% (Rs.)</th>
+<th align="center"> CGST @ 6% (Rs.)</th>
+</tr>
+<apex:repeat value="{!dwList}" var="d">
+<tr>
+<td><apex:outputText value="{!d.ptw.milestoneName}" /></td>
+<td><apex:outputtext value="{0, date, dd-MMM-YY}"><apex:param value="{!d.pm.Invoice_Date__c}"/></apex:outputtext></td>
+<td><apex:outputtext value="{0, date, dd-MMM-YY}"><apex:param value="{!d.pm.Invoice_Due_Date__c}"/></apex:outputtext></td>
+<td align="right"><apex:outputText value=" ₹ {!d.ptw.overAllAmt}" /></td>
+<td align="right" style="display:{!isTds}"><apex:outputText value=" ₹ {!d.ptw.overAllTDS}" /></td> 
+<td align="right"><apex:outputText value=" ₹ {!d.ptw.overAllTax1}" /></td>
+<td align="right"><apex:outputText value=" ₹ {!d.ptw.overAllTax2}" /></td>
+</tr>
+</apex:repeat> 
+<tr>
+<th colspan ="3" align="center"> Totals</th>
+<th align="right"> {!AmountGTStr} (C)</th>
+<th align="right" style="display:{!isTds}"> {!TDSGTStr}  (D)</th> 
+<th align="right"> {!sgstGTStr} (F)</th>
+<th align="right"> {!cgstGTSTr} (G)</th>
+</tr>
+</table>
+</td>
+</tr>
+<tr><td><b><apex:outputText value="Total Installment Payable (E = B + C – D )" rendered="{!if(isTds == 'table-data',true,false)}"/> <apex:outputText value="Total Installment Payable (E = B + C)" rendered="{!if(isTds == 'none',true,false)}"/> </b></td><td align="right"><b>₹ {!totalInstallmentPayableStr}</b></td></tr>
+<tr><td><b>Total Tax Due (H =F+G)</b></td><td align="right"><b>₹ {!totalTaxDueStr}</b></td></tr>
+<tr><th><b>Total Due (I = E+H)</b></th><th align="right">₹ {!totalDueStr}</th></tr>
+</table>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td width="100%" colspan="4">
+<table align ="center" width="100%">
+<tr>
+<td valign="top">
+2.
+</td>
+<td>&nbsp;</td>
+<td style="padding-left:5px;line-height:17px;">
+As you are aware, GST has been implemented by Government with effect from 1 July, 2017 which has replaced existing VAT/ Service Tax applicable on sale of under construction flats. Taxability is different in VAT / Service tax regime as compared to GST regime. If any differential tax liability arises on account of GST for amount due / paid tax increases or decreases in GST shall be recoverable / payable  from / to customer accordingly.  
+</td>
+</tr>
+<tr>
+<td valign="top">
+3.
+</td>
+<td>&nbsp;</td>
+<td style="padding-left:5px;line-height:17px;">
+As you are aware that as per the section 194-1A of the Income Tax Act, 1961, customers are required to deduct 1% TDS on total consideration value of flat purchased at the time payment made by him to Developer. If customer has failed to deduct TDS on any past payment then it is advised to regularize by deducting TDS in current payment including past shortfall of TDS deduction.
+</td>
+</tr>
+<tr>
+<td valign="top">
+&nbsp;
+</td>
+<td>&nbsp;</td>
+<td style="padding-left:5px;line-height:17px;">
+You are requested to share <b>Form 16B</b> for us to adjust the said amount towards consideration value of the said flat.
+</td>
+</tr>
+<tr><td colspan="3">&nbsp;</td></tr>
+<tr>
+<td colspan="3" style="padding-left:5px;line-height:17px;">
+As per the extant regulations (which may change as per the govt. regulation) the CGST is charged @ 6% and SGST is charged @ 6% on "Flat Consideration". CGST is charged @ 9% and SGST is charged @ 9% on "Estimated &amp; Tentative Other Charges".
+</td>
+</tr>
+<tr>
+<td colspan="3" style="padding-left:5px;line-height:17px;">
+In case of a property loan, we request you to ensure that both the components (Loan Amount and Self Paid Amount) is paid to us within the stipulated time, as time being of essence any delay in payments would attract interest <b>@ 8% p.a.</b> (shall be the State Bank of India highest Marginal cost of Lending Rate plus two percent or such benchmark lending rates which the State Bank of India may fix from time to time for lending to the general public) on the unpaid amounts.
+</td>
+</tr>
+<tr>
+<td colspan="3" style="padding-left:5px;line-height:17px;">
+Any cheque bounce will attract cheque bounce penalty charges of Rs.1200 + SGST @ 9% + CGST @ 9% 
+</td>
+</tr>
+<tr><td colspan="3">&nbsp;</td></tr>
+<tr>
+<td colspan="3" style="padding-left:5px;line-height:17px;font-weight:bold;">
+For any queries, please contact your Relationship Manager between Mon-Friday 10am to 6pm - at {!RMPhone} or {!RMMobile}.  
+</td>
+</tr>
+<tr>
+<td colspan="3" style="padding-left:5px;line-height:17px;font-weight:bold;">
+You can also email your query on {!RMEmail} 
+</td>
+</tr>
+<tr><td colspan="3">&nbsp;</td></tr>
+<tr><td colspan="3">&nbsp;</td></tr>
+<tr>
+<td colspan="3" style="padding-left:5px;line-height:17px;font-weight:bold;">
+Thanks and Regards,<br/>
+{!RMName}
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td width="100%" colspan="4">
+<table align ="center" width="100%">
+<tr>
+<td style="padding-left:5px;line-height:14px;">
+When an online transaction is initiated we request you to please share the transaction details mentioned below with us through an email, so that we can adjust the same against your respective unit.
+</td>
+</tr>
+<tr>    
+<td style="padding-left:5px;line-height:15px;">
+<ol type="1">
+<li> UTR No. </li>
+<li> Date of Transaction </li>
+<li> Name of the Bank </li>
+</ol>
+</td>
+</tr>
+<tr>
+<td style="padding-left:5px;line-height:14px;font-weight:bold;">
+Enclosed: 
+</td>
+</tr>
+<tr>
+<td style="padding-left:5px;line-height:10px;font-weight:bold;">
+<ol>
+<li>
+Architecture Certificate
+</li>
+</ol> 
+</td>
+</tr>
+</table>    
+
+</td>
+</tr>
+<tr>
+<td width="100%" colspan="4">
+<table class="RMStyle" align ="center" width="100%">
+<tr>
+<th colspan="4"> <!--  style="height: 8px;font-size:16px;line-height:22px; text-align: center; color:Black;" background-color:#e6eff7; -->
+        <!--                                          Payment Modes
+<!--                               </th>
+</tr>
+<tr>
+<th>
+Particulars
+</th>
+<th>
+Mode
+</th>
+<th>
+Favoring
+</th>
+<th>
+Steps to make payment
+</th>
+</tr>
+<tr>
+<td rowspan="2">
+Principle
+</td>
+<td>
+Cheque
+</td>
+<td>
+{!leglEntyNameFlatCost}
+</td>
+<td>
+1. Handover the Cheque to Sales Manager at Site <br/>
+OR<br/>
+2. Send via Courier to our Head Office Address
+
+</td>
+</tr> 
+<tr>
+<td>
+RTGS/NEFT
+</td>
+<td>
+{!leglEntyNameFlatCost}
+</td>
+<td>
+
+{!leglEntyForFlatCost}
+
+</td>
+</tr>
+<tr>
+<td rowspan="2">
+GST/Other Charges
+</td>
+
+<td>
+Cheque
+</td>
+<td>
+{!leglEntyNameGST}
+</td>
+<td>
+1. Handover the Cheque to Sales Manager at Site <br/>
+OR<br/>
+2. Send via Courier to our Head Office Address
+
+</td>
+</tr> 
+<tr>
+<td>
+RTGS/NEFT
+</td>
+<td>
+{!leglEntyNameGST}
+</td>
+<td>
+{!leglEntyForGST}
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr><td><br/></td></tr>
+
+</table>
+</td>
+</tr>
+</table>
+-->
+    </body>
+</apex:page>
