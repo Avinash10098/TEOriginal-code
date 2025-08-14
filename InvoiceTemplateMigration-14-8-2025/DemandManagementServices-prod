@@ -1,0 +1,1395 @@
+public with sharing class DemandManagementServices {
+    public static Map < String, List < String >> getAllPendingDemands() {
+        List < Payment_Milestones__c > paymentMilestoneList = new List < Payment_Milestones__c > ();
+        paymentMilestoneList = [Select Id, Name, Milestone_Name__c,Is_Unit_Linked__c,Show_on_Demand_Dashboard__c, Quotation__r.Booking__r.Customer_Number__c, Demand_Raised__c, Quotation__r.Unit__r.Project__r.Name, Quotation__r.Unit__r.Tower__R.Name
+            from Payment_Milestones__c
+            where Quotation__c != null
+            and Quotation__r.Booking__c != null
+            and Quotation__r.Booking__r.Signed_Termsheet_Date__c != null
+            and Quotation__r.Unit__c != null
+            and Quotation__r.Unit__r.Project__c != null
+            and Quotation__r.Unit__r.Tower__c != null
+            and Quotation__r.Opportunity__r.S_Active__c = true
+            and Quotation__r.Opportunity__r.StageName = 'Booking confirmed'
+            and Quotation__r.Unit__r.Unit_Status__c = 'Sold'
+            and Quotation__r.Quote_Status__c = 'Valid'
+            and Token_Amount_Milestone__c = false
+            and is_demand_raised__c = false 
+            and(
+                  (Milestone_Type_edit__c = 'Construction Linked' and Demand_Raised__c = true and Demand_Approval_Current_Status__c = 'Accepted' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15)
+                or(Milestone_Type_edit__c = 'Construction Linked' and Demand_Raised__c = true and Is_Unit_Linked__c = true and Show_on_Demand_Dashboard__c = true  and Demand_Approval_Current_Status__c = 'Accepted' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15)
+                or(Milestone_Type_edit__c = 'Date Linked' and Milestone_Due_Date__c != null  and Milestone_Due_Date__c <= NEXT_N_DAYS:15)
+                or(Milestone_Type_edit__c = 'On Registration' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 and C1_Amount__c > 0)
+                )
+            order by Quotation__r.Opportunity__r.Name, Milestone_Due_Date__c asc
+        ];
+        system.debug('paymentMilestoneList::--'+paymentMilestoneList);
+        Map < String, List < String >> projectTowerMap = new Map < String, List < String >> ();
+        Boolean exists;
+        if (paymentMilestoneList != null && !paymentMilestoneList.isEmpty()) {
+            for (Payment_Milestones__c pm: paymentMilestoneList) {
+                exists = false;
+                if (projectTowerMap.containsKey(pm.Quotation__r.Unit__r.Project__r.Name)) {
+                    List < String > tempList = projectTowerMap.get(pm.Quotation__r.Unit__r.Project__r.Name);
+
+                    for (String s: tempList) {
+                        if (s.equalsIgnoreCase(pm.Quotation__r.Unit__r.Tower__r.Name)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        tempList.add(pm.Quotation__r.Unit__r.Tower__r.Name);
+                        projectTowerMap.put(pm.Quotation__r.Unit__r.Project__r.Name, tempList);
+                    }
+                } else {
+                    List < String > tempList = new List < String > ();
+                    tempList.add(pm.Quotation__r.Unit__r.Tower__r.Name);
+                    projectTowerMap.put(pm.Quotation__r.Unit__r.Project__r.Name, tempList);
+                }
+            }
+        }
+        System.debug('project tower map:' + projecttowerMap);
+        return projectTowerMap;
+    }
+    public static Map < Id, List < DemandWrapper >> searchAllPendingDemandsWithGrouping(String towerName, String projectName, Integer list_size, Integer counter) {
+        List < Payment_Milestones__c > paymentMilestoneList = new List < Payment_Milestones__c > ();
+        Decimal tokengst;
+        Decimal tokenamt;
+        
+        System.debug('In searchAllPendingDemands: ' + towerName + ':' + projectName + ';' + counter);
+        String tempQuery = '';
+        for (Integer i = 1; i <= 25; i++) {
+            tempQuery += 'Charge' + i + 'Name__c' + ',';
+            tempQuery += 'Charge' + i + 'Percentage__c' + ',';
+            tempQuery += 'C' + i + '_Amount__c' + ',';
+            tempQuery += 'C' + i + '_SGST__c' + ',';
+            tempQuery += 'C' + i + '_CGST__c' + ',';
+
+        }
+        String tempQuery1 = '';
+        for (Integer i = 1; i <= 25; i++) {
+            tempQuery1 += 'Charge_' + i + '_Lookup__r.ChargeBucket__c,';
+        }
+        // remove the last character only if its a comma.
+        if (tempQuery1.length() > 0 && tempQuery1.substring(tempQuery1.length() - 1).equals(','))
+            tempQuery1 = tempQuery1.substring(0, tempQuery1.length() - 1);
+        String query = 'Select Id,Quotation__r.Unit__r.Project__r.Group_Demands_By_Customer__c,Token_Amount__c,Deduct_Token__c, Quotation__r.Opportunity__r.Primary_Email__c, Quotation__r.Opportunity__r.Primary_Name__c,  Name, Milestone_Name__c, Milestone_Type_Text__c,Milestone_Type_edit__c, Milestone_Due_Date__c, Milestone_Complete_At_Booking__c, Number_Of_Days__c, Demand_Raised__c, Quotation__r.Name, Quotation__r.Unit__r.Project__r.Name,' +
+            'Quotation__r.Unit__r.Tower__R.Name,' +
+            'Quotation__r.Unit__r.Customers__r.Name,' +
+            'Quotation__R.Opportunity__r.Name,' +
+            'Quotation__R.Opportunity__r.latest_demand_due_date__c,' +
+            'Quotation__R.Opportunity__c,' +
+            'Quotation__R.Unit__c,' +
+            'Quotation__r.Booking__r.Booking_Date__c,' +
+            'Quotation__R.Unit__r.Name,' + tempQuery + tempQuery1 +
+            ' from Payment_Milestones__c ' +
+            ' where ' +
+            ' ( ' +
+            ' (Milestone_Type_edit__c = \'Construction Linked\' and Demand_Raised__c = true and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 and Milestone_Status__c = \'Raise\') OR ' +
+            ' (Milestone_Type_edit__c = \'Construction Linked\' and Demand_Raised__c = true and Is_Unit_Linked__c = true and Show_on_Demand_Dashboard__c = true and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 and Milestone_Status__c = \'Raise\') OR ' +
+            ' (Milestone_Type_edit__c = \'Date Linked\' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 ) OR' +
+            ' (Milestone_Type_edit__c = \'On Registration\' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 and C1_Amount__c > 0)' +
+            ' ) ' +
+            ' and Quotation__c != null ' +
+            ' and Quotation__r.Booking__c != null ' +
+            ' and Quotation__r.Booking__r.Project__r.Name !=  \'Tangled up in Green.\' '  +
+            ' and Quotation__r.Booking__r.Signed_Termsheet_Date__c != null ' +
+            ' and Quotation__r.Unit__c != null ' +
+            ' and Quotation__r.Booking__r.Is_Zero_FSOA_generated__c != True '+
+            ' and Quotation__r.Unit__r.Project__r.Name = ' + '\'' + projectName + '\'' +
+            ' and Quotation__r.Unit__r.Tower__r.Name = ' + '\'' + towerName + '\'' +
+            ' and Quotation__r.Opportunity__r.S_Active__c = true ' +
+            ' and Quotation__r.Opportunity__r.StageName =  \'Booking confirmed\' ' +
+            ' and Quotation__r.Unit__r.Unit_Status__c = \'Sold\' ' +
+            ' and is_demand_raised__c = false ' +
+            ' and Quotation__r.Quote_Status__c = \'Valid\' '+
+            ' and Token_Amount_Milestone__c = false'+
+            ' order by Milestone_Due_Date__c asc ' +
+            ' limit :list_size ' +
+            ' offset :counter ';
+        paymentMilestoneList = Database.Query(query);
+        System.debug('Query:' + query);
+        Decimal overallAmt = 0;
+        Decimal overallTax1 = 0;
+        Decimal overallTax2 = 0;
+        Integer j = 1;
+        List < DemandWrapper > dwList = new List < DemandWrapper > ();
+        if (paymentMilestoneList != null && paymentMilestoneList.size() > 0) {
+            for (Payment_Milestones__c p: paymentMilestoneList) {
+                List < PrintChargesWrapper > temp = new List < PrintChargesWrapper > ();
+                PrintTotalsWrapper temp1 = new PrintTotalsWrapper();
+                DemandWrapper dw = new DemandWrapper();
+                // if its date linked demand, the invoice date should be the actual date on which it should have been raised irrespective of when they raise it.
+                // generally the invoice is to be raised 15 days prior to the due date
+                if (p.Milestone_Type_edit__c.equalsIgnoreCase('Date Linked')) {
+                    if (p.Number_of_Days__c <= 30) {
+                        p.Invoice_Date__c = Date.ValueOf(p.Quotation__r.Booking__r.Booking_Date__c);
+                        p.Invoice_Due_Date__c = Date.ValueOf(p.Quotation__r.Booking__r.Booking_Date__c).addDays(30);
+                    }
+                    else {
+                        p.Invoice_Date__c = system.today();
+                        p.Invoice_Due_Date__c = p.Milestone_Due_Date__c;
+                    }
+                    
+                } else if (p.Milestone_Type_edit__c.equalsIgnoreCase('On Registration') || p.Milestone_Complete_At_Booking__c) {
+                    p.Invoice_Date__c = p.Milestone_Due_Date__c.addDays(-30);
+                    p.Invoice_Due_Date__c = p.Milestone_Due_Date__c;
+                } else {
+                    p.Invoice_Date__c = system.today();
+                    p.Invoice_Due_Date__c = system.today().addDays(15);
+                }
+                if(p.Quotation__r.Opportunity__r.Latest_Demand_Due_Date__c != null && p.Invoice_Due_Date__c < p.Quotation__r.Opportunity__r.Latest_Demand_Due_Date__c) {
+                        p.Invoice_Due_Date__c = p.Quotation__r.Opportunity__r.Latest_Demand_Due_Date__c;
+                }
+                System.debug('Milestone Details:' + p.Name);
+                for (Integer i = 1; i <= 25; i++) {
+                    PrintChargesWrapper pcw = new PrintChargesWrapper();
+                    
+                    if (
+                        p.getSObject('Charge_' + i + '_Lookup__r') != null &&
+                        (String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c') != null &&
+                        String.isNotBlank((String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c')) &&
+                        (String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c') == 'Agreement Value'
+                    ) {
+                        if ((String) p.get('Charge' + i + 'Name__c') != null && String.isNotBlank((String) p.get('Charge' + i + 'Name__c'))) {
+                            pcw.chargeName = (String) p.get('Charge' + i + 'Name__c');
+                            if (p.get('Charge' + i + 'Percentage__c') != null)
+                                pcw.percentage = String.valueOf((Decimal) p.get('Charge' + i + 'Percentage__c')) + ' %';
+                            else
+                                pcw.percentage = '';
+
+                            if (p.get('C' + i + '_Amount__c') != null) {
+                                pcw.Amount = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_Amount__c'));
+                                overallAmt += (Decimal) p.get('C' + i + '_Amount__c');
+                            } else
+                                pcw.Amount = '';
+                            if (p.get('C' + i + '_SGST__c') != null) {
+                                pcw.Tax1 = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_SGST__c'));
+                                overallTax1 += (Decimal) p.get('C' + i + '_SGST__c');
+                            } else
+                                pcw.Tax1 = '';
+                            if (p.get('C' + i + '_CGST__c') != null) {
+                                pcw.Tax2 = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_CGST__c'));
+                                overallTax2 += (Decimal) p.get('C' + i + '_CGST__c');
+                            } else
+                                pcw.Tax2 = '';
+                            
+                            if(p.Deduct_Token__c == true && p.Token_Amount__c != null &&
+                               String.isNotBlank((String) p.get('Charge' + i + 'Name__c')) && 
+                               (String)p.get('Charge' + i + 'Name__c') == 'Basic'){
+                               tokenamt = 0;
+                               tokengst = 0; 
+                               tokenamt = p.Token_Amount__c;
+                               tokengst = p.Token_Amount__c * 0.06;
+                            }
+                            temp.add(pcw); // adding each charge of this milestone to the charge list
+                        }
+                    }
+                }
+                // adding the overall value of this milestone to the totals wrapper
+                if(tokenamt != null && tokengst != null){
+                    temp1.overallAmt = InventoryCostServices.Informat(overallAmt + tokenamt );
+                	temp1.overallTax1 = InventoryCostServices.Informat(overallTax1 + tokengst);
+                	temp1.overallTax2 = InventoryCostServices.Informat(overallTax2 + tokengst);
+                }else{
+                temp1.overallAmt = InventoryCostServices.Informat(overallAmt  );
+                temp1.overallTax1 = InventoryCostServices.Informat(overallTax1 );
+                temp1.overallTax2 = InventoryCostServices.Informat(overallTax2 );
+                }
+                if (String.isNotBlank(p.Milestone_Name__c)) {
+                    String[] tempStr = p.Milestone_Name__c.split(':');
+                    if (tempStr.size() == 2)
+                        temp1.milestoneName = tempStr[1];
+                    else
+                        temp1.milestoneName = tempStr[0];
+                }
+                // put all of these together into the demands wrapper.
+                dw.pm = p;
+                dw.pcwList.addAll(temp);
+                dw.ptw = temp1;
+                dwList.add(dw);
+                j++;
+                overAllAmt = 0;
+                overallTax1 = 0;
+                overallTax2 = 0;
+            }
+
+        }
+        Map < Id, List < DemandWrapper >> CustomerMap = new Map < Id, List < DemandWrapper >> ();
+            for (DemandWrapper dw: dwList) {
+                if (customerMap.containsKey(dw.pm.Quotation__R.Unit__c))
+                    customerMap.get(dw.pm.Quotation__R.Unit__c).add(dw);
+                else {
+                    List < DemandWrapper > dwListTemp = new List < DemandWrapper > ();
+                    dwListTemp.add(dw);
+                    customerMap.put(dw.pm.Quotation__R.Unit__c, dwListTemp);
+                }
+
+            }
+        System.debug('Customer Map:' + customerMap);
+        return customerMap;
+    }
+
+    public static Map < Id, CustomerWrapper > getCustomerWrapper(Set < Id > unitIdSet) {
+        Map < Id, CustomerWrapper > CustomerWrapperMap = new Map < Id, CustomerWrapper > ();
+        List < Opportunity > oppList = [Select id, Name, Account.PersonEmail, Booking__r.Customer_Number__c,Primary_Email__c, Primary_Name__c,Unit__r.Name 
+                                               from Opportunity 
+                                                where unit__c in: unitIdSet and stageName = 'Booking confirmed'
+                                                and S_Active__c = true order by createdDate asc
+                                        ];
+        Integer count = 1;
+        for (Opportunity o: oppList) {
+            CustomerWrapper cw = new CustomerWrapper();
+            cw.o = o;
+            if (Math.mod(count, 2) == 1)
+                cw.styleName = 'color1';
+            else
+                cw.styleName = 'color2';
+            customerWrapperMap.put(o.unit__c, cw);
+            count++;
+        }
+        return customerWrapperMap;
+    }
+
+   public static Map < Id, List < DemandWrapper >> searchSpecificDemands(String towerName, String projectName, string customer, string unit, Date startDate, Date endDate, Id selectedStage, String forMilestone, Decimal CustomerId ) {
+        system.debug('CustomerId: '+CustomerId);
+       system.debug('CustomerUnit: '+unit);
+       system.debug('customer: '+customer);
+       system.debug('projectName: '+projectName);
+       system.debug('towerName: '+towerName);
+       system.debug('forMilestone: '+forMilestone);
+       
+        List < Payment_Milestones__c > paymentMilestoneList = new List < Payment_Milestones__c > ();
+        String tempQuery = '';
+        for (Integer i = 1; i <= 15; i++) {
+            tempQuery += 'Charge' + i + 'Name__c' + ',';
+            tempQuery += 'Charge' + i + 'Percentage__c' + ',';
+            tempQuery += 'C' + i + '_Amount__c' + ',';
+            tempQuery += 'C' + i + '_SGST__c' + ',';
+            tempQuery += 'C' + i + '_CGST__c' + ',';
+            tempQuery += 'Charge_' + i + '_Lookup__c' + ',';
+
+        }
+        String tempQuery1 = '';
+        for (Integer i = 1; i <= 15; i++) {
+            tempQuery1 += 'Charge_' + i + '_Lookup__r.ChargeBucket__c,';
+        }
+        // remove the last character only if its a comma.
+        if (tempQuery1.length() > 0 && tempQuery1.substring(tempQuery1.length() - 1).equals(','))
+            tempQuery1 = tempQuery1.substring(0, tempQuery1.length() - 1);
+        String query = 'Select Id, Name,Milestone_Name__c,Deduct_Token__c,Token_Amount__c,Token_Amount_Milestone__c, Milestone_Type_Text__c, Milestone_Due_Date__c,Milestone_Type_edit__c,Number_Of_Days__c,Milestone_Complete_At_Booking__c,' +
+                'Quotation__r.Opportunity__r.Primary_Email__c,Quotation__r.Unit__r.Project__c,Quotation__R.Unit__c, Quotation__r.Opportunity__r.Primary_Name__c, ' +
+            'Demand_Raised__c, Quotation__r.Name, Quotation__r.Unit__r.Project__r.Name,' +
+            'Quotation__r.Unit__r.Tower__R.Name,' +
+            'Quotation__r.Booking__c,' +
+            'Quotation__r.Booking__r.Booking_Date__c, Quotation__r.Booking__r.Customer_Number__c,' +
+            'Quotation__R.Opportunity__r.Name,' +
+            'Quotation__r.Unit__r.Customers__r.Name,' +
+            'Quotation__R.Opportunity__r.latest_demand_due_date__c,' +
+            'Quotation__R.Unit__r.Name, Project_Construction_Stages__c,' + tempQuery + tempQuery1 +
+            ' from Payment_Milestones__c ' +
+            ' where Quotation__c != null ' +
+            ' and Quotation__r.Unit__c != null ' +
+            ' and Quotation__r.Booking__r.Is_Zero_FSOA_generated__c != True '+
+            ' and Quotation__r.Booking__c != null ' +
+            ' and Quotation__r.Booking__r.Project__r.Name !=  \'Tangled up in Green.\' '  +
+            ' and Quotation__r.Booking__r.Signed_Termsheet_Date__c != null' +
+            ' and is_demand_raised__c = false' +
+            ' and Token_Amount_Milestone__c = false'+
+            ' and Quotation__r.Opportunity__r.S_Active__c = true ' +
+            ' and Quotation__r.Quote_Status__c = \'Valid\' '+
+            ' and Quotation__r.Opportunity__r.StageName =  \'Booking confirmed\' ' +
+            ' and Quotation__r.Unit__r.Unit_Status__c = \'Sold\' ';
+           
+           
+
+
+
+        String searchQuery = '';
+        if (towerName != null && String.isNotBlank(towerName))
+            searchQuery += ' and Quotation__r.Unit__r.Tower__r.Name = ' + '\'' + towerName + '\'';
+        if (projectName != null && String.isNotBlank(projectName))
+            searchQuery += ' and Quotation__r.Unit__r.Project__r.Name = ' + '\'' + projectName + '\'';
+        if (unit != null && string.isNotBlank(unit))
+            searchQuery += ' and Quotation__r.Unit__r.Name like ' + '\'%' + unit + '%\'';
+        if (CustomerId != null && CustomerId != 0)
+            searchQuery += ' and Quotation__r.Booking__r.Customer_Number__c = ' + CustomerId ;
+        if (customer != null && string.isNotBlank(customer))
+            searchQuery += ' and Quotation__r.Unit__r.Customers__r.Name like' + '\'%' + customer + '%\'';
+        
+        // if there is a date range search only for Date linked demands 
+        if (startDate != null || endDate != null)
+            searchQuery += ' and (Milestone_Type_edit__c = \'Date Linked\')'; 
+        if (startDate != null)
+            searchQuery += ' and Milestone_Due_Date__c >=  :startDate';
+        if (endDate != null)
+            searchQuery += ' and Milestone_Due_Date__c <= :endDate';
+
+
+        // if stage is present then search only for the demands where this stage has been acheived
+        if (selectedStage != null)
+            searchQuery += ' and Project_Construction_Stages__c = :selectedStage and demand_raised__c = true';
+
+        // if no parameters are specified neither date range nor stage name then search all date linked demands with in the next 15 days and construction linked demands where milestone is acheived.
+        // this is the default value we used for showing all demands in the tower. This is to accommodate when someone clicks search after entering just the customer name or unit name.
+        if (startDate == null && endDate == null && selectedStage == null) {
+            searchQuery += ' and  ( ' +
+                ' (Milestone_Type_edit__c = \'Construction Linked\' and Demand_Raised__c = true and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 and Milestone_Status__c = \'Raise\') OR ' +
+                ' (Milestone_Type_edit__c = \'Construction Linked\' and Demand_Raised__c = true and Is_Unit_Linked__c = true and Show_on_Demand_Dashboard__c = true and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 and Milestone_Status__c = \'Raise\') OR ' +
+                ' (Milestone_Type_edit__c = \'Date Linked\' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 ) OR' +
+                ' (Milestone_Type_edit__c = \'On Registration\' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 and C1_Amount__c > 0)' +
+                ' ) '
+          ;       }
+        System.debug('before for milestone check in search specific demands:' + formilestone);
+        if(forMilestone != null) {
+            
+            searchQuery +=' and Id = :forMilestone';
+            System.debug('Inside for milestone check in search specific demands:' + searchQuery); 
+        }
+        System.debug('Query used:' + query + searchQuery);
+        paymentMilestoneList = Database.Query(query + SearchQuery + ' order by Milestone_Due_Date__c asc');
+        Decimal overallAmt = 0;
+        Decimal overallTax1 = 0;
+        Decimal overallTax2 = 0;
+        Integer j = 1;
+       system.debug('paymentMilestoneList :'+ paymentMilestoneList);
+        List < DemandWrapper > dwList = new List < DemandWrapper > ();
+        if (paymentMilestoneList != null && paymentMilestoneList.size() > 0) {
+            for (Payment_Milestones__c p: paymentMilestoneList) {
+                List < PrintChargesWrapper > temp = new List < PrintChargesWrapper > ();
+                PrintTotalsWrapper temp1 = new PrintTotalsWrapper();
+                DemandWrapper dw = new DemandWrapper();
+                // if its date linked demand, the invoice date should be the actual date on which it should have been raised irrespective of when they raise it.
+                // generally the invoice is to be raised 15 days prior to the due date
+                if (p.Milestone_Type_edit__c.equalsIgnoreCase('Date Linked')) {
+                    if (p.Number_of_Days__c <= 30) {
+                        p.Invoice_Date__c = Date.ValueOf(p.Quotation__r.Booking__r.Booking_Date__c);
+                        p.Invoice_Due_Date__c = Date.ValueOf(p.Quotation__r.Booking__r.Booking_Date__c).addDays(30);
+                    }
+                    else {
+                        p.Invoice_Date__c = system.today();
+                        p.Invoice_Due_Date__c = p.Milestone_Due_Date__c;
+                    }
+                    
+                } else if (p.Milestone_Type_edit__c.equalsIgnoreCase('On Registration') || p.Milestone_Complete_At_Booking__c) {
+                    p.Invoice_Date__c = p.Milestone_Due_Date__c.addDays(-30);
+                    p.Invoice_Due_Date__c = p.Milestone_Due_Date__c;
+                } else {
+                    p.Invoice_Date__c = system.today();
+                    p.Invoice_Due_Date__c = system.today().addDays(15);
+                }
+                if(p.Quotation__r.Opportunity__r.Latest_Demand_Due_Date__c != null && p.Invoice_Due_Date__c < p.Quotation__r.Opportunity__r.Latest_Demand_Due_Date__c) {
+                        p.Invoice_Due_Date__c = p.Quotation__r.Opportunity__r.Latest_Demand_Due_Date__c;
+                }
+                Map<String, Tax_Slab__c> taxSlabMap = getTaxRatesForProjectCharges(p.Quotation__R.Unit__c,p.Invoice_Date__c);
+                for (Integer i = 1; i <= 15; i++) {
+                        Decimal amountForTaxation = 0;
+                    Decimal sgst = 0;
+                    Decimal cgst = 0;
+                    PrintChargesWrapper pcw = new PrintChargesWrapper();
+                    if (
+                        p.getSObject('Charge_' + i + '_Lookup__r') != null &&
+                        (String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c') != null &&
+                        String.isNotBlank((String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c')) &&
+                        (String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c') == 'Agreement Value'
+                    ) {
+                        if ((String) p.get('Charge' + i + 'Name__c') != null && String.isNotBlank((String) p.get('Charge' + i + 'Name__c'))) {
+                            pcw.chargeName = (String) p.get('Charge' + i + 'Name__c');
+                            if (p.get('Charge' + i + 'Percentage__c') != null)
+                                pcw.percentage = String.valueOf((Decimal) p.get('Charge' + i + 'Percentage__c')) + ' %';
+                            else
+                                pcw.percentage = '';
+                            if(p.Deduct_Token__c == true && p.Token_Amount__c != null && p.get('C' + i + '_Amount__c') != null){
+                                if( p.get('Charge' + i + 'Name__c') == 'Basic'){
+                                    pcw.Amount = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_Amount__c') + p.Token_Amount__c );
+                                	overallAmt += (Decimal) p.get('C' + i + '_Amount__c') + p.Token_Amount__c;
+                                	amountforTaxation = (Decimal) p.get('C' + i + '_Amount__c') + p.Token_Amount__c; 
+                                 }else{
+                                    pcw.Amount = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_Amount__c')  );
+                               		 overallAmt += (Decimal) p.get('C' + i + '_Amount__c') ;
+                                	 amountforTaxation = (Decimal) p.get('C' + i + '_Amount__c') ;
+                                    
+                                 }
+                            }else if (p.Deduct_Token__c == false && p.get('C' + i + '_Amount__c') != null) {
+                                pcw.Amount = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_Amount__c'));
+                                overallAmt += (Decimal) p.get('C' + i + '_Amount__c');
+                                amountforTaxation = (Decimal) p.get('C' + i + '_Amount__c');
+                            } else
+                                pcw.Amount = '';
+                           
+                            String chargeName = (String) p.get('Charge' + i + 'Name__c');
+                            system.debug('Charge Name ::::---'+chargeName);
+                            if(chargeName == 'Car Parking Charges' )
+                                chargeName = 'Basic';
+                            else if(chargeName == 'Customisation Charge')
+                                chargeName = 'Basic';
+                            else if(chargeName == 'Vastu Premium')
+                                chargeName = 'Basic';
+                            else if(chargeName == 'Floor Rise')
+                                chargeName = 'Basic';
+                            else if(chargeName == 'Additional Land')
+                                chargeName = 'Basic';
+                            
+                            if(taxSlabMap.containsKey(chargeName)) {
+                                system.debug('Charge Name inside tax if ::::---'+chargeName);
+                                  sgst = ( amountForTaxation * taxSlabMap.get(chargeName).Taxable2_Percentage__c * taxSlabMap.get(chargeName).Tax2_Percentage__c)/10000;
+                                  cgst = ( amountForTaxation * taxSlabMap.get(chargeName).Taxable1_Percentage__c * taxSlabMap.get(chargeName).Tax1_Percentage__c)/10000;
+                                  pcw.Tax1 = InventoryCostServices.InFormat(sgst);
+                                  pcw.Tax2 = InventoryCostServices.InFormat(cgst);
+                                  overallTax1 += sgst;
+                                  overallTax2 += cgst;
+                            } else {
+                                    pcw.Tax1 = '';
+                                    pcw.Tax2 = '';
+                            }
+                            temp.add(pcw); // adding each charge of this milestone to the charge list
+                        }
+                    }
+                }
+                // adding the overall value of this milestone to the totals wrapper
+                temp1.overallAmt = InventoryCostServices.InformatR(overallAmt);
+                temp1.overallTax1 = InventoryCostServices.InformatR(overallTax1);
+                temp1.overallTax2 = InventoryCostServices.InformatR(overallTax2);
+                temp1.totalTax = InventoryCostServices.InformatR(overallTax1 + overallTax2);
+                temp1.overallTDS = InventoryCostServices.InformatR(overallAmt * 1 / 100);
+
+                temp1.overallAmtD = math.abs(overallAmt.setscale(0,RoundingMode.HALF_UP));
+                temp1.overallTax1D = math.abs(overallTax1.setscale(0,RoundingMode.HALF_UP));
+                temp1.overallTax2D = math.abs(overallTax2.setscale(0,RoundingMode.HALF_UP));
+                temp1.overallTDSD = math.abs((overallAmt * 1 / 100).setscale(0,RoundingMode.HALF_UP));
+
+                if (String.isNotBlank(p.Milestone_Name__c)) {
+                    String[] tempStr = p.Milestone_Name__c.split(':');
+                    if (tempStr.size() == 2)
+                        temp1.milestoneName = tempStr[1];
+                    else
+                        temp1.milestoneName = tempStr[0];
+                }
+
+                // put all of these together into the demands wrapper.
+                dw.pm = p;
+                dw.pcwList.addAll(temp);
+                dw.ptw = temp1;
+                dwList.add(dw);
+                j++;
+                overAllAmt = 0;
+                overallTax1 = 0;
+                overallTax2 = 0;
+            }
+
+        }
+        Map < Id, List < DemandWrapper >> CustomerMap = new Map < Id, List < DemandWrapper >> ();
+            for (DemandWrapper dw: dwList) {
+                if (customerMap.containsKey(dw.pm.Quotation__R.Unit__c))
+                    customerMap.get(dw.pm.Quotation__R.Unit__c).add(dw);
+                else {
+                    List < DemandWrapper > dwListTemp = new List < DemandWrapper > ();
+                    dwListTemp.add(dw);
+                    customerMap.put(dw.pm.Quotation__R.Unit__c, dwListTemp);
+                }
+
+            }
+        System.debug('Customer Map:' + customerMap);
+        return customerMap;
+    }
+    
+    //Added By Aniket for sending mail from send email dashboard on 21-10-2021/// 
+    public static Map < Id, List < DemandWrapper >> searchSpecificDemandsmailset(String towerName, String projectName, string customer, string unit, Date startDate, Date endDate, Id selectedStage, String forMilestone, Decimal CustomerId ) {
+        system.debug('CustomerId: '+CustomerId);
+       system.debug('CustomerUnit: '+unit);
+       system.debug('customer: '+customer);
+       system.debug('projectName: '+projectName);
+       system.debug('towerName: '+towerName);
+       system.debug('forMilestone: '+forMilestone);
+       
+        List < Payment_Milestones__c > paymentMilestoneList = new List < Payment_Milestones__c > ();
+        String tempQuery = '';
+        for (Integer i = 1; i <= 15; i++) {
+            tempQuery += 'Charge' + i + 'Name__c' + ',';
+            tempQuery += 'Charge' + i + 'Percentage__c' + ',';
+            tempQuery += 'C' + i + '_Amount__c' + ',';
+            tempQuery += 'C' + i + '_SGST__c' + ',';
+            tempQuery += 'C' + i + '_CGST__c' + ',';
+            tempQuery += 'Charge_' + i + '_Lookup__c' + ',';
+
+        }
+        String tempQuery1 = '';
+        for (Integer i = 1; i <= 15; i++) {
+            tempQuery1 += 'Charge_' + i + '_Lookup__r.ChargeBucket__c,';
+        }
+        // remove the last character only if its a comma.
+        if (tempQuery1.length() > 0 && tempQuery1.substring(tempQuery1.length() - 1).equals(','))
+            tempQuery1 = tempQuery1.substring(0, tempQuery1.length() - 1);
+        String query = 'Select Id, Name,Milestone_Name__c,Deduct_Token__c,Token_Amount__c,Token_Amount_Milestone__c, Milestone_Type_Text__c, Milestone_Due_Date__c,Milestone_Type_edit__c,Number_Of_Days__c,Milestone_Complete_At_Booking__c,' +
+                'Quotation__r.Opportunity__r.Primary_Email__c, Quotation__r.Opportunity__r.Primary_Name__c, ' +
+            'Demand_Raised__c, Quotation__r.Name, Quotation__r.Unit__r.Project__r.Name,' +
+            'Quotation__r.Unit__r.Tower__R.Name,' +
+            'Quotation__r.Booking__c,' +
+            'Quotation__r.Booking__r.Booking_Date__c, Quotation__r.Booking__r.Customer_Number__c,' +
+            'Quotation__R.Opportunity__r.Name,' +
+            'Quotation__r.Unit__r.Customers__r.Name,' +
+            'Quotation__R.Opportunity__r.latest_demand_due_date__c,' +
+            'Quotation__R.Unit__r.Name, Project_Construction_Stages__c,' + tempQuery + tempQuery1 +
+            ' from Payment_Milestones__c ' +
+            ' where Quotation__c != null ' +
+            ' and Quotation__r.Unit__c != null ' +
+            ' and Quotation__r.Booking__c != null ' +
+            ' and Quotation__r.Booking__r.Signed_Termsheet_Date__c != null' +
+            ' and is_demand_raised__c = true' +
+            ' and Token_Amount_Milestone__c = false'+
+            ' and Quotation__r.Opportunity__r.S_Active__c = true ' +
+            ' and Quotation__r.Quote_Status__c = \'Valid\' '+
+            ' and Quotation__r.Opportunity__r.StageName =  \'Booking confirmed\' ' +
+            ' and Quotation__r.Unit__r.Unit_Status__c = \'Sold\' ';
+           
+           
+
+
+
+        String searchQuery = '';
+        if (towerName != null && String.isNotBlank(towerName))
+            searchQuery += ' and Quotation__r.Unit__r.Tower__r.Name = ' + '\'' + towerName + '\'';
+        if (projectName != null && String.isNotBlank(projectName))
+            searchQuery += ' and Quotation__r.Unit__r.Project__r.Name = ' + '\'' + projectName + '\'';
+        if (unit != null && string.isNotBlank(unit))
+            searchQuery += ' and Quotation__r.Unit__r.Name like ' + '\'%' + unit + '%\'';
+        if (CustomerId != null && CustomerId != 0)
+            searchQuery += ' and Quotation__r.Booking__r.Customer_Number__c = ' + CustomerId ;
+        if (customer != null && string.isNotBlank(customer))
+            searchQuery += ' and Quotation__r.Unit__r.Customers__r.Name like' + '\'%' + customer + '%\'';
+        
+        // if there is a date range search only for Date linked demands 
+        if (startDate != null || endDate != null)
+            searchQuery += ' and (Milestone_Type_edit__c = \'Date Linked\')'; 
+        if (startDate != null)
+            searchQuery += ' and Milestone_Due_Date__c >=  :startDate';
+        if (endDate != null)
+            searchQuery += ' and Milestone_Due_Date__c <= :endDate';
+
+
+        // if stage is present then search only for the demands where this stage has been acheived
+        if (selectedStage != null)
+            searchQuery += ' and Project_Construction_Stages__c = :selectedStage and demand_raised__c = true';
+
+        // if no parameters are specified neither date range nor stage name then search all date linked demands with in the next 15 days and construction linked demands where milestone is acheived.
+        // this is the default value we used for showing all demands in the tower. This is to accommodate when someone clicks search after entering just the customer name or unit name.
+        if (startDate == null && endDate == null && selectedStage == null) {
+            searchQuery += ' and  ( ' +
+                ' (Milestone_Type_edit__c = \'Construction Linked\' and Demand_Raised__c = true and Demand_Approval_Current_Status__c = \'Accepted\' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15) OR ' +
+                ' (Milestone_Type_edit__c = \'Construction Linked\' and Demand_Raised__c = true and Is_Unit_Linked__c = true and Show_on_Demand_Dashboard__c = true  and Demand_Approval_Current_Status__c =  \'Accepted\' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15) OR ' +
+                ' (Milestone_Type_edit__c = \'Date Linked\' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 ) OR' +
+                ' (Milestone_Type_edit__c = \'On Registration\' and Milestone_Due_Date__c != null and Milestone_Due_Date__c <= NEXT_N_DAYS:15 and C1_Amount__c > 0)' +
+                ' ) '
+          ;       }
+        System.debug('before for milestone check in search specific demands:' + formilestone);
+        if(forMilestone != null) {
+            
+            searchQuery +=' and Id = :forMilestone';
+            System.debug('Inside for milestone check in search specific demands:' + searchQuery); 
+        }
+        System.debug('Query used:' + query + searchQuery);
+        paymentMilestoneList = Database.Query(query + SearchQuery + ' order by Milestone_Due_Date__c asc');
+        Decimal overallAmt = 0;
+        Decimal overallTax1 = 0;
+        Decimal overallTax2 = 0;
+        Integer j = 1;
+       system.debug('paymentMilestoneList :'+ paymentMilestoneList);
+        List < DemandWrapper > dwList = new List < DemandWrapper > ();
+        if (paymentMilestoneList != null && paymentMilestoneList.size() > 0) {
+            for (Payment_Milestones__c p: paymentMilestoneList) {
+                List < PrintChargesWrapper > temp = new List < PrintChargesWrapper > ();
+                PrintTotalsWrapper temp1 = new PrintTotalsWrapper();
+                DemandWrapper dw = new DemandWrapper();
+                // if its date linked demand, the invoice date should be the actual date on which it should have been raised irrespective of when they raise it.
+                // generally the invoice is to be raised 15 days prior to the due date
+                if (p.Milestone_Type_edit__c.equalsIgnoreCase('Date Linked')) {
+                    if (p.Number_of_Days__c <= 30) {
+                        p.Invoice_Date__c = Date.ValueOf(p.Quotation__r.Booking__r.Booking_Date__c);
+                        p.Invoice_Due_Date__c = Date.ValueOf(p.Quotation__r.Booking__r.Booking_Date__c).addDays(30);
+                    }
+                    else {
+                        p.Invoice_Date__c = system.today();
+                        p.Invoice_Due_Date__c = p.Milestone_Due_Date__c;
+                    }
+                    
+                } else if (p.Milestone_Type_edit__c.equalsIgnoreCase('On Registration') || p.Milestone_Complete_At_Booking__c) {
+                    p.Invoice_Date__c = p.Milestone_Due_Date__c.addDays(-30);
+                    p.Invoice_Due_Date__c = p.Milestone_Due_Date__c;
+                } else {
+                    p.Invoice_Date__c = system.today();
+                    p.Invoice_Due_Date__c = system.today().addDays(15);
+                }
+                if(p.Quotation__r.Opportunity__r.Latest_Demand_Due_Date__c != null && p.Invoice_Due_Date__c < p.Quotation__r.Opportunity__r.Latest_Demand_Due_Date__c) {
+                        p.Invoice_Due_Date__c = p.Quotation__r.Opportunity__r.Latest_Demand_Due_Date__c;
+                }
+                Map<String, Tax_Slab__c> taxSlabMap = getTaxRatesForProjectCharges(p.Quotation__R.Unit__c,p.Invoice_Date__c);
+                for (Integer i = 1; i <= 15; i++) {
+                        Decimal amountForTaxation = 0;
+                    Decimal sgst = 0;
+                    Decimal cgst = 0;
+                    PrintChargesWrapper pcw = new PrintChargesWrapper();
+                    if (
+                        p.getSObject('Charge_' + i + '_Lookup__r') != null &&
+                        (String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c') != null &&
+                        String.isNotBlank((String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c')) &&
+                        (String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c') == 'Agreement Value'
+                    ) {
+                        if ((String) p.get('Charge' + i + 'Name__c') != null && String.isNotBlank((String) p.get('Charge' + i + 'Name__c'))) {
+                            pcw.chargeName = (String) p.get('Charge' + i + 'Name__c');
+                            if (p.get('Charge' + i + 'Percentage__c') != null)
+                                pcw.percentage = String.valueOf((Decimal) p.get('Charge' + i + 'Percentage__c')) + ' %';
+                            else
+                                pcw.percentage = '';
+                             if(p.Deduct_Token__c == true && p.Token_Amount__c != null && p.get('C' + i + '_Amount__c') != null){
+                                 if( p.get('Charge' + i + 'Name__c') == 'Basic'){
+                                     pcw.Amount = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_Amount__c') + p.Token_Amount__c );
+                                	overallAmt += (Decimal) p.get('C' + i + '_Amount__c') + p.Token_Amount__c;
+                                	amountforTaxation = (Decimal) p.get('C' + i + '_Amount__c') + p.Token_Amount__c; 
+                                 }else{
+                                    pcw.Amount = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_Amount__c')  );
+                               		 overallAmt += (Decimal) p.get('C' + i + '_Amount__c') ;
+                                	 amountforTaxation = (Decimal) p.get('C' + i + '_Amount__c') ;
+                                    
+                                 }
+                                
+                            }else if (p.Deduct_Token__c == false && p.get('C' + i + '_Amount__c') != null) {
+                                pcw.Amount = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_Amount__c'));
+                                overallAmt += (Decimal) p.get('C' + i + '_Amount__c');
+                                amountforTaxation = (Decimal) p.get('C' + i + '_Amount__c');
+                            } else
+                                pcw.Amount = '';
+							
+                           /*if ( p.get('C' + i + '_Amount__c') != null) {
+                                pcw.Amount = InventoryCostServices.InFormat((Decimal) p.get('C' + i + '_Amount__c'));
+                                overallAmt += (Decimal) p.get('C' + i + '_Amount__c');
+                                amountforTaxation = (Decimal) p.get('C' + i + '_Amount__c');
+                            } else
+                                pcw.Amount = '';
+							*/
+                            String chargeName = (String) p.get('Charge' + i + 'Name__c');
+                            system.debug('Charge Name ::::---'+chargeName);
+                            if(chargeName == 'Car Parking Charges' )
+                                chargeName = 'Basic';
+                            else if(chargeName == 'Customisation Charge')
+                                chargeName = 'Basic';
+							else if(chargeName == 'Vastu Premium')
+                                chargeName = 'Basic';
+							else if(chargeName == 'Floor Rise')
+                                chargeName = 'Basic';  
+                            else if(chargeName == 'Additional Land')
+                                chargeName = 'Basic';
+                            if(taxSlabMap.containsKey(chargeName)) {
+                                system.debug('Charge Name inside tax if ::::---'+chargeName);
+                                System.debug('sgst::'+sgst);
+                                System.debug('cgst::'+cgst);
+                                  sgst = ( amountForTaxation * taxSlabMap.get(chargeName).Taxable2_Percentage__c * taxSlabMap.get(chargeName).Tax2_Percentage__c)/10000;
+                                  cgst = ( amountForTaxation * taxSlabMap.get(chargeName).Taxable1_Percentage__c * taxSlabMap.get(chargeName).Tax1_Percentage__c)/10000;
+                                  pcw.Tax1 = InventoryCostServices.InFormat(sgst);
+                                  pcw.Tax2 = InventoryCostServices.InFormat(cgst);
+                                  overallTax1 += sgst;
+                                  overallTax2 += cgst;
+                            } else {
+                                System.debug('Inside Else');
+                                    pcw.Tax1 = '';
+                                    pcw.Tax2 = '';
+                            }
+                            temp.add(pcw); // adding each charge of this milestone to the charge list
+                        }
+                    }
+                }
+                // adding the overall value of this milestone to the totals wrapper
+                temp1.overallAmt = InventoryCostServices.INFormat(overallAmt);
+                temp1.overallTax1 = InventoryCostServices.InformatR(overallTax1);
+                temp1.overallTax2 = InventoryCostServices.InformatR(overallTax2);
+                temp1.totalTax = InventoryCostServices.InformatR(overallTax1 + overallTax2);
+                temp1.overallTDS = InventoryCostServices.InformatR(overallAmt * 1 / 100);
+
+                temp1.overallAmtD = math.abs(overallAmt.setscale(0,RoundingMode.HALF_UP));
+                temp1.overallTax1D = math.abs(overallTax1.setscale(0,RoundingMode.HALF_UP));
+                temp1.overallTax2D = math.abs(overallTax2.setscale(0,RoundingMode.HALF_UP));
+                temp1.overallTDSD = math.abs((overallAmt * 1 / 100).setscale(0,RoundingMode.HALF_UP));
+
+                if (String.isNotBlank(p.Milestone_Name__c)) {
+                    String[] tempStr = p.Milestone_Name__c.split(':');
+                    if (tempStr.size() == 2)
+                        temp1.milestoneName = tempStr[1];
+                    else
+                        temp1.milestoneName = tempStr[0];
+                }
+
+                // put all of these together into the demands wrapper.
+                dw.pm = p;
+                dw.pcwList.addAll(temp);
+                dw.ptw = temp1;
+                dwList.add(dw);
+                j++;
+                overAllAmt = 0;
+                overallTax1 = 0;
+                overallTax2 = 0;
+            }
+
+        }
+        Map < Id, List < DemandWrapper >> CustomerMap = new Map < Id, List < DemandWrapper >> ();
+            for (DemandWrapper dw: dwList) {
+                if (customerMap.containsKey(dw.pm.Quotation__R.Unit__c))
+                    customerMap.get(dw.pm.Quotation__R.Unit__c).add(dw);
+                else {
+                    List < DemandWrapper > dwListTemp = new List < DemandWrapper > ();
+                    dwListTemp.add(dw);
+                    customerMap.put(dw.pm.Quotation__R.Unit__c, dwListTemp);
+                }
+
+            }
+        System.debug('Customer Map:' + customerMap);
+        return customerMap;
+    }
+    public static Map < String, Decimal > getCurrentOutStanding(Id customerId, Id unitId) {
+        Map < String, Decimal > currentOutstandingMap = new Map < String, Decimal > ();
+        Booking__c b = [Select Id, Name, Total_Agreement_Value_Demanded__c, Total_Agreement_Value_Paid__c, Total_Agreement_Value_Balance__c,
+            Total_Service_Tax_Demanded__c, Total_Service_Tax_Paid__c, Total_Service_Tax_Balance__c,
+            Total_Other_Charges_Demanded__c, Total_Other_Charges_Paid__c, Total_Other_Charges_Balance__c,
+            Total_Other_Charges_ST_Demanded__c, Total_Other_Charges_ST_Paid__c, Total_Other_Charges_ST_Balance__c
+            from Booking__c where Opportunity__c =: CustomerId and unit__c =: unitId
+        ];
+        if (b != null) {
+            currentOutstandingMap.put('CV Demanded', math.abs(b.Total_Agreement_Value_Demanded__c.setscale(0,RoundingMode.HALF_UP)));
+            currentOutstandingMap.put('CV Paid', math.abs(b.Total_Agreement_Value_Paid__c.setscale(0,RoundingMode.HALF_UP)));
+            currentOutstandingMap.put('CV Balance', math.abs(b.Total_Agreement_Value_Balance__c.setscale(0,RoundingMode.HALF_UP)));
+            currentOutstandingMap.put('CV Tax Demanded', math.abs(b.Total_Service_Tax_Demanded__c.setscale(0,RoundingMode.HALF_UP)));
+            currentOutstandingMap.put('CV Tax Paid', math.abs(b.Total_Service_Tax_Paid__c.setscale(0,RoundingMode.HALF_UP)));
+            currentOutstandingMap.put('CV Tax Balance', math.abs(b.Total_Service_Tax_Balance__c.setscale(0,RoundingMode.HALF_UP)));
+
+            currentOutstandingMap.put('OC Demanded', b.Total_Other_Charges_Demanded__c);
+            currentOutstandingMap.put('OC Paid', b.Total_Other_Charges_Paid__c);
+            currentOutstandingMap.put('OC Balance', b.Total_Other_Charges_Balance__c);
+            currentOutstandingMap.put('OC Tax Demanded', b.Total_Other_Charges_ST_Demanded__c);
+            currentOutstandingMap.put('OC Tax Paid', b.Total_Other_Charges_ST_Paid__c);
+            currentOutstandingMap.put('OC Tax Balance', b.Total_Other_Charges_ST_Balance__c);
+
+        }
+        return currentOutstandingMap;
+    }
+    public static Id raiseGroupDemandKickoffBatch(Set < Id > groupDemandIds) {
+        DemandsBatch db = new DemandsBatch(groupDemandIds);
+        Id batchId = database.executeBatch(db, 1);
+        return batchId;
+    }
+
+    public static Id raisePerMilestoneDemandKickoffBatch(Map<Id,List<Id>> unitMilestoneMap) {
+        DemandsBatchPerMilestone db = new DemandsBatchPerMilestone(unitMilestoneMap);
+        Id batchId = database.executeBatch(db, 1);
+        return batchId;
+    }
+    
+    
+    public static void raiseGroupDemandNew(Id unitId, Id milestoneId) {
+        // if its a group demand, i.e. more than one demand to be raised for a customer at a time, then the unit is passed as a parameter
+        // search specific demands gives the list of demands to be raised for that specific unit.
+		
+        Opportunity Customer = [Select Id, Unit__c, Unit__r.Name, Unit__r.Tower__r.Name, Unit__r.Tower__r.Cluster__r.Name,
+            Unit__r.Project__r.Name, Unit__r.Project__r.Project_Logo__c, Unit__r.Configuration__c, Name,Project__r.Name,
+            Relationship_Manager__c, Primary_Email__c,Unit__r.Booking__r.Customer_Number__c, Primary_Name__c,Unit__r.Booking__r.owner.Email,Registration_Date__c,
+            Project__r.Construction_Milestone_Days__c,Project__r.Registration_Milestone_to_be_Add__c,
+            Booking__r.Agreement_Value__c,Booking__c
+            from Opportunity where Unit__c =: unitId
+            and StageName = 'Booking Confirmed' 
+            and S_Active__c = true 
+            and Unit__r.Unit_Status__c = 'Sold'
+        ];
+       
+        system.debug('Customer::'+Customer);
+        Map < Id, List < DemandWrapper >> customerDemandWrapperMap  = new Map < Id, List < DemandWrapper >>();
+        
+        customerDemandWrapperMap = searchSpecificDemands(Customer.Unit__r.Tower__r.Name,
+            Customer.Unit__r.Project__r.Name,
+            Customer.Name,
+            Customer.Unit__r.Name,
+            null, null, null, milestoneId,Customer.Unit__r.Booking__r.Customer_Number__c);
+        system.debug('customerDemandWrapperMap :'+ customerDemandWrapperMap);
+        List < Demand__c > demandList = new List < Demand__c > ();
+        for (DemandWrapper d: customerDemandWrapperMap.get(unitId)) {
+            List<Payment_Milestones__c> pmlst = new List<Payment_Milestones__c>();
+            pmlst = [Select id, name ,Is_Legacy_Data__c,Towards_Land_Legacy__c,CGST__c,SGST__c from Payment_Milestones__c where id =:d.pm.id];
+            system.debug('pmlst::'+pmlst);
+            for(Payment_Milestones__c p1 : pmlst){
+            // create Demands
+            Demand__c di = new Demand__c();
+            di.Payment_Milestones__c = d.pm.Id;
+            di.Project__c = d.pm.Quotation__r.Unit__r.Project__c;
+            di.Unit__c = d.pm.Quotation__R.Unit__c;
+            di.Quotation__c = d.pm.Quotation__c;
+            di.Booking__c = d.pm.Quotation__r.Booking__c;            
+            di.Invoice_Date__c = d.pm.Invoice_Date__c;
+            di.Due_Date__c = d.pm.Invoice_Due_Date__c;
+            di.Demand_Status__c = 'Raised';
+            di.Approval_Status_Debit_Note__c = 'Accepted';
+            System.debug('Due Date:' +  d.pm.Invoice_Due_Date__c + di.Due_Date__c);
+            if(milestoneId == null || String.isBlank(milestoneId))
+                    di.is_group_demand__c  = true;
+            Payment_Milestones__c p = new Payment_Milestones__c();
+            p = d.pm;
+            Map<String, Tax_Slab__c> taxSlabMap = getTaxRatesForProjectCharges(unitId,d.pm.Invoice_Date__c);
+                for (Integer i = 1; i <= 15; i++) {
+                    Decimal amountForTaxation = 0;
+                    Decimal sgst = 0;
+                    Decimal cgst = 0;
+                    if (
+                        p.getSObject('Charge_' + i + '_Lookup__r') != null &&
+                        (String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c') != null &&
+                        String.isNotBlank((String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c')) &&
+                        (String) p.getSObject('Charge_' + i + '_Lookup__r').get('ChargeBucket__c') == 'Agreement Value' 
+                    ) {
+                        if ((String) p.get('Charge' + i + 'Name__c') != null && String.isNotBlank((String) p.get('Charge' + i + 'Name__c'))) {
+                            di.put('Charge_' + i + '_Name__c', p.get('Charge' + i + 'Name__c'));
+                            if (p.Deduct_Token__c == true && p.Token_Amount__c != null && p.get('C' + i + '_Amount__c') != null) {
+								 if(p.get('Charge' + i + 'Name__c') == 'Basic'){
+                                   di.put('Charge_' + i + '_Demanded__c', math.abs(((Decimal) p.get('C' + i + '_Amount__c')).setscale(0,RoundingMode.HALF_UP) + p.Token_Amount__c));
+                                   amountForTaxation = math.abs(((Decimal) p.get('C' + i + '_Amount__c')).setscale(0,RoundingMode.HALF_UP) + p.Token_Amount__c);
+									}else{
+									di.put('Charge_' + i + '_Demanded__c', math.abs(((Decimal) p.get('C' + i + '_Amount__c')).setscale(0,RoundingMode.HALF_UP)) );
+                                   amountForTaxation = math.abs(((Decimal) p.get('C' + i + '_Amount__c')).setscale(0,RoundingMode.HALF_UP));
+									}
+                               }else if (p.Deduct_Token__c == false && p.get('C' + i + '_Amount__c') != null) {
+                                di.put('Charge_' + i + '_Demanded__c', math.abs(((Decimal) p.get('C' + i + '_Amount__c')).setscale(0,RoundingMode.HALF_UP)));
+                                amountForTaxation = math.abs(((Decimal) p.get('C' + i + '_Amount__c')).setscale(0,RoundingMode.HALF_UP));
+                            } 
+                            
+                            di.put('Charge_' + i + '_Lookup__c', p.get('Charge_' + i + '_Lookup__c'));
+                            String chargeName = (String) p.get('Charge' + i + 'Name__c');
+                            if(chargeName == 'Car Parking Charges')
+                                chargeName = 'Basic';
+                            else if(chargeName == 'Customisation Charge')
+                                chargeName = 'Basic';
+                            else if(chargeName == 'Vastu Premium')
+                                chargeName = 'Basic';
+                             else if(chargeName == 'Floor Rise')
+                                chargeName = 'Basic';
+                            else if(chargeName == 'Additional Land')
+                                chargeName = 'Basic';
+                            
+                            if(taxSlabMap.containsKey(chargeName)) {
+                                sgst = math.abs(((amountForTaxation * taxSlabMap.get(chargeName).Taxable2_Percentage__c * taxSlabMap.get(chargeName).Tax2_Percentage__c)/10000).setscale(0,RoundingMode.HALF_UP));//Rounding Changed by Aniket from 0 to 2 decimal Place
+                                cgst = math.abs(((amountForTaxation * taxSlabMap.get(chargeName).Taxable1_Percentage__c * taxSlabMap.get(chargeName).Tax1_Percentage__c)/10000).setscale(0,RoundingMode.HALF_UP));//Rounding Changed by Aniket from 0 to 2 decimal Place
+                            }
+                            
+                            system.debug('SGST:::'+sgst);
+                            system.debug('CGST:::'+cgst);
+                            if(p1.Is_Legacy_Data__c == true){
+                                di.put('Charge_' + i + '_SGST__c', p.get('C' + i + '_SGST__c'));
+                                di.put('Charge_' + i + '_CGST__c', p.get('C' + i + '_CGST__c'));
+                            }else{
+                                di.put('Charge_' + i + '_SGST__c',sgst);
+                                di.put('Charge_' + i + '_CGST__c',cgst);   
+                            }
+                        }
+                    }
+                    
+                    
+                }
+            demandList.add(di);
+
+            System.debug('Demand to be raised:' + di);
+        
+        }
+        }
+
+        List < Id > dId = new List < Id > ();
+        if (demandList != null & !demandList.isEmpty()) {
+            Database.SaveResult[] resultLst = Database.insert(demandList);
+            for (Database.SaveResult r: resultLst) {
+                if (r.isSuccess()) {
+                    dId.add(r.getId());
+                }
+            }
+        }
+
+        List < Demand__c > diList = [Select Id, Name , Invoice_Date__c, Due_Date__c,CreatedById, Invoice_Number__c, Booking__r.Opportunity__r.Name,  Booking__r.Opportunity__r.Unit__r.Name, Booking__r.Opportunity__r.Unit__r.Tower__r.Name, Booking__r.Opportunity__r.Unit__r.Tower__r.Cluster__r.Name, AttachmentId__c from Demand__c where Id in: dId];
+        List<Payment_Milestones__c> pmList = new List<Payment_Milestones__c>();
+        for (DemandWrapper d: customerDemandWrapperMap.get(unitId)) {
+                d.pm.Is_Demand_Raised__c = true;
+                pmList.add(d.pm);
+        }
+        if(!pmList.isEmpty()){
+                try {
+                    update pmList;
+                } catch (Exception ex) {
+                    System.debug('Exception while updating payment milestones:' + ex);
+                }
+        }
+        String invoiceNumber = '';
+        Date invoiceDueDate = system.today().addDays(-10000);
+        for (Demand__c demand: diList) {
+            invoiceNumber = demand.Name;
+            if(invoiceDueDate < demand.Due_Date__c)
+            invoiceDueDate = demand.Due_Date__c;
+        }
+        
+        PageReference pageRef = new PageReference('/apex/showDemandPreview');
+        pageRef.getParameters().put('mode', 'raise');
+        pageRef.getParameters().put('letterHead', '1');
+        pageRef.getParameters().put('previewId', unitId);
+        pageRef.getParameters().put('invoiceDueDate', invoiceDueDate.format());
+        pageRef.getParameters().put('invoiceNumber', invoiceNumber);
+        if(milestoneId != null)
+        pageRef.getParameters().put('forMilestone', milestoneId);
+        
+        PageReference pageRef2 = new PageReference('/apex/SendDemandMail');
+        pageRef2.getParameters().put('unitId', unitId);
+        pageRef2.getParameters().put('invoiceDueDate', invoiceDueDate.format());
+        pageRef2.getParameters().put('invoiceNumber', invoiceNumber);
+        if(milestoneId != null)
+        pageRef2.getParameters().put('milestoneId', milestoneId);
+        
+        
+        // create the new attachment
+        // List < Attachment > aList = new List < Attachment > ();
+        // the contents of the attachment from the pdf
+        Blob body;
+        Blob htmlBody;
+        try {
+            // returns the output of the page as a PDF
+            if(!test.isRunningTest()) {
+                body = pageRef.getContentAsPDF();
+                htmlBody = pageRef2.getContent();
+            }
+            else {
+                htmlBody = Blob.valueof('Dummy COntent for Test Methods');
+                body = Blob.valueOf('Some Text');
+            }    
+        } catch (VisualforceException e) {
+            system.debug('in the catch block');
+            body = Blob.valueOf('Some Text');
+        }
+        ContentVersion cont = generateNewContentVersion(body, diList[0]);
+        //createFeedItem(cont.Id, diList);
+        List<Demand__c> dmandListForUpdate = new List<Demand__c>();
+        for(Demand__c d : diList){
+            d.AttachmentId__c = cont.id;
+            dmandListForUpdate.add(d); 
+        }
+       // update dmandListForUpdate; 
+     
+       /* List<Payment_Milestones__c> pmList = new List<Payment_Milestones__c>();
+        for (DemandWrapper d: customerDemandWrapperMap.get(unitId)) {
+                d.pm.Is_Demand_Raised__c = true;
+                pmList.add(d.pm);
+        }
+        if(!pmList.isEmpty()){
+                try {
+                    update pmList;
+                } catch (Exception ex) {
+                    System.debug('Exception while updating payment milestones:' + ex);
+                }
+        }
+     */
+        
+        if(customer != null) {
+                customer.Latest_Demand_Due_Date__c = invoiceDueDate;
+                update customer;
+        }
+       List<Messaging.Emailfileattachment> fileAttachments = new List<Messaging.Emailfileattachment>();
+       for (ContentVersion c : [SELECT id,VersionData,Title FROM ContentVersion WHERE Id =: cont.Id])
+        {
+            Messaging.Emailfileattachment efa = new Messaging.Emailfileattachment();
+            efa.setFileName(c.Title+'.pdf');
+            efa.setBody(c.VersionData);
+            fileAttachments.add(efa);
+        }
+        List<String> toAddresses = new List<String>();
+        List<String> toCCAddresses = new List<String>();
+        List<String> toBCCAddresses = new List<String>();
+        Map<string,OrgWideEmailAddress> owaMap = new Map<string,OrgWideEmailAddress>();
+        string fromMailId ;
+        if(Customer.Unit__r.Booking__r.owner.Email != null){
+            fromMailId = Customer.Unit__r.Booking__r.owner.Email;
+        }    
+        for(OrgWideEmailAddress owa : [select id,DisplayName, Address from OrgWideEmailAddress]){
+            owaMap.put(owa.Address,owa);
+        }
+        OrgWideEmailAddress[] owea = [select Id from OrgWideEmailAddress 
+                                          where Address =: 'finance.billing@total-environment.com'];
+        
+              
+        
+        //toAddresses.add(customer.Primary_Email__c);
+        //toAddresses.add('aniket.kale@stetig.in');
+        //toAddresses.add('vikash.prasad@total-environment.com');
+        for(Demand__c d : diList){
+            toAddresses.add(d.CreatedById);
+        }
+        system.debug('Owner Email::::'+customer.Unit__r.Booking__r.owner.Email);
+        //*************************************************************************************************
+        //commented because dont need to send demand to applicants when we raise a demand
+        //    List<Applicant_Details__c> appList = new List<Applicant_Details__c>();
+        //    appList = [Select id,Email_Address__c from Applicant_Details__c WHERE Booking__c =: customer.Unit__r.Booking__c];
+        //    for(Applicant_Details__c app:appList){
+        //        toAddresses.add(app.Email_Address__c);
+        //    }
+        //*************************************************************************************************
+        User uObj = new User();
+        uObj = [select id,Name,ProfileId,Email,MobilePhone,Phone from User where id =: customer.Unit__r.Booking__r.ownerId];
+        Profile pro = new Profile();
+        pro = [Select id,Name from Profile where id=:uObj.ProfileId];
+        if(pro.Name == 'Design Manager' && customer.Unit__r.Booking__r.owner.Email != null){
+            toCCAddresses.add(customer.Unit__r.Booking__r.owner.Email);
+        }
+        toCCAddresses.add('finance@total-environment.com');
+      //  toCCAddresses.add('vdpatil6677@gmail.com');
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage(); 
+        // Sets the paramaters of the email
+        email.setSubject( 'Invoice - ' + Customer.Project__r.Name + '-'+'Unit '+Customer.Unit__r.Name);
+        email.setToAddresses( toAddresses);
+        if(!toCCAddresses.isEmpty()){
+            email.setCcAddresses(toCCAddresses);
+        }
+        if(!toBCCAddresses.isEmpty()){
+            email.setBccAddresses(toBCCAddresses);
+        }
+        email.setHtmlBody(htmlBody.toString());
+        /*if(string.isNotBlank(fromMailId) && owaMap != null && owaMap.containsKey(fromMailId))
+            email.setOrgWideEmailAddressId(owaMap.get(fromMailId).id);*/
+        if ( owea.size() > 0 ) {
+                email.setOrgWideEmailAddressId(owea.get(0).Id);
+            }  
+        email.setFileAttachments(fileAttachments);
+
+        // Sends the email
+        Messaging.SendEmailResult [] r = 
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[] {email});   
+    }
+
+    public static ContentVersion generateNewContentVersion(Blob fileContent, Demand__c d) {
+        ContentVersion cont = new ContentVersion();
+        cont.Title = d.Invoice_Number__c + '-' + d.Booking__r.Opportunity__r.Name + '-' + d.Booking__r.Opportunity__r.Unit__r.Tower__r.Cluster__r.Name + '-' + d.Booking__r.Opportunity__r.Unit__r.Tower__r.Name + '-' + d.Booking__r.Opportunity__r.Unit__r.Name + system.now();
+        cont.VersionData = fileContent;
+        cont.PathOnClient = d.Invoice_Number__c +'.pdf';
+        cont.ContentLocation = 'S';
+        cont.Description = 'Demand for :' + d.Booking__r.Opportunity__r.Name;
+        cont.TagCSV = 'Demand for :' + d.Booking__r.Opportunity__r.Name;
+        insert cont;
+        return cont;
+    }
+    
+    public static void createFeedItem(Id contentId, List<Demand__c> dList )
+    {
+        List<FeedItem> flList = new List<FeedItem>();
+        if(!Test.isRunningTest()){
+            Id conDoc = [SELECT ContentDocumentId FROM ContentVersion WHERE Id =:contentId].ContentDocumentId;
+            ContentWorkspace cw = [SELECT Id,name FROM ContentWorkspace where name =: 'Demands'];
+            //Create ContentDocumentLink for putting the doc in the Folder.
+            ContentDocumentLink cDe = new ContentDocumentLink();
+            cDe.ContentDocumentId = conDoc;
+            cDe.LinkedEntityId =cw.Id;// '0582u000000PtZV'; //'production:: 0582u000000PtZV';   // sandbox::: '058p00000002wa9'; // you can use libraryId, objectId,GroupId etc 
+            cDe.ShareType = 'I'; // Inferred permission, checkout description of ContentDocumentLink object for more details
+            insert cDe;
+            
+            for(Demand__c d :dList) {
+                FeedItem elm = new FeedItem(Body = 'Post with related document body', ParentId = d.Id, RelatedRecordId = contentId, Type = 'ContentPost');
+                flList.add(elm);
+            }
+            insert flList;
+        }
+    }
+    
+    public static Map<String, Tax_Slab__c> getTaxRates(Date invoiceDate) {
+             Map<String, Tax_Slab__c> taxslabsMap = new Map<String, Tax_Slab__c>();
+             List<Tax_Slab__c> tsList = new List<Tax_Slab__c>();
+             tsList = [Select Id, Name, Tax_Name__c, Tax1_Name__c, Tax1_Percentage_on_100__c, Tax1_Percentage__c, Taxable1_Percentage__c,
+                                                    Tax2_Name__c, Tax2_Percentage_on_100__c, Tax2_Percentage__c, Taxable2_Percentage__c,
+                                                    From_Date__c, To_Date__c, Tax_Rate__c from Tax_Slab__c 
+                                                    where 
+                                                    From_Date__c <= TODAY and (To_Date__c >= TODAY OR To_Date__c = null)];
+            if(!tsList.isEmpty()) {
+                for(Tax_Slab__c ts: tsList) {
+                    taxslabsMap.put(ts.Tax_Rate__c, ts);
+                }
+            }                                       
+            return taxslabsMap;
+    }
+    public static Map<String, Tax_Slab__c> getTaxRatesForProjectCharges(Id unitId, Date invoiceDate) {
+            Map<String, Tax_Slab__c> taxslabsMap = getTaxRates(invoiceDate);
+            System.debug('Tax Rates:' + taxSlabsMap);
+            Unit__c u = InventoryCostServices.getUnitDetails(unitId);
+            Map<String, Tax_Slab__c> chargeTaxRate = new Map<String, Tax_Slab__c>();
+            if(u != null && taxslabsMap!= null && taxslabsMap.size() >= 1) {
+                Map<String, ProjectCharges__c> projChargeMap  = InventoryCostServices.getProjectChargesMap(u);
+                for(String s: projChargeMap.keySet()) {
+                    if(taxslabsMap.containsKey(projChargeMap.get(s).tax_rate__c)) {
+                        chargeTaxRate.put(s, taxslabsMap.get( projChargeMap.get(s).tax_rate__c ) );
+                    }
+                }
+                // check if OC received.
+                if(u.OC_Received__c) {
+                    // no tax on basic
+                    for(String s: projChargeMap.keySet()) {
+                        if(projChargeMap.get(s).ChargeBucket__c != null && projChargeMap.get(s).ChargeBucket__c == 'Agreement Value')
+                            chargeTaxRate.put(s, taxSlabsMap.get('GST 0%'));
+                    }
+                } else if (u.Tax_Rate_Basic__c != null) {
+                    // this must be a below 50 sq.mt unit and hence has special tax rate, override the tax at unit level.
+                    for(String s: projChargeMap.keySet()) {
+                        if(projChargeMap.get(s).ChargeBucket__c != null && projChargeMap.get(s).ChargeBucket__c == 'Agreement Value')
+                            chargeTaxRate.put(s, taxslabsMap.get( u.Tax_Rate_Basic__c));
+                    }
+                }
+            }
+            System.debug('Project Charges Tax Rate Map:' + chargeTaxRate);
+            return chargeTaxRate;
+    }
+    
+    
+    ////////////// Added By Vikas For getting previous Dues /////////////
+    
+    Public static List<DemandManagementServices.DemandWrapper> getAllPreviousDemand(Id unitId){
+        List<DemandManagementServices.DemandWrapper> dIList = new List<DemandManagementServices.DemandWrapper>();
+        if(unitId != null){
+            String tempQuery = '';
+            for (Integer i = 1; i <= 15; i++) {
+                tempQuery += 'Charge_' + i + '_Name__c' + ',';
+                tempQuery += 'Charge_' + i + '_Demanded__c' + ',';
+                tempQuery += 'Charge_' + i + '_Paid__c' + ',';
+                tempQuery += 'Charge_' + i + '_Tax_Demanded__c' + ',';
+                tempQuery += 'Charge_' + i + '_Tax_Paid__c' + ',';
+                tempQuery += 'Charge_' + i + '_SGST__c' + ',';
+                tempQuery += 'Charge_' + i + '_CGST__c' + ',';
+                tempQuery += 'Charge_' + i + '_Lookup__r.ChargeBucket__c,';
+                tempQuery += 'Charge_' + i + '_Lookup__r.Name,';
+                tempQuery += 'Charge_' + i + '_Balance__c,';
+                tempQuery += 'Charge_' + i + '_Tax_Balance__c,';
+
+            }
+            if (tempQuery.length() > 0 && tempQuery.substring(tempQuery.length() - 1).equals(','))
+            tempQuery = tempQuery.substring(0, tempQuery.length() - 1);
+            String DemandQuery = 'Select Id, Name, Due_Date__c, Invoice_Number__c, Agreement_Value_Demanded_New__c, Service_Tax_on_Agreement_Value_Demanded__c, '+
+                            ' Agreement_Value_Paid__c,Service_Tax_on_Agreement_Value_Paid__c,Agreement_Value_Balance__c,Service_Tax_on_Agreement_Value_Balance__c, '+
+                            ' Debit_Type__c,Debit_Paid__c,Debit_Demanded__c,Debit_Balance__c,Total_Amount_Demanded__c,Total_Amount_Paid__c,Total_Amount_Balance__c,'  +
+                            ' Debit_Tax_Paid__c, Debit_Tax_Balance__c, Debit_Tax_Demanded__c,Total_Tax_Demanded__c,Total_tax_paid__c,Total_Tax_Balance__c,'+ 
+                            ' Payment_Milestones__r.Milestone_Name__c, No_of_Delay__c,Invoice_Date__c,Overall_Interest_Due__c,Total_Interest_Amount_Due__c,' + 
+                            ' Tax_on_Total_Interest_Amount_Due__c,' + tempQuery + 
+                            ' from Demand__c where Booking__r.Unit__c = :unitId and ' +
+                                    '(Total_Amount_Balance__c != 0 or Total_Tax_Balance__c != 0)' +
+                                    ' and Booking__r.Opportunity__r.S_Active__c = true ' +
+                                ' and Booking__r.Opportunity__r.StageName =  \'Booking confirmed\' ' +
+                                ' and Booking__r.Unit__r.Unit_Status__c = \'Sold\' order by Due_Date__c asc' ;
+            List<Demand__c> dList = Database.Query(DemandQuery);
+            
+             if(dList != null && dList.size() > 0) {
+                for(Demand__c d: dList) {
+                    System.debug('demand outstanding:' +d); 
+                    DemandWrapper dmw = new DemandWrapper();
+                    dmw.dm = d;
+                    dmw.ptw.milestoneName = d.Payment_Milestones__r.Milestone_Name__c;
+                    dmw.ptw.demandedAmt = InventoryCostServices.InFormatR(d.Total_Amount_Demanded__c); 
+                    dmw.ptw.receivedAmt = InventoryCostServices.InFormatR(d.Total_Amount_Paid__c);
+                    dmw.ptw.overallAmt = InventoryCostServices.InFormatR(d.Total_Amount_Balance__c);
+                    
+                    dmw.ptw.demandedTax = InventoryCostServices.InFormatR(d.Total_Tax_Demanded__c); 
+                    dmw.ptw.receivedTax = InventoryCostServices.InFormatR(d.Total_tax_paid__c);
+                    dmw.ptw.totalTax = InventoryCostServices.InFormatR(d.Total_Tax_Balance__c);
+                    dmw.ptw.totalOutstandingWithTax = InventoryCostServices.InFormatR(d.Total_Amount_Balance__c + d.Total_Tax_Balance__c);
+                    dmw.ptw.totalDemandedWithTax = InventoryCostServices.InFormatR(d.Total_Amount_Demanded__c + d.Total_Tax_Demanded__c);
+                    dmw.ptw.totalInterest = InventoryCostServices.InFormatR(d.Total_Interest_Amount_Due__c);
+                    dmw.ptw.totalGSTOnInterest = InventoryCostServices.InFormatR(d.Tax_on_Total_Interest_Amount_Due__c);
+                    dmw.ptw.totalDueWithInterest = InventoryCostServices.InFormatR(d.Total_Amount_Balance__c + d.Total_Tax_Balance__c + d.Overall_Interest_Due__c);
+                    dmw.ptw.grandTotal = d.Total_Amount_Balance__c + d.Total_Tax_Balance__c + d.Overall_Interest_Due__c;
+                    dmw.ptw.totalDueWithoutGSTInterest = InventoryCostServices.InFormatR(d.Total_Amount_Balance__c + d.Total_Tax_Balance__c + d.Total_Interest_Amount_Due__c);
+                    dmw.ptw.grandTotalWithoutGSTOnInterest = d.Total_Amount_Balance__c + d.Total_Tax_Balance__c + d.Total_Interest_Amount_Due__c;
+                    dIList.add(dmw);
+                }
+                    
+             }else{
+                 if(Test.isRunningTest()){
+                        DemandWrapper dmw = new DemandWrapper();
+                        dmw.dm = null;
+                        dmw.ptw.milestoneName = '';
+                        dmw.ptw.demandedAmt = null; 
+                        dmw.ptw.receivedAmt = null;
+                        dmw.ptw.overallAmt = null;
+                        
+                        dmw.ptw.demandedTax = null; 
+                        dmw.ptw.receivedTax = null;
+                        dmw.ptw.totalTax = null;
+                        dmw.ptw.totalOutstandingWithTax = null;
+                        dmw.ptw.totalDemandedWithTax = null;
+                        dmw.ptw.totalInterest = null;
+                        dmw.ptw.totalGSTOnInterest = null;
+                        dmw.ptw.totalDueWithInterest = null;
+                        dmw.ptw.grandTotal = null;
+                        dmw.ptw.totalDueWithoutGSTInterest = null;
+                        dmw.ptw.grandTotalWithoutGSTOnInterest = null;
+                        dIList.add(dmw);
+                 }
+             }       
+        
+        }
+        
+        return dIList;
+    }
+    
+
+    public class PrintTotalsWrapper {
+        public String overallAmt {
+            get;
+            set;
+        }
+        public String overallTax1 {
+            get;
+            set;
+        }
+        public String overallTax2 {
+            get;
+            set;
+        }
+        public String totalTax {
+            get;
+            set;
+        }
+        public String overallTDS {
+            get;
+            set;
+        }
+
+        public Decimal overallAmtD {
+            get;
+            set;
+        }
+        public Decimal overallTax1D {
+            get;
+            set;
+        }
+        public Decimal overallTax2D {
+            get;
+            set;
+        }
+        public Decimal overallTDSD {
+            get;
+            set;
+        }
+        public String receivedAmt {
+            get;
+            set;
+        }
+        public String demandedAmt {
+            get;
+            set;
+        }
+        public String receivedTax {
+            get;
+            set;
+        }
+        public String demandedTax {
+            get;
+            set;
+        }
+        
+        public String milestoneName {
+            get;
+            set;
+        }
+        public String totalOutstandingWithTax {
+            get;
+            set;
+        }
+        public String totalDemandedWithTax {
+            get;
+            set;
+        }
+        public String totalDueWithInterest {
+            get;
+            set;
+        }
+        public String totalDueWithoutGSTInterest {
+            get;
+            set;
+        }
+        public String totalInterest {
+            get;
+            set;
+        }
+        public String totalGSTOnInterest {
+            get;
+            set;
+        }
+        public Decimal grandTotal {
+            get;
+            set;
+        }
+        public Decimal grandTotalWithoutGSTOnInterest {
+            get;
+            set;
+        }
+    }
+    public class PrintChargesWrapper {
+        public String chargeName {
+            get;
+            set;
+        }
+        public String percentage {
+            get;
+            set;
+        }
+        public String Amount {
+            get;
+            set;
+        }
+        public String Tax1 {
+            get;
+            set;
+        }
+        public String Tax2 {
+            get;
+            set;
+        }
+    }
+    public class DemandWrapper {
+        public Payment_Milestones__c pm {
+            get;
+            set;
+        }
+        public Demand__c dm {
+            get;
+            set;
+        }
+        public PrintTotalsWrapper ptw {
+            get;
+            set;
+        }
+        public List < PrintChargesWrapper > pcwList {
+            get;
+            set;
+        }
+        public Boolean perMilestoneSelect {
+            get;
+            set;
+        }
+        public DemandWrapper() {
+            pm = new Payment_Milestones__c();
+            ptw = new PrintTotalsWrapper();
+            pcwList = new List < PrintChargesWrapper > ();
+            perMilestoneSelect = false;
+        }
+    }
+    public class CustomerWrapper {
+        public Opportunity o {
+            get;
+            set;
+        }
+        public Unit__c u {
+            get;
+            set;
+        }
+        public String styleName {
+            get;
+            set;
+        }
+        public Boolean groupSelect {
+            get;
+            set;
+        }
+        
+        public CustomerWrapper() {}
+    }
+    
+    
+}
