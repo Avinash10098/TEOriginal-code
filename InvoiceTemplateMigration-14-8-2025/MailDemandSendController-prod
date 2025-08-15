@@ -1,0 +1,513 @@
+public class MailDemandSendController {
+    public Boolean quickSearch {get;set;}
+    public List<Demand__c> demandlist {get;set;}
+    public String selectedVal {get;set;}
+    public String customerName {get;set;}
+    public String unitName {get;set;}
+    public List<string> customerList {get;set;}
+    public List<showMilestone> lstShowMilestone {get;set;}
+    public Map<string, List<showMilestone>> mapShowMilestoneNew {get;set;}
+    public showMilestone sm {get;set;}
+    Public set<Id> dId {get;set;}
+    Public ID cont1 {get;set;}
+    Public Id batchid ;
+    public Boolean batchStatusBool {get;set;}
+    public Boolean pagebuttonvisible {get;set;}
+    public String batchStatus {get;set;}
+    public Boolean pollerBool {get;set;}
+    public string SuccessMessage {get;set;}
+    public PaginationController.PaginationWrapper pgw;
+    private integer counter=0;  //keeps track of the offset
+    private integer list_size=10; //sets the page size or number of rows
+    public integer total_size=100; //used to show user the total size of the list
+    public MailDemandSendController(){
+        
+        demandlist = new List<Demand__c>();
+        customerList = new List<string>();
+        lstShowMilestone = new List<showMilestone>();
+        mapShowMilestoneNew = new Map<string, List<showMilestone>>();
+        selectedVal = '';
+        quickSearch = false;
+        SuccessMessage = '';
+        customerName = '';
+        unitName = '';
+        batchStatusBool = false;
+        pollerBool = false;
+        
+        
+         quickSearch = true;
+        customerList = new List<string>();
+        lstShowMilestone = new List<showMilestone>();
+        mapShowMilestoneNew = new Map<string, List<showMilestone>>();
+        List<Project__c> lstPr = [Select Id, Name from Project__c where Id =: selectedVal];
+        system.debug('lstPr'+lstPr);
+        String query =  'Select Id, name,Quotation__c,Payment_Milestones__c,Booking__r.Unit__r.name,Booking__r.Unit__c,Booking__r.name,Booking__r.Primary_Applicant_Email__c, Due_Date__c, Booking__c, SAP_Invoice_No__c,SAP_Posting_Date__c,Invoice_Date__c,Accounting_Document_Number__c, Total_Amount_Demanded__c,Total_Tax_Demanded__c,'+
+            'Total_Amount_with_Tax_Demanded__c,Booking__r.Primary_Applicant_Name__c,Payment_Milestones__r.Milestone_Name__c,Payment_Milestones__r.TotalMilestoneTax__c,Payment_Milestones__r.Total_Amount_in_Milestone__c from Demand__c where Booking__r.Opportunity__r.StageName = \'Booking confirmed\' and '+
+            'Booking__r.Unit__r.Unit_Status__c = \'Sold\' and Booking__r.Status__c = \'Processed\'  and Booking__c != Null and Email_Sent__c = false and SAP_Invoice_No__c != Null and Debit_Type__c = null and SAP_Posting_Date__c != Null and Booking__r.Status__c != \'Cancelled\' and Due_Date__c != null ORDER BY  Payment_Milestones__r.Milestone_Name__c ' ;//
+        
+        String searchQuery = '';
+        if (selectedVal != null && String.isNotBlank(selectedVal))
+            searchQuery += ' and Booking__r.Project__r.Name like '+'\'%'+lstPr[0].Name+'%\'';
+        if (customerName != null && String.isNotBlank(customerName))
+            searchQuery += ' and Booking__r.Customer_Number__c = '+customerName;
+        if (unitName != null && String.isNotBlank(unitName))
+            searchQuery += ' and Booking__r.Unit__r.Name like '+'\'%'+unitName+'%\'';
+        system.debug('query:::--'+query+searchQuery);  
+     //   demandlist = Database.Query(query + searchQuery);
+    }
+    
+    
+    public void quickSearch() {
+        pagebuttonvisible = true;
+        quickSearch = true;
+        //integer list_size=10;
+        customerList = new List<string>();
+        lstShowMilestone = new List<showMilestone>();
+        mapShowMilestoneNew = new Map<string, List<showMilestone>>();
+        List<Project__c> lstPr = [Select Id, Name from Project__c where Id =: selectedVal];
+        system.debug('lstPr'+lstPr);
+        String query =  'Select Id, name,Quotation__c,Payment_Milestones__c,Booking__r.Unit__r.name,Booking__r.Unit__c,Booking__r.name,Booking__r.Primary_Applicant_Email__c, Due_Date__c, Booking__c, SAP_Invoice_No__c,SAP_Posting_Date__c,Invoice_Date__c,Accounting_Document_Number__c, Total_Amount_Demanded__c,Total_Tax_Demanded__c,'+
+            'Total_Amount_with_Tax_Demanded__c,Booking__r.Primary_Applicant_Name__c,Payment_Milestones__r.Milestone_Name__c,Payment_Milestones__r.TotalMilestoneTax__c,Payment_Milestones__r.Total_Amount_in_Milestone__c from Demand__c where Booking__r.Opportunity__r.StageName = \'Booking confirmed\' and '+
+            'Booking__r.Unit__r.Unit_Status__c = \'Sold\' and Booking__r.Status__c = \'Processed\'  and Booking__c != Null and Booking__r.Is_Zero_FSOA_generated__c != True and Demand_Status__c != \'Reversed\' and Email_Sent__c = false and SAP_Invoice_No__c != Null and Debit_Type__c = null and SAP_Posting_Date__c != Null and Booking__r.Status__c != \'Cancelled\' and Due_Date__c != null' ;//
+        
+        String searchQuery = '';
+        if (selectedVal != null && String.isNotBlank(selectedVal)) 
+            searchQuery = ' and Booking__r.Project__r.Name like '+'\'%'+lstPr[0].Name+'%\'';//
+        if (customerName != null && String.isNotBlank(customerName))
+            searchQuery += ' and Booking__r.Customer_Number__c = '+customerName;
+        if (unitName != null && String.isNotBlank(unitName))
+            searchQuery += ' and Booking__r.Unit__r.Name like '+'\'%'+unitName+'%\'';
+        system.debug('query:::--'+query+searchQuery); 
+        searchQuery += ' limit :list_size ' + ' offset :counter ';
+        demandlist = Database.Query(query + searchQuery);
+      /*  demandlist =[Select Id, name,Quotation__c,Payment_Milestones__c,Booking__r.Unit__r.name,Booking__r.Unit__c,Booking__r.name,Booking__r.Primary_Applicant_Email__c, Due_Date__c, Booking__c, SAP_Invoice_No__c,SAP_Posting_Date__c,Invoice_Date__c,Accounting_Document_Number__c, Total_Amount_Demanded__c,Total_Tax_Demanded__c,
+            Total_Amount_with_Tax_Demanded__c,Booking__r.Primary_Applicant_Name__c,Payment_Milestones__r.Milestone_Name__c,Payment_Milestones__r.TotalMilestoneTax__c,Payment_Milestones__r.Total_Amount_in_Milestone__c from Demand__c where Booking__r.Opportunity__r.StageName = 'Booking confirmed' and 
+            Booking__r.Unit__r.Unit_Status__c = 'Sold' and Booking__r.Status__c = 'Processed' and Booking__c != Null and Email_Sent__c = false and SAP_Invoice_No__c != Null and Debit_Type__c = null and SAP_Posting_Date__c != Null and Booking__r.Status__c != 'Cancelled' and Due_Date__c != null Order By CreatedDate DESC limit :list_size offset :counter ];
+        system.debug('Demandlist Inside QuickSearch'+demandlist.size());*/
+        for(Demand__c dlist : demandlist)
+        {
+            sm = new showMilestone(dlist.Booking__r.Primary_Applicant_Email__c,dlist.Booking__r.name, dlist.Booking__r.Unit__c, dlist.Booking__r.Unit__r.name,dlist.Quotation__c, dlist.booking__c, dlist.Id, dlist.Booking__r.Primary_Applicant_Name__c,dlist.Payment_Milestones__r.Milestone_Name__c, dlist.Invoice_Date__c, dlist.Due_Date__c, dlist.Payment_Milestones__r.Total_Amount_in_Milestone__c, dlist.Payment_Milestones__r.TotalMilestoneTax__c );
+            lstShowMilestone.add(sm);
+            
+        }
+        system.debug('lstShowMilestone:::'+lstShowMilestone);
+        for(showMilestone sml : lstShowMilestone)
+        {
+            
+         //   system.debug('Booking Id:: '+sml.bookingName);
+            
+            if(mapShowMilestoneNew.containsKey(sml.custName+ ' : Unit-'+sml.unitName+' : '+sml.bookingName))
+            {
+                mapShowMilestoneNew.get(sml.custName+ ' : Unit-'+sml.unitName+' : '+sml.bookingName).add(sml);
+                
+            }
+            
+            else
+            {
+                List<showMilestone> lstsml = new List<showMilestone>();
+                lstsml.add(sml);
+                mapShowMilestoneNew.put(sml.custName+ ' : Unit-'+sml.unitName+' : '+sml.bookingName, lstsml);
+            }
+        }
+        customerList.addAll(mapShowMilestoneNew.keySet());
+    }
+    
+    public void SendPerMilestoneDemand()
+    {
+        
+        dId = new Set<Id>();
+        Set<Id> setmilestone = new Set<Id>();
+        for(showMilestone sml : lstShowMilestone){
+            if(sml.selected){
+             /*  Demand__c di = new Demand__c();
+               di.Email_Sent__c = true ;
+               di.Email_Sent_Date__c = system.today();
+               di.Id = sml.dId;
+               update di;*/
+               //setmilestone.add(sml.dId);
+               dId.add(sml.dId);
+               
+               
+            }
+        }
+      
+        BatchMailDemandSend batchmail = new BatchMailDemandSend(dId);
+        batchid = Database.executeBatch(batchmail,1);
+       // AsyncApexJob job = [SELECT Id, Status FROM AsyncApexJob WHERE Id =: batchId];
+        //String JobStatus = job.Status;
+        
+       // system.debug('Batch ID:::'+batchid);
+       // System.debug('Job Status '+JobStatus);
+       /* if(JobStatus == 'Completed'){
+            system.debug('I am Completed ');
+            quickSearch();
+        }*/
+        //Attachment(dId);
+        batchStatusBool = true; 
+        checkBatchStatus();
+        
+        SuccessMessage = 'Email has been successfully Sent To Customer';
+        
+    }
+    
+    Public static void Attachment( id did){ 
+        List < Demand__c > diList = [Select Id, Name , Invoice_Date__c, Due_Date__c,Booking__r.Unit__r.Permitted_Use__c,
+                                     Invoice_Number__c, Booking__r.Opportunity__r.Name,  Booking__r.Opportunity__r.Unit__r.Name,
+                                     Booking__r.Opportunity__r.Unit__r.Tower__r.Name, Booking__r.Opportunity__r.Unit__r.Tower__r.Cluster__r.Name,
+                                     AttachmentId__c,Booking__r.Primary_Applicant_Email__c,Booking__r.Unit__c,CreatedById,
+                                     Booking__r.Unit__r.name,SAP_Invoice_No__c,Payment_Milestones__c,SAP_Posting_Date__c,
+                                     Total_Amount_with_Tax_Demanded__c,Booking__r.Project__r.Name,Booking__r.Relationship_Manager__r.Id,
+                                     Booking__r.Primary_Applicant_Name__c,Booking__r.OwnerId from Demand__c where id =: did];
+ //   system.debug('DList size:::'+diList.size());
+ //       system.debug('DList'+diList);
+        List<Demand__c> dmandListForUpdate = new List<Demand__c>();
+        for(Demand__c d1 : diList){
+  //      system.debug('Payment Milstone ID:::'+d1.Payment_Milestones__c);    
+        PageReference pageRef = new PageReference('/apex/showDemandPreviewNew');
+        pageRef.getParameters().put('mode','raise');
+        pageRef.getParameters().put('letterHead','1');
+        pageRef.getParameters().put('previewId',d1.Booking__r.Unit__c);
+        pageRef.getParameters().put('invoiceNumber',d1.SAP_Invoice_No__c);
+        pageRef.getParameters().put('postingdate',dateFormat(d1.SAP_Posting_Date__c));
+        if(d1.Payment_Milestones__c != null)
+       // pageRef.getParameters().put('demandid',d1.Id);
+        pageRef.getParameters().put('forMilestone',d1.Payment_Milestones__c);
+    	
+        PageReference pageRef2 = new PageReference('/apex/SendDemandMail');
+        pageRef2.getParameters().put('unitId', d1.Booking__r.Unit__c);
+        pageRef2.getParameters().put('invoiceDueDate', d1.Due_Date__c.format());
+        pageRef2.getParameters().put('invoiceNumber', d1.SAP_Invoice_No__c);
+        if(d1.Payment_Milestones__c != null)
+        pageRef2.getParameters().put('milestoneId', d1.Payment_Milestones__c);
+		
+    	// create the new attachment
+        // List < Attachment > aList = new List < Attachment > ();
+        // the contents of the attachment from the pdf
+        Blob body;
+        Blob htmlBody;
+        try {
+            // returns the output of the page as a PDF
+            if(!test.isRunningTest()) {
+                body = pageRef.getContentAsPDF();
+                htmlBody = pageRef2.getContent();
+            }
+            else {
+                htmlBody = Blob.valueof('Dummy COntent for Test Methods');
+                body = Blob.valueOf('Some Text');
+            }    
+        } catch (VisualforceException e) {
+            system.debug('in the catch block');
+            body = Blob.valueOf('Some Text');
+        }
+        
+        ContentVersion cont = generateNewContentVersion(body, d1);
+        //cont1 = cont.id;
+        createFeedItem(cont.Id, d1);
+        
+            d1.AttachmentId__c = cont.id;
+            d1.Email_Sent__c = true;
+            d1.Email_Sent_Date__c = system.now();
+            dmandListForUpdate.add(d1); 
+            
+            //// Email to customer///////////
+        
+        
+        Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
+        List<Messaging.SingleEmailMessage> allMails = new List<Messaging.SingleEmailMessage>();
+        
+        List<Messaging.Emailfileattachment> fileAttachments = new List<Messaging.Emailfileattachment>();
+       for (ContentVersion c : [SELECT id,VersionData,Title FROM ContentVersion WHERE Id =: cont.id])
+        {
+            Messaging.Emailfileattachment efa = new Messaging.Emailfileattachment();
+            efa.setFileName(c.Title+'.pdf');
+            efa.setBody(c.VersionData);
+            fileAttachments.add(efa);
+        }
+        OrgWideEmailAddress[] owea = [select Id from OrgWideEmailAddress 
+                                          where Address =: 'finance.billing@total-environment.com'];
+        
+              
+        if ( owea.size() > 0 ) {
+                message.setOrgWideEmailAddressId(owea.get(0).Id);
+            }  
+       // String Email;
+        //Email = 'aniket.kale@stetig.in';
+            
+        //String[] toAddresses =  new String[] {Email}; 
+        List<String> toAddresses = new List<String>();
+        List<String> toCCAddresses = new List<String>();
+		
+        /*    String TELink = 'http://www.total-environment.com/';
+            String FBLink = 'https://www.facebook.com/TotalEnv/';
+            String YTLink = 'https://www.youtube.com/watch?v=3VlafRMdM70&feature=youtu.be';
+            //String body1 = STR.Body.toString();
+            String myUrl = 'https://totalenvironment--sbdev--c.documentforce.com/servlet/servlet.ImageServer?id=015p0000000f6Mt&oid=00Dp00000009ioT&lastMod=1624527034000';
+            system.debug('imgUrl:'+myUrl);
+            
+                
+                String BodyEmail = 'Dear Mr./Mrs. '+d1.Booking__r.Primary_Applicant_Name__c+','+'<br></br>'+
+                +'<br></br>'+'The Total Environment Story. Click '+'<a href='+YTLink+'>here</a>'+' to watch.';*/
+            String Subject = 'Invoice - '+d1.Booking__r.Project__r.Name+ '-'+'Unit '+d1.Booking__r.Unit__r.name;
+        
+        User uObj = new User();
+        uObj = [select id,Name,ProfileId,Email,MobilePhone,Phone from User where id =: d1.Booking__r.Relationship_Manager__r.Id];
+        Profile pro = new Profile();
+        pro = [Select id,Name from Profile where id=:uObj.ProfileId];
+        
+        
+        
+        
+            //message.setTemplateId(et.id);
+        /*------------------------TO----------------------------------*/
+            List<Applicant_Details__c> appList = new List<Applicant_Details__c>();
+            appList = [Select id,Email_Address__c from Applicant_Details__c WHERE Booking__c =: d1.Booking__c];
+            for(Applicant_Details__c app:appList){
+                toAddresses.add(app.Email_Address__c);
+            }
+            system.debug('toAddresses size::'+toAddresses.size());
+            system.debug('toAddresses ::'+toAddresses);
+      //  toAddresses.add(d1.Booking__r.Primary_Applicant_Email__c);
+        //toAddresses.add('aniket.kale@stetig.in');
+        if(!toAddresses.isEmpty()){
+            system.debug('Inside If');
+        message.setToAddresses(toAddresses);
+        }
+        /*------------------------CC----------------------------------*/
+        if(pro.Name == 'Design Manager' && d1.Booking__r.Relationship_Manager__c != null){
+            toCCAddresses.add(d1.Booking__r.Relationship_Manager__c);
+        }
+            if(d1.Booking__r.Unit__r.Permitted_Use__c == 'Plotted Development'){
+                toCCAddresses.add('finance.landcraft@total-environment.com');
+            }
+            else{
+                toCCAddresses.add('finance@total-environment.com');
+            }    
+        toCCAddresses.add('finance.billing@total-environment.com');    
+        
+        if(!toCCAddresses.isEmpty()){
+            message.setCcAddresses(toCCAddresses);
+        }
+        /*------------------------BCC----------------------------------*/
+        //toBCCAddresses.add('aniket.kale@stetig.in');
+        //toBCCAddresses.add(d1.CreatedById);
+		message.setFileAttachments(fileAttachments);
+        message.setSubject(Subject);
+        message.setHtmlBody(htmlBody.toString());
+        message.setSaveAsActivity(true);
+        message.setWhatId(d1.Id);
+     // message.setTargetObjectId(primaryContact);
+      //message.setWhatId(primaryAccount);
+        allMails.add(message);
+        Messaging.sendEmail(allMails); 
+      //Messaging.sendEmail(new Messaging.SingleEmailMessage[] { allMails });
+  //    System.debug('You have made ' + Limits.getEmailInvocations() + ' email calls out of ' + Limits.getLimitEmailInvocations() + ' allowed');
+    }
+        
+        update dmandListForUpdate;
+       
+    }
+    
+    public static ContentVersion generateNewContentVersion(Blob fileContent, Demand__c d) {
+        ContentVersion cont = new ContentVersion();
+        cont.Title = d.Invoice_Number__c + '-' + d.Booking__r.Opportunity__r.Name + '-' + d.Booking__r.Opportunity__r.Unit__r.Tower__r.Cluster__r.Name + '-' + d.Booking__r.Opportunity__r.Unit__r.Tower__r.Name + '-' + d.Booking__r.Opportunity__r.Unit__r.Name + system.now();
+        cont.VersionData = fileContent;
+        cont.PathOnClient = d.Invoice_Number__c +'.pdf';
+        cont.ContentLocation = 'S';
+        cont.Description = 'Demand for :' + d.Booking__r.Opportunity__r.Name;
+        cont.TagCSV = 'Demand for :' + d.Booking__r.Opportunity__r.Name;
+        insert cont;
+        return cont;
+        
+    }
+    
+     public static void createFeedItem(Id contentId, Demand__c demand )
+    {
+        List<FeedItem> flList = new List<FeedItem>();
+        if(!Test.isRunningTest()){
+            Id conDoc = [SELECT ContentDocumentId FROM ContentVersion WHERE Id =:contentId].ContentDocumentId;
+            ContentWorkspace cw = [SELECT Id,name FROM ContentWorkspace where name =: 'Demands'];
+            //Create ContentDocumentLink for putting the doc in the Folder.
+            ContentDocumentLink cDe = new ContentDocumentLink();
+            cDe.ContentDocumentId = conDoc;
+            cDe.LinkedEntityId = cw.Id;//'058p00000002wa9'; //'production:: 0582u000000PtZV';   // sandbox::: '058p00000002wa9'; // you can use libraryId, objectId,GroupId etc 
+            cDe.ShareType = 'I'; // Inferred permission, checkout description of ContentDocumentLink object for more details
+            insert cDe;
+            
+            
+                FeedItem elm = new FeedItem(Body = 'Post with related document body', ParentId = demand.Id, RelatedRecordId = contentId, Type = 'ContentPost');
+                flList.add(elm);
+            
+            insert flList;
+        }
+    }
+    public PageReference Beginning() { //user clicked beginning
+      counter = 0;
+        quickSearch();
+      return null;
+   }
+
+   public PageReference Previous() { //user clicked previous button
+      counter -= list_size;
+       quickSearch();
+      return null;
+   }
+
+   public PageReference Next() { //user clicked next button
+      counter += list_size;
+       quickSearch();
+      return null;
+   }
+
+   public PageReference End() { //user clicked end
+      counter = total_size - math.mod(total_size, list_size);
+       quickSearch();
+      return null;
+   }
+
+   public Boolean getDisablePrevious() { 
+      //this will disable the previous and beginning buttons
+      if (counter>0) return false; else return true;
+   }
+
+   public Boolean getDisableNext() { //this will disable the next and end buttons
+      if (counter + list_size < total_size) return false; else return true;
+   }  
+    public void checkBatchStatus( ) {
+        system.debug('Inside CheckBAtchStatus::'+batchid);
+        AsyncApexJob job = [SELECT Id, Status FROM AsyncApexJob WHERE Id =: batchid];
+        batchStatus = job.Status;
+        if(batchStatus == 'Completed') {
+            pollerBool = false;
+            batchStatusBool = false;
+            quickSearch();
+        } else {
+            pollerBool = true;
+        }
+    }
+    public List < SelectOption > getProjects {
+        get {
+            
+            List < SelectOption > optns = new List < Selectoption > ();
+            List < Project__c > queryResult = new List < Project__c > ();
+            
+            queryResult = [Select Id, Name from Project__c];
+            optns.add(new SelectOption('', 'Select a Project'));
+            
+            for (Project__c obj: queryResult) {
+                optns.add(new SelectOption(obj.Id, obj.Name));
+            }
+            return optns;
+        }
+        set;
+    }
+    
+    public class customerListWrapper
+    {
+        public string BookingName {get;set;}
+        public string UnitName {get;set;}
+        
+        public customerListWrapper(string bkName, string uName)
+        {
+            this.BookingName = bkName;
+            this.UnitName = uName;
+        }
+    }
+    
+    public class showMilestone
+    {
+        public string milestoneName {get;set;}
+        public string demandDate {get;set;}
+        public Date NewInDate {get;set;}
+        Public Date newDdate {get;set;}
+        public string dueDate {get;set;}
+        
+        public string Dtotalamt {get;set;}
+        public string Dtotaltax {get;set;}
+        public string DAmount {get;set;}
+        
+        public decimal totalamt {get;set;}
+        public decimal totaltax {get;set;}
+        public decimal Amount {get;set;}
+        
+        public Boolean selected {get;set;}
+        public string bookingName {get;set;}
+        public string unitName {get;set;}
+        public string custName {get;set;}
+        public string quoteId {get;set;}
+        public string bkId {get;set;}
+        public string dId {get;set;}
+        public string bEmail {get;set;}
+        public string projectChargeId {get;set;}
+        public string projectName {get;set;}
+        public Map<String, ProjectCharges__c> projectMap {get;set;}
+        
+        public showMilestone(string bEmail, string bName, string unit, string unitName, string qid, string bId, string dId,string cName, string mName, date dDate, date dueDate, decimal totalamt, decimal totaltax)
+        {
+            this.milestoneName = mName;
+            this.NewInDate = dueDate;
+            this.newDdate = dueDate.addDays(15);
+            this.demandDate = dueDate.format();
+            Date tempDate = dueDate.addDays(15);
+            this.dueDate = tempDate.format();
+            if(totalamt != null)
+            this.totalamt = totalamt;
+            if(totaltax != null)
+            this.totaltax = totaltax / 2;
+            //this.Amount = Amt;
+            if(totalamt != null)
+            this.Dtotalamt = InventoryCostServices.INFormat(totalamt);
+            if(totaltax != null)
+            this.Dtotaltax = InventoryCostServices.INFormat(totaltax/2) ;
+            //this.DAmount = InventoryCostServices.INFormat(Amt);
+            
+            this.selected = false;
+            this.bookingName = bName;
+            this.quoteId = qid;
+            this.dId = dId;
+            this.bkId = bId;
+            this.unitName = unitName;
+            this.custName = cName;
+            this.bEmail = bEmail;
+            
+            /*Unit__c ut = [Select id, name,Project__c, project__r.Name,Premium_1__c,Premium_2__c,Premium_3__c, Premium_4__c,Premium_5__c,Premium_6__c
+                          from Unit__c where Id =: unit];
+            projectMap = InventoryCostServices.getProjectChargesMap(ut);
+            system.debug(projectMap.get('Basic').Id);
+            this.projectChargeId = projectMap.get('Basic').Id;
+            this.projectName = ut.project__r.Name;*/
+            
+        }
+    }
+    public static string dateFormat(Date dt)
+    {
+        system.debug('inside CusomDateFormat Method:: '+dt);
+        string stDate = '';
+        if(dt != Null){
+            string stMonth = '';
+            string stDay = '';
+            Integer day = dt.Day();
+            Integer month = dt.month();
+            Integer year = dt.year();
+            string stYear = string.valueof(year);
+            
+            stDay = day+'-';
+            
+            if(month == 1){ stMonth = 'Jan';}
+            else if(month == 2) { stMonth = 'Feb'; }
+            else if(month == 3) { stMonth = 'Mar'; }
+            else if(month == 4) { stMonth = 'Apr'; }
+            else if(month == 5) { stMonth = 'May'; }
+            else if(month == 6) { stMonth = 'Jun'; }
+            else if(month == 7) { stMonth = 'Jul'; }
+            else if(month == 8) { stMonth = 'Aug'; }
+            else if(month == 9) { stMonth = 'Sep'; }
+            else if(month == 10) { stMonth = 'Oct'; }
+            else if(month == 11) { stMonth = 'Nov'; }
+            else if(month == 12) { stMonth = 'Dec'; }
+            
+            stDate = stDay + '' + stMonth + '-' + stYear; 
+            
+        }
+        return stDate;
+    }
+}
