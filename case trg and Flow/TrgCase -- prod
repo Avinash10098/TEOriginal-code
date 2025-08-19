@@ -1,0 +1,73 @@
+trigger TrgCase on Case (after update) {
+	if (Trigger.IsAfter) {
+          System.debug('In after');
+          if (Trigger.isUpdate){
+            System.debug('In after update');
+              
+             List<case> c1 = new List<case>();
+             List<case> c2 = new List<case>();
+             List<case> c3 = new List<case>();
+             List<ID> c4 = new List<ID>();
+                            
+              for(case c : trigger.new){
+                  if(trigger.oldMap.get(c.id).Category__c != trigger.newMap.get(c.id).Category__c && trigger.newMap.get(c.id).Category__c != null){
+                     c1 = [select id,Previous_Category__c,Category__c from case where id =: c.id];
+                      if(!c1.isEmpty()){
+                      	c1[0].Previous_Category__c = trigger.oldMap.get(c.id).Category__c;
+                          system.debug('Case list c1::'+c1);
+                      }
+                  }
+             
+                  if(trigger.oldMap.get(c.id).Sub_Category__c != trigger.newMap.get(c.id).Sub_Category__c && trigger.newMap.get(c.id).Sub_Category__c != null){
+                     c2 = [select id,Previous_Sub_Category__c,Sub_Category__c from case where id =: c.id];
+                      if(!c2.isEmpty()){
+                      	c2[0].Previous_Sub_Category__c = trigger.oldMap.get(c.id).Sub_Category__c;
+                          system.debug('Case list c2::'+c2);
+                      }
+                  }
+                  /*if(trigger.oldMap.get(c.id).Case_Status__c != trigger.newMap.get(c.id).Case_Status__c && trigger.newMap.get(c.id).Case_Status__c != null){
+                     c3 = [select id,Case_Status__c,Status,Date_Time_Re_Open__c from case where id =: c.id];
+                      if(!c3.isEmpty()){
+                      	c3[0].Status = trigger.newMap.get(c.id).Case_Status__c;
+                          system.debug('Case list c3::'+c3);
+                      }
+                  }*/
+
+                  }
+                  
+              
+              if(!c1.isEmpty()){
+                  update c1;
+                  system.debug('Case list c1::'+c1);
+              }
+              if(!c2.isEmpty()){
+                  update c2;
+                  system.debug('Case list c2::'+c2);
+              }
+             /* if(!c3.isEmpty()){
+                  update c3;
+                  system.debug('Case list c3::'+c3);
+              }*/
+      		  
+             /*for(case cs : trigger.old){
+                  if( cs.Sub_Category__c == 'To be deleted'){
+                     c4.add(cs.id);
+                      }                  
+              }
+              if(!c4.isEmpty()){
+            	database.delete(c4);
+        	  }*/
+              Id OwnerId = [Select id from User where Username = 'bhavana.meloth@total-environment.com'].id;
+              List<Case> casesToUpdate = new List<Case>();
+              for(case ca : trigger.new){
+                  if(trigger.oldMap.get(ca.id).Sub_Category__c != trigger.newMap.get(ca.id).Sub_Category__c && ca.Sub_Category__c == 'To be deleted'){
+                      Case newcase = new Case();
+                      newcase.id = ca.id;
+                      newcase.OwnerId = OwnerId;
+                      casesToUpdate.add(newcase);
+                  }
+              }
+              update casesToUpdate;
+    }
+}
+}
