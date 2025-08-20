@@ -1,0 +1,569 @@
+<apex:page docType="html-5.0" controller="UnitTransfer" showHeader="false" sidebar="false" standardStylesheets="false">
+    <html
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink">
+        <head>
+            <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+            <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+            <link href="https://fonts.googleapis.com/css?family=Lato:400,700&subset=latin,latin-ext" rel="stylesheet" type="text/css" />
+            <script src="/soap/ajax/9.0/connection.js"></script>
+        </head>
+        <style>
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th, .slds td {
+        font-family: 'Lato';
+        font-size: 12px;
+        }
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th {
+        text-align: center;
+        }
+        .slds .slds-theme--shade {
+        background-color: aliceblue;
+        }
+        .slds .slds-button {
+            background-color:aliceblue;
+            line-height: 10px;
+            min-height: 22px;
+            color:#041122;
+            font-weight:normal;
+            border:1px solid black;
+            padding-left: 5px;
+            padding-right: 5px;
+            align:center;
+        }
+        .slds .slds-form-element__label {
+            color: #5c1628;
+            font-weight: bold;
+            text-align:right;
+        }
+        body .bPageBlock .pbBody .pbSubheader {
+            background-color:#fff7f8;
+            border-color: black;
+            color:#041122;
+            font-weight: bold;
+        }
+        
+        div.fadeMe {
+          opacity:    0.5; 
+          background: #D9E9FF; 
+          width:      100%;
+          height:     100%; 
+          z-index:    1000;
+          top:        0; 
+          left:       0; 
+          position:   fixed; 
+        }
+       
+        .messageTable {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-weight:700;
+            color: #BE2625;
+            width:100%;
+            background-color:#EEB4B4; !important
+            }
+            .slds .slds-icon-action-edit {
+                background-color: #111625;
+        }
+            /** copying salesforce lookup input styles
+        since we are turning off the std styles **/
+        .lookupInput
+        {
+            display: inline;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .lookupInput img
+        {
+            background-repeat: no-repeat;
+            margin-right: .25em;
+            vertical-align: middle;
+        }
+        .lookupInput .disabled
+        {
+            background-color: #ccc;
+        }
+        .lookupInput .emptyDependentLookup
+        {
+            font-style: italic;
+        }
+        .lookupInput input[readonly]
+        {
+            background-color: #e6e6e6;
+            border: 2px solid #e6e6e6;
+            color: #333;
+            cursor: default;
+        }
+        .lookupInput a.readOnly
+        {
+            float: right;
+        }
+        .lookupInput span.readOnly
+        {
+            display: block;
+            white-space: normal;
+        }
+        .lookupInput span.totalSummary
+        {
+            font-weight: bold;
+        }
+        .inlineEditRequiredDiv .lookupInput img,.inlineEditDiv .lookupInput img
+        {
+            vertical-align: middle;
+        }
+        .quickCreateModule .lookupInput input {
+            max-width: 155px
+        }
+        .lookupIcon {
+            background-image: url(/img/func_icons/util/lookup20.gif);
+            background-position: 0 0;
+            width: 20px;
+            height: 20px;
+            background-position: top left
+        }
+        .lookupIconOn {
+            background-image: url(/img/func_icons/util/lookup20.gif);
+            background-position: 0 0;
+            width: 20px;
+            height: 20px;
+            background-position: top right
+        }
+        .paymenttoStyle th {
+                background-color:#fff7f8 !important;
+                align:center !important;
+                valign:bottom !important;
+                border: 1px solid #ffe9ec !important;
+            }
+            .paymenttoStyle {
+                border: 2px solid #42647F !important;
+                width:90% !important;
+                margin:auto !important;
+                
+            }
+            .paymenttoStyle td {
+                    border: 1px solid #ffe9ec !important;
+            }
+            
+         .topTable  {
+            width:90% !important;
+            margin:auto !important;
+         }
+         .topTable  th {
+         border-width: 1px !important;
+         padding: 3px !important;
+         
+         }
+         .topTable  td {
+         padding: 1px !important;
+         vertical-align:top !important;
+         }
+            
+    </style>
+        <body>
+            <!-- REQUIRED SLDS WRAPPER -->
+            <div class="slds">
+                <!-- PRIMARY CONTENT WRAPPER -->
+                <div class="myapp">
+                    <!-- UNIT TRANSFER-->
+                    <div aria-labelledby="DSform">
+                        <!-- BOXED AREA -->
+                        <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+                            <legend id="dsForm" class="slds-text-heading--medium slds-p-vertical--medium">Unit Transfer</legend>
+                            <apex:form id="unittransferform">
+                                <apex:actionStatus id="status">
+                                    <apex:facet name="start">
+                                        <div class="fadeMe">  &nbsp;  </div>
+                                        <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                            <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                                <img src="{!$Resource.spinner}" style="float: left; margin: 0px;" />
+                                                <span style="display: inline-block;">Please Wait...</span>
+                                            </div>
+                                        </div>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                                <apex:actionFunction name="selectQuoteFunction" action="{!selectQuote}"   reRender="messages,printArea" status="status">
+                                    <apex:param id="qId" name="sq" value="" />
+                                </apex:actionFunction>
+                                <apex:actionFunction name="rowModifyFunction" action="{!rowModify}" reRender="plan" status="status" >
+                                    <apex:param id="rowNumber" name="rowNumber" value="index" assignTo="{!rowNumber}"/>
+                                    <apex:param id="actionType" name="actionType" value="type" assignTo="{!actionType}"/>
+                                </apex:actionFunction>
+                                <apex:actionFunction name="disableFieldFunction" action="{!dummy}" status="status" reRender="plan,messages,printArea"></apex:actionFunction>
+                                <apex:outputPanel id="messages" >
+                                    <apex:PageMessages id="pageMsgs" />
+                                </apex:outputPanel>
+                                <apex:outputPanel id="printArea">
+                                    <apex:outputPanel rendered="{!NOT(transferComplete)}">
+                                    <h2 style="text-align:left;font-style:italic;color:grey;">Before you start, please verify</h2>
+                                    <br/>
+                                    <ul style="text-align:left;color:#041122;font-style:italic;">
+                                        <li>The existing booking on the current unit is cancelled with reason for cancellation as "Unit Transfer"</li>
+                                        <li>You have created a new opportunity and quotation for the new unit the customer wants to transfer to</li>
+                                        <li>For transfer between two companies/legal entities please cancel the existing booking and create a new booking</li>
+                                    </ul>
+                                    <br/>
+                                    <apex:PageBlock >
+                                        <apex:outputPanel id="customerPanel">
+                                            <apex:pageBlockSection id="customerBlock" title="Customer Details" collapsible="false" columns="2"  rendered="{!oList1.size ==1 && selectedQuote == null}">
+                                                <apex:pageBlockSectionItem >
+                                                    <apex:outputLabel styleclass="slds-form-element__label"  >Applicant Names</apex:outputLabel>
+                                                    <apex:outputText value="{!applicantNames}"/>
+                                                </apex:pageBlockSectionItem>
+                                                <apex:pageBlockSectionItem >
+                                                    <apex:outputLabel styleclass="slds-form-element__label"  >Transferring From</apex:outputLabel>
+                                                    <apex:outputText value="{!oList1[0].Unit__r.Name}"/>
+                                                </apex:pageBlockSectionItem>
+                                            </apex:pageBlockSection>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel id="quotePanel" rendered="{!selectedQuote == null && qList.size >= 1}">
+                                            <apex:pageBlockSection id="quoteBlock" title="Quote Selection" collapsible="false" columns="1" >
+                                                <apex:pageBlockSectionItem >
+                                                    <apex:outputLabel styleclass="slds-form-element__label"  >Quotation Name</apex:outputLabel>
+                                                    <apex:selectRadio value="{!selectedQuote}"  layout="pageDirection" onchange="selectQuote();">
+                                                        <apex:selectOptions value="{!lstQuotes}"/>
+                                                    </apex:selectRadio>
+                                                </apex:pageBlockSectionItem>
+                                            </apex:pageBlockSection>
+                                        </apex:outputPanel>
+                                    </apex:PageBlock>
+                                    <apex:outputPanel id="compareOldNew" rendered="{!selectedQuote != null}">
+                                        <table class="topTable">
+                                            <tr>
+                                                <th colspan="2"> Transfer Snapshot - Review details and click Transfer to proceed </th>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <table class="paymenttoStyle">
+                                                        <tr>
+                                                            <th colspan="2"> Old Unit Details  </th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Unit Name</td>
+                                                            <td> {!fromUnitW.unitName} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Project Name</td>
+                                                            <td> {!fromUnitW.projectName} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Floor</td>
+                                                            <td> {!fromUnitW.floor} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Configuration</td>
+                                                            <td> {!fromUnitW.configuration} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Carpet Area</td>
+                                                            <td> {!fromUnitW.carpetArea} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Consideration Value</td>
+                                                            <td> {!fromUnitW.considerationValue} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Legal Entity</td>
+                                                            <td> {!fromUnitW.legalEntityName} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Booking Date</td>
+                                                            <td> {!fromUnitW.bookingDate} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Cancellation Date</td>
+                                                            <td> {!fromUnitW.dateOfCancellation} </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                                <td>
+                                                    <table class="paymenttoStyle" >
+                                                        <tr>
+                                                            <th colspan="2"> New Unit Details  </th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Unit Name</td>
+                                                            <td> {!toUnitW.unitName} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Project Name</td>
+                                                            <td> {!toUnitW.projectName} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Floor</td>
+                                                            <td> {!toUnitW.floor} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Configuration</td>
+                                                            <td> {!toUnitW.configuration} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Carpet Area</td>
+                                                            <td> {!toUnitW.carpetArea} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Consideration Value</td>
+                                                            <td> {!toUnitW.considerationValue} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Legal Entity</td>
+                                                            <td> {!toUnitW.legalEntityName} </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan="2">&nbsp;</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan="2">&nbsp;</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="2">
+                                                    <apex:outputText value="This is a transfer within the same legal entity" rendered="{!NOT(isDifferentLegalEntities)}"/>
+                                                    <apex:outputText value="This is a transfer between two different legal entities" rendered="{!isDifferentLegalEntities}"/>
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="2" style="text-align:center;">
+                                                    <apex:commandButton value="Transfer" action="{!changePaymentMilestones}" styleClass="slds-button slds-button--brand slds-button--small" disabled="{!changePaymilestones}" rerender="printArea,messages,payMilestoneEdit" status="status"/>&nbsp;&nbsp;
+                                                                    
+                                                    <apex:commandButton value="Reset" action="{!resetPage}" styleClass="slds-button slds-button--brand slds-button--small" rendered="{!NOT(isConfirmed)}" rerender="printArea,messages,payMilestoneEdit" status="status"/>
+                                                </th>
+                                            </tr>
+                                        </table>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!changePaymilestones}" >
+                                        <table class="topTable">
+                                            <tr>
+                                                <th colspan="1"></th>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <table class="paymenttoStyle">
+                                                        <tr>
+                                                            <th colspan="4"> Amounts demanded and Paid against {!fromUnitW.unitName}  </th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Agreement Value Demanded</td>
+                                                            <td> {!oldBookingDetails.Total_Agreement_Value_Demanded__c} </td>
+                                                            <td>Agreement Value Paid</td>
+                                                            <td> {!oldBookingDetails.Total_Agreement_Value_Paid__c} </td>
+                                                        </tr>
+                                                        <tr></tr>
+                                                        <tr>
+                                                            <td>Agreement Value Tax Demanded</td>
+                                                            <td> {!oldBookingDetails.Total_Service_Tax_Demanded__c} </td>
+                                                            <td>Agreement Value Tax Paid</td>
+                                                            <td> {!oldBookingDetails.Total_Service_Tax_Paid__c} </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <br/>
+                                    </apex:outputPanel>
+                                    <br/>
+                                    <apex:outputPanel id="plan">
+                                        <apex:outputPanel rendered="{!changePaymilestones && NOT(isConfirmed) }">
+                                            <apex:outputPanel id="messages1" >
+                                                <apex:PageMessages id="pageMsgs1" />
+                                            </apex:outputPanel>
+                                            <apex:variable var="index" value="{!0}"/>
+                                            <table class="paymenttoStyle">
+                                                <tr>
+                                                    <th colspan="9">
+                                                        <apex:outputText value="There is diffrence in milestones {!amountDiffrenceTobeSorted} which needs to be sorted in below plan"/>
+                                                    </th>
+                                                    <th colspan="1">
+                                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!updatePlan}" id="updateScheduleBtn" value="Update Schedule" title="Update Schedule" status="status" rerender="plan,printcharg,messages1"/>
+                                                        <!-- printArea,payMilestoneEdit -->
+                                                    </th>
+                                                    <th colspan="1">
+                                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!confirmEditSchedule}" id="confirmBtn" value="Confirm Schedule" title="Confirm Schedule" rendered="{!NOT(validationError)}" status="status" rerender="plan,printcharg,messages1"/>
+                                                    </th>
+                                                    <th colspan="1">
+                                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" id="cancelEditBtn" action="{!cancelEditSchedule}" value="Cancel Schedule" title="Confirm Schedule" status="status" rerender="plan,printcharg,messages1"/>
+                                                    </th>
+                                                </tr>
+                                                <tr></tr>
+                                                <tr>
+                                                    <th>Milestone</th>
+                                                    <th>Days Offset</th>
+                                                    <th>Milestone Type</th>
+                                                    <th>Construction Stage</th>
+                                                    <th>Amount Type</th>
+                                                    <th>Milestone Percentage</th>
+                                                    <th>Milestone Amount</th>
+                                                    <th>Due Date</th>
+                                                    <th>Amount</th>
+                                                    <th>Tax</th>
+                                                    <th>Total</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                                <apex:repeat value="{!payPlanDetails}" var="ppd">
+                                                    <tr class="{!ppd.editedRowStyle}">
+                                                        <td>
+                                                            <apex:outputText value="{!ppd.tobePaid}" rendered="{!(ppd.pm != null && ppd.basicMilestone && !ppd.allowedEdit)}"/>
+                                                            <apex:inputField value="{!ppd.ppm.Milestone_Name_Picklist__c}" rendered="{!(ppd.pm != null && ppd.basicMilestone && ppd.allowedEdit)}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:inputField value="{!ppd.pm.Number_Of_Days__c}" rendered="{!ppd.pm != null && ppd.allowedEdit}"/>
+                                                            <apex:outputField value="{!ppd.pm.Number_Of_Days__c}" rendered="{!ppd.pm != null && ppd.basicMilestone && !ppd.allowedEdit}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:inputField value="{!ppd.pm.Milestone_Type_edit__c}" rendered="{!ppd.pm != null && ppd.allowedEdit}"/>
+                                                            <apex:outputField value="{!ppd.pm.Milestone_Type_edit__c}" rendered="{!ppd.pm != null && ppd.basicMilestone && !ppd.allowedEdit}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:outputPanel rendered="{!ppd.pm != null && ppd.allowedEdit}">
+                                                                <apex:selectList id="stageOptions" size="1" value="{!ppd.pm.Project_Construction_Stages__c}" styleclass="slds-select__small" multiselect="false">
+                                                                    <apex:selectOptions value="{!ppd.lstConstructionStages}"/>
+                                                                </apex:selectList>
+                                                            </apex:outputPanel>
+                                                            <apex:outputPanel rendered="{!ppd.pm != null && !ppd.allowedEdit && ppd.pm.Milestone_Type_edit__c != 'Date Linked'}">
+                                                                <!--  -->
+                                                                <apex:outputText value="{!ppd.tobePaid}" />
+                                                            </apex:outputPanel>
+                                                        </td>
+                                                        <td>
+                                                            <apex:inputField value="{!ppd.ppm[ppd.fldMap['CHARGETYPE']]}" onChange="disableFieldFunction()" rendered="{!ppd.pm != null && ppd.allowedEdit}"/>
+                                                            <apex:outputField value="{!ppd.ppm[ppd.fldMap['CHARGETYPE']]}" rendered="{!ppd.pm != null && ppd.basicMilestone && !ppd.allowedEdit}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:inputField value="{!ppd.pm[ppd.fldMap['CHARGEPCT']]}" rendered="{!ppd.pm != null && ppd.allowedEdit}" />
+                                                            <!-- && ppd.ppm.Charge1Type__c == 'Percentage'}" -->
+                                                            <apex:outputField value="{!ppd.pm[ppd.fldMap['CHARGEPCT']]}" rendered="{!ppd.pm != null && ppd.basicMilestone && !ppd.allowedEdit}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:inputText value="{!ppd.milestoneAmount}" rendered="{!ppd.pm != null && ppd.allowedEdit}" />
+                                                            <!-- && ppd.ppm.Charge1Type__c == 'Amount' -->
+                                                            <apex:outputText value="{!ppd.milestoneAmount}" rendered="{!ppd.pm != null && ppd.basicMilestone && !ppd.allowedEdit}" />
+                                                        </td>
+                                                        <td>
+                                                            <apex:outputField value="{!ppd.pm.Milestone_Due_Date__c}" rendered="{!ppd.pm != null && ppd.basicMilestone}" />
+                                                        </td>
+                                                        <td>
+                                                            <apex:outputText value="{!ppd.amount}" rendered="{!ppd.pm != null && ppd.basicMilestone}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:outputText value="{!ppd.tax}" rendered="{!ppd.pm != null && ppd.basicMilestone}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:outputText value="{!ppd.total}" rendered="{!ppd.pm != null && ppd.basicMilestone}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:commandLink value="+ " onclick="rowModify({!index},'add');return false;"  rendered="{!ppd.pm != null && ppd.allowedEdit}" />
+                                                            <apex:commandLink value=" -" onclick="rowModify({!index},'del');return false;"  rendered="{!ppd.pm != null && ppd.allowedEdit}" />
+                                                            <apex:variable var="index" value="{!index + 1}" />
+                                                        </td>
+                                                    </tr>
+                                                </apex:repeat>
+                                            </table>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel id="printcharg">
+                                        <apex:outputPanel rendered="{!isConfirmed}" >
+                                            <table class="topTable">
+                                                <tr>
+                                                    <th colspan="1"> Below are details of charges demanded in the previous unit and the adjusted payment plan for the new unit</th>
+                                                </tr>
+                                                <tr>
+                                                    <th colspan="2" style="text-align:center;">
+                                                        <apex:commandButton value="Confirm Transfer" action="{!performTransfer}" styleClass="slds-button slds-button--brand slds-button--small" disabled="{!transferComplete}" rerender="printArea,messages,payMilestoneEdit,completeTransferBlock" status="status"/>&nbsp;&nbsp;
+                                                     
+                                                        <apex:commandButton value="Reset" action="{!resetPage}" styleClass="slds-button slds-button--brand slds-button--small" rerender="printArea,messages,payMilestoneEdit" status="status"/>
+                                                    </th>
+                                                </tr>
+                                                <tr>
+                                                    <th colspan="1"></th>
+                                                </tr>
+                                            </table>
+                                            <tr>
+                                                <td>
+                                                    <table class="paymenttoStyle">
+                                                        <tr>
+                                                            <th colspan="1"> MilestoneName </th>
+                                                            <th colspan="1"> Total Amount to be Paid (₹)</th>
+                                                            <th colspan="1"> Charge Name </th>
+                                                            <th colspan="1"> Percentage </th>
+                                                            <th colspan="1"> Amount (₹) </th>
+                                                            <th colspan="1"> SGST (₹)</th>
+                                                            <th colspan="1"> CGST (₹)</th>
+                                                        </tr>
+                                                        <tr>
+                                                            <apex:repeat value="{!printChargesMap}" var="milestone">
+                                                                <tr>
+                                                                    <td rowspan="{!printTotalsMap[milestone].chargeCount}"> {!printTotalsMap[milestone].milestoneName} </td>
+                                                                    <td rowspan="{!printTotalsMap[milestone].chargeCount}"> 
+                                                                    {!printTotalsMap[milestone].overallAmt} 
+                                                                        <br/>
+                                                                    {!printTotalsMap[milestone].overallTax1} 
+                                                                        <br/>
+                                                                    {!printTotalsMap[milestone].overallTax2} 
+                                                                        <br/>
+                                                                    </td>
+                                                                    <apex:repeat value="{!printChargesMap[milestone]}" var="charges">
+                                                                        <tr>
+                                                                            <td> {!charges.chargeName} </td>
+                                                                            <td> {!charges.percentage} </td>
+                                                                            <td> {!charges.Amount} </td>
+                                                                            <td> {!charges.Tax1} </td>
+                                                                            <td> {!charges.Tax2} </td>
+                                                                        </tr>
+                                                                    </apex:repeat>
+                                                                </tr>
+                                                            </apex:repeat>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                                </apex:outputPanel>
+                                <apex:outputPanel id="completeTransferBlock">
+                                    <apex:outputPanel rendered="{!transferComplete}">
+                                        <table class="topTable">
+                                            <tr>
+                                                <th colspan="2">
+                                                    <apex:outputText value="Transfer Process is complete. Please Click on Close button"/>
+                                                    
+                                                </th>
+                                                <tr>
+                                                    <th colspan="2" style="text-align:center;">
+                                                        <apex:commandButton value="Close" action="{!closePage}" styleClass="slds-button slds-button--brand slds-button--small" rerender="printArea,messages,payMilestoneEdit" status="status"/>
+                                                    </th>
+                                                </tr>
+                                            </tr>
+                                        </table>
+                                </apex:outputPanel>
+                                </apex:outputPanel>
+                            </apex:form>
+                            <!-- UNIT TRANSFER FORM -->
+                        </fieldset>
+                        <!-- BOXED AREA -->
+                    </div>
+                    <!-- UNIT TRANSFER-->
+                </div>
+                <!-- PRIMARY CONTENT WRAPPER -->
+            </div>
+            <!-- REQUIRED SLDS WRAPPER -->
+            <!-- JAVASCRIPT -->
+            <script>
+            var j$ = jQuery.noConflict();
+     
+            j$(document).ready(function() {
+            });
+            
+            function selectQuote() {
+                    //alert('in select quote');
+                    selectQuoteFunction();
+            } 
+            function rowModify(index,type) {
+                    rowModifyFunction(index,type);
+            }
+           </script>
+            <!-- / JAVASCRIPT -->
+        </body>
+    </html>
+</apex:page>
