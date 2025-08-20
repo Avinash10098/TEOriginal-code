@@ -1,0 +1,207 @@
+<apex:page controller="FreebiesController" docType="html-5.0" showHeader="false" sidebar="false" standardStylesheets="false">    
+    <html>          
+        <head>
+            <title>Freebies</title>
+            <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+           <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+          <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+          <script src="/soap/ajax/9.0/connection.js"></script>
+        </head>
+        <style>
+            .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th, .slds td {
+            font-family: 'Lato';
+            text-align: left;
+            padding-left: 5px;
+            }
+            
+            .slds .slds-theme--shade {
+            background-color: aliceblue;
+            }
+            
+            .slds .slds-button {
+            background-color:#5971AD;
+            line-height: 10px;
+            min-height: 22px;
+            color:white;
+            border:1px solid black;
+            float: left;
+            align:right;
+            margin-left: 20%;
+            }
+            
+            table {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-size: 12px;
+            border-width: 3px;
+            border-collapse: collapse;
+            empty-cells:show; 
+            text-align:left;
+            }
+            
+            table th {
+            border-width: 1px;
+            padding: 3px;
+            border: 1px solid #517994;
+            background-color:#FFFAFA;
+            color:black;
+            text-align:left;
+            }
+            
+            table td {
+            border-width: 1px;
+            padding: 0.5px;
+            border: 1px solid #CAD1C3;
+            }            
+            
+            div.fadeMe {
+            opacity:    0.5; 
+            background: #D9E9FF; 
+            width:      100%;
+            height:     100%; 
+            z-index:    1000;
+            top:        0; 
+            left:       0; 
+            position:   fixed; 
+            } 
+            
+            .tableStyle {
+            text-align:center !important;
+            }
+            
+            .alignleft {
+            float: left;
+            width:20%;
+            text-align:left;
+            }
+            
+            .aligncenter {
+            float: left;
+            width:20%;
+            text-align:center;
+            }
+            .alignright {
+            float: left;
+            width:20%;
+            text-right;
+            }
+        </style>
+        <body>
+            <!-- REQUIRED SLDS WRAPPER -->
+            <div class="slds">
+                <!-- PRIMARY CONTENT WRAPPER -->
+                <div class="myapp">
+                    <!-- SEARCH Freebies-->
+                    <div aria-labelledby="Freebies">
+                        <!-- BOXED AREA -->
+                        <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+                            <legend id="Freebies" class="slds-text-heading--medium slds-p-vertical--medium">Freebies</legend>
+                            <apex:form id="newfreebiesform">
+                                
+                                <!-- Status  -->
+                                <apex:actionStatus id="status">
+                                    <apex:facet name="start">
+                                        <div class="fadeMe">
+                                            &nbsp;
+                                        </div>
+                                        <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                            <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                                <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                                                <span style="display: inline-block;">Please Wait...</span>
+                                            </div>
+                                        </div>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                                
+                                <!--Error message -->
+                                <apex:outputPanel id="messages" >
+                                    <apex:PageMessages id="pageMsgs" />
+                                </apex:outputPanel>
+                                
+                                <apex:outputPanel rendered="{!NOT(isError)}"> 
+                                    <apex:outputPanel id="amount">
+                                        
+                                        <div style="color:RED;"> 
+                                            <table>
+                                                <tr>
+                                                    <td style="border:0px;font-size:14px;">
+                                                        Selected Specification: <apex:outputText value="{!selectedSpecs}" style="background-color:{!selectedSpecs};color:White;"/>
+                                                    </td>
+                                                    <td style="border:0px;font-size:14px;">
+                                                        Total Freebies Amount: {!totalFreebiesAmountStr}
+                                                    </td>
+                                                    <td style="border:0px;font-size:14px;">
+                                                        Total Freebies Discount: {!totalFreebiesDiscountStr}
+                                                    </td>
+                                                    <td style="border:0px;font-size:14px;">
+                                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" value="Reset" action="{!reset}" status="status" reRender="fbTable, amount"/>&nbsp;&nbsp;
+            											<apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" value="Save" action="{!save}" oncomplete="window.close();" status="status" reRender="fbTable, amount"/>
+                                                    </td>
+                                                    <td style="border:0px;font-size:14px;">
+                                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" value="Close" rendered="{!close}" onclick="window.close();"/>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                        <br/><br/>  
+                                    </apex:outputPanel>
+                                    <apex:outputPanel id="fbTable">
+                                        <table>                                               
+                                            <tr>
+                                                <th class="tableStyle">Select</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Upgrade From</th>
+                                                <th>Upgrade To</th>
+                                            </tr>                                             
+                                            <tr>
+                                                <apex:repeat value="{!fbWrapList}" var="f">
+                                                    <tr>
+                                                        <td class="tableStyle">
+                                                            <apex:actionRegion >
+                                                                <apex:inputCheckbox value="{!f.isSelected}">
+                                                                    <apex:actionSupport event="onchange" action="{!calculateAmount}" status="status" reRender="amount, fbTable" oncomplete="passFreebies({!totalFreebiesDiscount})">
+                                                                        <apex:param name="fbAmount" value="{!f.fb.Amount__c}"/>
+                                                                        <apex:param name="selectStatus" value="{!f.isSelected}"/>
+                                                                        <apex:param name="fbname" value="{!f.fb.name}"/>
+                                                                    </apex:actionSupport>
+                                                                </apex:inputCheckbox>
+                                                            </apex:actionRegion>
+                                                        </td>   
+                                                        <td>{!f.fb.Name}</td>
+                                                        <td>{!f.amount}</td>
+                                                        <td>{!f.fb.From__c}</td>
+                                                        <td>{!f.fb.To__c}</td>
+                                                    </tr>
+                                                </apex:repeat>
+                                            </tr>                                
+                                        </table>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                            </apex:form>
+                            <!-- FREEBIES FORM -->
+                        </fieldset>
+                        <!-- / BOXED AREA -->
+                    </div>
+                    <!-- / FREEBIES -->
+                </div>
+                <!-- / PRIMARY CONTENT WRAPPER -->
+            </div>
+            <!-- / REQUIRED SLDS WRAPPER -->
+            
+            
+            <script>
+                function passFreebies(totalAmt){
+                  window.opener.freeeee(totalAmt);
+                
+               }
+            function decs(name){
+                  window.opener.freename(name);
+               }
+            </script>
+        </body>
+    </html>
+</apex:page>
