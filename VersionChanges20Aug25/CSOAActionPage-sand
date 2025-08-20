@@ -1,0 +1,170 @@
+<apex:page showHeader="false" controller="CSOAActionPageController" docType="html-5.0" standardStylesheets="true">
+    <html>
+        <head>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+            <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+            <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+            <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+            <script src="/soap/ajax/55.0/connection.js"></script>
+            <link href="https://fonts.googleapis.com/css?family=Lato:400,700&subset=latin,latin-ext" rel="stylesheet" type="text/css" />
+                <link href="https://fonts.googleapis.com/css?family=Buda:300" rel="stylesheet" type="text/css"/>
+                    
+                    </head>
+                
+                <style>
+                    .buttonStyle { width:15%; background-color:blue; text-align:center; padding-top:5px; }
+            @page {
+                size: A4;
+                margin:  2mm         //5mm;
+                @bottom-center {
+                    content: "Page " counter(page) " of " counter(pages);
+                }
+            }
+            .page-break {
+                display:block;
+                page-break-after:always;                
+            }
+            #MainTable
+            {
+                margin-top:25px;
+                font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;//'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', Tahoma, sans-serif;
+                border:0.5px solid black;
+                border-collapse: collapse;
+            }
+            /* tr,td
+            {
+                font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;//'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', Tahoma, sans-serif;
+                border:0.5px solid black;
+                
+            }*/
+            body 
+            {
+                font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;//'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', Tahoma, sans-serif;
+                font-weight:normal; 
+                font-size:11px; 
+                mso-line-height-rule: exactly;
+            }
+            .infobox {
+                font-size: 80%;
+            }
+            .noBorder{
+                border:0px solid White;
+                
+            }
+            /*         .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th, .slds td {
+                        font-family: 'Lato';
+                    }*/
+            .slds .slds-theme--shade {
+                background-color: aliceblue;
+            }
+            .slds .slds-button {
+                background-color:#838B8B;
+            }
+            body .bPageBlock .pbBody .pbSubheader {
+                background-color:#838B8B;
+                border-color:#838B8B;
+            }
+            .slds table {
+                font-size: 11px;
+                empty-cells:show;
+            }
+            .slds td {
+                text-align:left;
+            }
+            div.fadeMe {
+                opacity:    0.5; 
+                background: #D9E9FF; 
+                width:      100%;
+                height:     100%; 
+                z-index:    1000;
+                top:        0; 
+                left:       0; 
+                position:   fixed; 
+            }
+            
+            .styled-button-5 {
+                background-color:#ed8223;
+                color:#fff;
+                font-size:9px;
+                line-height:30px;
+                border-radius:20px;
+                -webkit-border-radius:20px;
+                -moz-border-radius:20px;
+                border:0;
+                text-shadow:#C17C3A 0 -1px 0;
+                width:120px;
+                height:32px
+            }              
+            .containerdiv {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+           
+        }
+            .containerdiv > div {
+            margin: 0 5px; /* Adjust margin as needed */
+        }
+            </style>
+            
+            <body>
+                <div class="slds">
+                    <div class="myapp">
+                        <div aria-labelledby="newreceiptform">
+                            <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+                                <legend id="newreceiptform" class="slds-text-heading--medium slds-p-vertical--medium">Customer Statement of Accounts</legend>
+                                <apex:form id="costsheetForm" styleClass="slds-form--inline">
+                                    <apex:actionStatus id="status">
+                                        <apex:facet name="start">
+                                            <div class="fadeMe">
+                                                &nbsp;
+            </div>
+            <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                    <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                        <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>
+                        </div>
+                        </div>
+                        </apex:facet>
+                        </apex:actionStatus>
+                        <apex:outputPanel id="messages">
+                            <apex:PageMessages id="pageMsgs" />
+                                </apex:outputPanel>
+                            <!--apex:pageBlock id="pgBlock" mode="edit">
+                                
+                                
+                                <apex:pageBlockSection id="mainBlock" collapsible="false" >
+                                    <apex:pageBlockSectionItem >
+                                        <apex:commandlink action="{!downloadasPDF}" target="_blank">
+                                            <apex:commandButton value="View PDF" styleClass="slds-button slds-button--brand slds-button--small" style="width:150px;" />
+                                                </apex:commandLink>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:commandButton action="{!sendToCustomer}" onclick="this.style.visibility = 'hidden'" value="Send To Customer" styleClass="slds-button slds-button--brand slds-button--small" style="width:150px;" />
+                                                    
+                                                    </apex:pageBlockSectionItem>
+                                                <apex:pageBlockSectionItem >
+                                                    <apex:commandButton action="{!redirectPage}"  value="Back" styleClass="slds-button slds-button--brand slds-button--small" style="width:150px;"/>
+                                                        
+                                                        </apex:pageBlockSectionItem>
+                                                    
+                                                    </apex:pageBlockSection>
+                                                    
+                                                    </apex:pageBlock-->
+                                                    <div class="containerdiv">
+                                                        <div><apex:commandlink action="{!downloadasPDF}" target="_blank">
+                                            <apex:commandButton value="View PDF" styleClass="slds-button slds-button--brand slds-button--small" style="width:auto;min-width: 150px;" />
+                                                </apex:commandLink></div>
+                                                    <div><apex:commandButton action="{!sendToCustomer}" onclick="this.style.visibility = 'hidden'" value="Send To Customer" styleClass="slds-button slds-button--brand slds-button--small" style="width:auto;min-width: 150px;" /></div>
+                                                    <div><apex:commandButton action="{!redirectPage}"  value="Back" styleClass="slds-button slds-button--brand slds-button--small" style="width:auto;min-width: 150px;"/></div>
+                                                    </div>
+                                                    </apex:form>
+                                                    </fieldset>
+                                                    </div>
+                                                    </div>
+                                                    </div>
+                                                    <br/><br/><br/><br/>
+                                                    <apex:include pagename="{!csoaName}"/>
+                                                    </body>
+                                                    </html>
+                                                    </apex:page>
