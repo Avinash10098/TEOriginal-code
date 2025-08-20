@@ -1,0 +1,67 @@
+<apex:page docType="html-5.0" controller="S_WelcomeCallPageController" showHeader="false" sidebar="false" standardStylesheets="true" cache="false">
+<html
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink">
+<head>
+            <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+            <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+            <link href="https://fonts.googleapis.com/css?family=Lato:400,700&subset=latin,latin-ext" rel="stylesheet" type="text/css" />
+            <script src="/soap/ajax/9.0/connection.js"></script>
+            <meta charset="utf-8" />
+            <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta name="description" content=""/>
+            <meta name="author" content=""/>
+            <apex:stylesheet value="{!URLFOR($Resource.bootstrap, '/bootstrap/css/bootstrap.min.css')}" />
+            <apex:includeScript value="{!URLFOR($Resource.bootstrap, '/bootstrap/js/bootstrap.min.js')}" />
+<style>
+
+.button2:hover {
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0 rgba(0,0,0,0.19);
+}
+</style>
+</head>
+        
+<body>  
+ <div class="slds">    
+ 
+    <div class="myapp">   
+       
+      <div aria-labelledby="newtaskform">
+        
+        <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+          <legend id="newtaskform" class="slds-text-heading--medium slds-p-vertical--medium"></legend> 
+            
+            <apex:form id="newtaskform" styleClass="slds-form--inline">
+             <apex:PageMessages id="pageMsgs"/>
+              <apex:outputPanel rendered="{!If(ermsg == 'no',True,False)} && successError">
+  
+     <table>
+        
+         <tr>
+             <td> 
+             <apex:outputPanel layout="block">
+             
+                  <apex:pageBlock >
+                  
+                  <apex:pageBlockSection > 
+                  <div height="50%;" border="2px;"><p>Click the below button for Registration Follow Up : </p></div> 
+                    <!--  <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" Value="Registration Follow Up" action="{!regFollowUp}" rendered="{!successError}" status="status"/>    -->
+                  </apex:pageBlockSection>
+                  </apex:pageBlock> 
+                  
+                  </apex:outputPanel>  
+             </td>
+         </tr>
+     </table>  
+      
+ </apex:outputPanel>
+ </apex:form>
+ </fieldset >
+ </div>
+ </div>
+ </div>
+ </body>
+ </html>
+ </apex:page>
