@@ -1,0 +1,908 @@
+<apex:page controller="ChangeRequestQuoteController" docType="html-5.0" showHeader="false" sidebar="false" standardStylesheets="false">
+    <html
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <head>
+      <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+      <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+      <link href="https://fonts.googleapis.com/css?family=Lato:400,700&subset=latin,latin-ext" rel="stylesheet" type="text/css" />
+      <script src="/soap/ajax/9.0/connection.js"></script>
+    </head>
+    <style>
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th, .slds td {
+        font-family: 'Lato';
+        }
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th {
+        text-align: center;
+        }
+        .slds .slds-theme--shade {
+        background-color: aliceblue;
+        }
+        .slds .slds-button {
+            background-color:#5971AD;
+            line-height: 10px;
+            min-height: 22px;
+            color:white;
+            font-weight:normal;
+            border:1px solid black;
+            padding-left: 5px;
+            padding-right: 5px;
+            align:center;
+        }
+        
+        table {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-size: 12px;
+            border-width: 3px;
+            border-collapse: collapse;
+            empty-cells:show;
+            
+        }
+     
+        table th {
+            border-width: 1px;
+            padding: 3px;
+            border: 1px solid #517994;
+            background-color:#FFFAFA;
+            color:black;
+            }
+     
+        table td {
+            border-width: 1px;
+            padding: 1px;
+            border: 1px solid #CAD1C3;
+            vertical-align: top;
+        }
+        .topTable table {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-size: 12px;
+            border-collapse: collapse;
+            empty-cells:show;
+            border-style:none;
+        }
+     
+        .topTable  th {
+            padding: 3px;
+            background-color:#DCE0E6;
+            color:black;
+            }
+     
+        .topTable  td {
+            padding: 1px;
+            text-align:right;
+        }
+    
+        
+        div.fadeMe {
+          opacity:    0.5; 
+          background: #D9E9FF; 
+          width:      100%;
+          height:     100%; 
+          z-index:    1000;
+          top:        0; 
+          left:       0; 
+          position:   fixed; 
+        }
+         .projectStyle {
+            font-weight:700;
+            text-align:center;
+            border-style: none;
+        }
+        .Edit1 {
+            border-color:black;
+            border-width: 1px;
+            border-style: dotted dotted dotted dotted;
+            background-color:#ACE7FF;
+        }
+        .Edit2 {
+            border-color:black;
+            border-width: 1px;
+            border-style: dotted dotted dotted dotted;
+            background-color:#fff5ba;
+        }
+        .Edit3 {
+            border-color:"#EDEF85";
+            border-width: 1px;
+            border-style: dotted dotted dotted dotted;
+            background-color:#EDEF85;
+        }
+        .Edited{
+           color:#ff6961;
+               font-weight: bold;
+        }
+        .planColor {
+           background-color:aliceblue;
+        }
+        .carParkColor {
+           background-color:aliceblue;
+        }
+        .emcarParkColor {
+           background-color:aliceblue;
+        }
+        .editRateColor {
+                background-color:aliceblue;
+        }
+        .modifiedCharge
+        {
+                color:#ff6961;
+                font-weight: bold;
+        }
+        .messageTable {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-weight:700;
+            color: #BE2625;
+            width:100%;
+            background-color:#EEB4B4; !important
+            }
+            .slds .slds-icon-action-edit {
+                background-color: #111625;
+        }
+            /** copying salesforce lookup input styles
+        since we are turning off the std styles **/
+        .lookupInput
+        {
+            display: inline;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .lookupInput img
+        {
+            background-repeat: no-repeat;
+            margin-right: .25em;
+            vertical-align: middle;
+        }
+        .lookupInput .disabled
+        {
+            background-color: #ccc;
+        }
+        .lookupInput .emptyDependentLookup
+        {
+            font-style: italic;
+        }
+        .lookupInput input[readonly]
+        {
+            background-color: #e6e6e6;
+            border: 2px solid #e6e6e6;
+            color: #333;
+            cursor: default;
+        }
+        .lookupInput a.readOnly
+        {
+            float: right;
+        }
+        .lookupInput span.readOnly
+        {
+            display: block;
+            white-space: normal;
+        }
+        .lookupInput span.totalSummary
+        {
+            font-weight: bold;
+        }
+        .inlineEditRequiredDiv .lookupInput img,.inlineEditDiv .lookupInput img
+        {
+            vertical-align: middle;
+        }
+        .quickCreateModule .lookupInput input {
+            max-width: 155px
+        }
+        .lookupIcon {
+            background-image: url(/img/func_icons/util/lookup20.gif);
+            background-position: 0 0;
+            width: 20px;
+            height: 20px;
+            background-position: top left
+        }
+        .lookupIconOn {
+            background-image: url(/img/func_icons/util/lookup20.gif);
+            background-position: 0 0;
+            width: 20px;
+            height: 20px;
+            background-position: top right
+        }
+    </style>
+    <body>
+        <!-- REQUIRED SLDS WRAPPER -->
+      <div class="slds">
+        <!-- PRIMARY CONTENT WRAPPER -->
+        <div class="myapp">
+          <!-- SEARCH DEMANDS-->
+          <div aria-labelledby="DSform">
+            <!-- BOXED AREA -->
+            <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+              <legend id="dsForm" class="slds-text-heading--medium slds-p-vertical--medium"> Change Request </legend>
+              <apex:form id="form1">
+                  <apex:actionRegion > 
+              <apex:actionStatus id="status">
+                  <apex:facet name="start">
+                    <div class="fadeMe">
+                    &nbsp;
+                        </div>
+                    <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                      <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                        <img src="{!$Resource.spinner}" style="float: left; margin: 0px;" />
+                        <span style="display: inline-block;">Please Wait...</span>
+                      </div>
+                    </div>
+                  </apex:facet>
+                </apex:actionStatus>
+                <apex:outputPanel id="messages" >
+                  <apex:PageMessages id="pageMsgs" />
+                </apex:outputPanel>
+              <apex:repeat value="{!lstQuotation}" var="q">
+              <td class="projectStyle">
+                    Change Request for : 
+                    <a href="/{!q.Opportunity__c}">{!q.Opportunity__r.Name}</a>
+              </td>
+              <table >
+                  <tr>
+                      <td width="30%">
+                          <table>
+                              <tr>
+                                  <th>
+                                      {!q.Unit__r.Name} in {!q.Unit__r.Tower__r.Name} of {!q.Unit__r.Project__r.Name} on floor {!q.Unit__r.Floor__c}
+                                  </th>
+                              </tr>
+                              <tr>
+                                  <th >
+                                      <b>Configuration : </b> {!q.Unit__r.Configuration__c} 
+                                  </th>
+                              </tr>
+                              <tr>
+                                  <th>
+                                      Product: {!q.Unit__r.TE_Product__r.Name}
+                                  </th>
+                              </tr>
+                              
+                              <tr>
+                                  <th><b> Product Variant : </b> {!q.Unit__r.Product_Type__r.name}</th>
+                              </tr>
+                              <tr>
+                                  <th>
+                                      Existing Specification : <b style="font-size:16px;background-color:{!lstQuotation[0].Selected_Specification__c}; width:20px;color:white;"> {!lstQuotation[0].Selected_Specification__c} </b> 
+                                  </th>
+                              </tr>
+                              <tr>
+                                  <th>
+                                      Existing Scheme :  {!lstQuotation[0].Scheme__r.name} 
+                                  </th>
+                              </tr>
+                              <tr>
+                                  <th>
+                                      Existing Customisation :  {!lstQuotation[0].Selected_Customisation__c}
+                                  </th>
+                              </tr>
+                              
+                          </table>
+                          
+                          <table>
+                      <!--<tr rowspan="1">
+                          <th >
+                              <b>Payment details</b>
+                          </th>
+                      </tr>
+                      <tr>
+                      <td>
+                          <table>
+                                <apex:repeat value="{!chargeBucketMap}" var="bucket">
+                                            <tr>
+                                                <th colspan="3">
+                                                <apex:outputText value="{!bucket}" />
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="1">
+                                                <apex:outputText value="Charge Name" />
+                                                </th>
+                                                <th colspan="1">
+                                                <apex:outputText value="Amount (Rs)" />
+                                                </th>
+                                                <th colspan="1">
+                                                <apex:outputText value="Taxes (Rs)" />
+                                                </th>
+                                            </tr>
+                                            <apex:repeat value="{!chargeBucketMap[bucket]}" var="chargeName">
+                                                <tr>
+                                                    <td>{!chargeName} </td>
+                                                    <td style="text-align:right;">{!allChargesMapOriginalFormatted[chargeName]}</td>
+                                                    <td style="text-align:right;">{!allChargesMapOriginalFormatted[chargeName+' TAXTOTAL']}</td>
+                                                </tr>
+                                            </apex:repeat>
+                                            <tr>
+                                                <td>
+                                                Total (Rs)
+                                                </td>
+                                                <td style="text-align:right;">
+                                                    <apex:outputText value="{!allChargesMapOriginalFormatted[bucket+' AMOUNTTOTAL']}" />
+                                                </td>
+                                                <td style="text-align:right;">
+                                                    <apex:outputText value="{!allChargesMapOriginalFormatted[bucket+' TAXAMOUNTTOTAL']}" />
+                                                </td>
+                                            </tr>
+                            </apex:repeat>
+                            </table>
+                         </td> 
+                      </tr> -->
+                      </table>
+                      
+                      </td>
+                      <td width="70%">
+                          <table >
+                              <tr>
+                                 <th colspan="3" style="text-align:right;">Change Selection &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                  
+                                  
+                                     <apex:commandButton value="Save" action="{!saveQuote}" rendered="{!NOT(validationError)}" style="text-align:right;" styleClass="slds-button slds-button--brand slds-button--small" status="status"/> 
+                                 
+                                     &nbsp;&nbsp;
+                                      <apex:commandButton value="Reset" action="{!resetQuote}" style="text-align:right;" styleClass="slds-button slds-button--brand slds-button--small" status="status"/> &nbsp;&nbsp;
+                                 </th>  
+                              </tr>
+                              <th colspan="4">
+                                  Remarks : <apex:inputField value="{!qnew.Quotation_ChangeOrder_Remarks__c}" required="true"></apex:inputField>
+                              </th>
+                              
+                              <tr>
+                        <th colspan="4">
+                            DEFAULT SPECIFICATION : <b style="font-size:16px;background-color:{!u.Default_Specification_new__c}; width:20px;color:white;"> {!u.Default_Specification_new__c} </b> 
+                        </th>
+                    </tr>
+                    <apex:outputPanel rendered="{!NOT(isStartQuote)}">
+                        <tr>
+                              <th colspan="2"> SELECT SPECIFICATION </th>
+                              <th colspan="1">  <apex:selectList id="abc" value="{!selectedSpecification}" size="1" onchange="afterSpecsSelect();"> 
+                                                <apex:selectOptions value="{!lstSpecs}" /> 
+                                                <apex:actionSupport event="onchange">
+                                                <apex:param name="selectedSpecification" value="{!lstSpecs}" assignTo="{!selectedSpecification}"/>
+                                                </apex:actionSupport> 
+                                                </apex:selectList> </th>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                SCHEME   
+                            </th>
+                            <th style="text-align:left;">
+                                  <apex:selectRadio value="{!selectedSchemeType}"  layout="pageDirection" onchange="selectScheme();">
+                                    <apex:selectOptions value="{!SchemeOptions}"/>
+                                  </apex:selectRadio>
+                                  
+                                  <apex:selectList id="abcd" value="{!selectedScheme}" size="1" rendered="{!selectedSchemeType == 'With Scheme'}">  
+                                        <apex:selectOptions value="{!lstSchemes}" /> 
+                                        <apex:actionSupport event="onchange">
+                                            <apex:param name="selectedScheme" value="{!lstSchemes}" assignTo="{!selectedScheme}"/>
+                                        </apex:actionSupport> 
+                                  </apex:selectList>
+                            </th>
+                            
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                               <b> Default Customization: </b> {!u.Default_Customisation__c}
+                            </th>
+                            <th>
+                                <b> Change Customization: </b> 
+                                <apex:selectList id="abcde" value="{!selectedCust}" size="1">  
+                                    <apex:selectOptions value="{!Custmizations}" /> 
+                                    <apex:actionSupport event="onchange" action="{!getCustmizationschange}" status="status">
+                                        <apex:param name="selectedCust" value="{!Custmizations}" assignTo="{!selectedCust}"/>
+                                    </apex:actionSupport> 
+                                </apex:selectList>
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="text-align:center"> <apex:commandButton value="Proceed" styleClass="slds-button slds-button--brand slds-button--small" action="{!Proceed}"/> </td>
+                        </tr> 
+                    </apex:outputPanel> 
+                    <apex:outputPanel rendered="{!isStartQuote}">
+                        <tr>
+                              <th colspan="4"> SELECTED SPECIFICATION: <b style="font-size:16px;background-color:{!selectedSpecification}; width:20px;color:white;"> {!selectedSpecification} </b></th>
+                        </tr>
+                        <tr>
+                            <th colspan="4">
+                                SCHEME: {!selectedSchemeType} <apex:outputText value="-{!selectedSchemeName}" rendered="{!selectedSchemeType == 'With Scheme'}"></apex:outputText>   
+                            </th>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                   DEFAULT CUSTOMIZATION: {!u.Default_Customisation__c}
+                            </th>
+                            <th colspan="2">
+                                   SELECTED CUSTOMIZATION: {!selectedCust}
+                            </th>
+                        </tr>      
+                        <tr>
+                              <th colspan="2"> SELECTED PLAN </th>
+                              <th colspan="1"> </th>
+                        </tr>
+                        <tr>
+                          <td colspan="2" class="planColor">
+                          
+                            <apex:selectRadio value="{!selectedPlan}" disabled="true"  layout="pageDirection" onchange="selectPlan();">
+                            <apex:selectOptions value="{!lstPlans}"/>
+                            </apex:selectRadio><p/>
+                          </td> 
+                          <td>
+                          <apex:repeat value="{!payplanList}" var="plan">  
+                          <table>
+                            <tr>
+                                <td class="planColor">
+                                    <apex:outputText value="Subvention Plan" rendered="{!plan.Subvention_Payment_Plan__c}"/>
+                                    <apex:outputText value="Non-Subvention Plan" rendered="{!NOT(plan.Subvention_Payment_Plan__c)}" /> 
+                                </td>
+                            </tr>
+                          </table>   
+                          </apex:repeat>
+                          </td>
+                        </tr>  
+                       
+                       <tr>
+                        <th colspan="2"> EARMARKED PARKING </th>
+                        <th align="center"> <apex:commandButton value="Modify/Remove"  action="{!modifyCarPark}" styleClass="slds-button slds-button--brand slds-button--small"  status="status"/></th> <!-- reRender="btnsId,plan,pricingPanel" -->
+                       </tr>
+                       <tr class="emcarParkColor">
+                          <apex:repeat value="{!earMarkedCP}" var="parkingType">
+                             <tr class="emcarParkColor">
+                                <td> <apex:outputLabel value="{!parkingType}" /> </td>
+                                <td> <apex:inputField value="{!qnew[carParkFieldsMapEM[parkingType]]}" styleClass="Edit2" /> </td>
+                                <td> <apex:inputField value="{!qnew[carParkFieldsMapEM1[parkingType]]}" styleClass="Edit2" /> </td>
+                             </tr>
+                          </apex:repeat> 
+                       </tr>
+                       
+                       <tr>
+                        <th colspan="2"> ADDITIONAL ALLOTMENT </th>
+                        <th align="center"> <apex:actionRegion >
+                        <apex:commandButton value="Add"  action="{!addCarPark}" styleClass="slds-button slds-button--brand slds-button--small"  status="status"/>
+                        </apex:actionRegion>
+                        </th> <!-- reRender="btnsId,plan,pricingPanel" -->
+                       
+                       </tr>
+                       <tr>
+                        
+                       </tr>
+                       <tr class="carParkColor">
+                          <apex:repeat value="{!additionalCarparks}" var="parkingType">
+                             <tr class="carParkColor">
+                                <td> <apex:outputLabel value="{!parkingType}" /> </td>
+                                
+                                <td> 
+                                <apex:actionRegion ><apex:inputField value="{!qnew[carParkFieldsMap[parkingType]]}" styleClass="Edit2" />
+                            <!--    {!q[carParkFieldsMap[parkingType]]} -->
+                                </apex:actionRegion>
+                                </td>
+                                <td> <apex:inputField value="{!qnew[carParkFieldsMap1[parkingType]]}" styleClass="Edit2" /> 
+                            <!--    {!q[carParkFieldsMap1[parkingType]]} -->
+                                </td>
+                             </tr>
+                             
+                          </apex:repeat> 
+                       </tr>
+                  </apex:outputPanel> 
+                   <tr class="editRateColor">
+                   <td colspan="3">
+                    <apex:outputPanel id="editRatesPanel">
+                      <apex:outputPanel id="editRates"  rendered="{!selectedPlan != null && editableRates != null && editableRates.size > 0}">
+                      <table>
+                            <tr>
+                               <th colspan="2" width="80%" >MODIFY RATES</th>
+                               <th colspan="2" width="20%" >
+                                  <apex:commandButton value="Apply" styleClass="slds-button slds-button--brand slds-button--small" action="{!applyNewRates}" status="status"/> <!-- reRender="btnsId,plan,pricingPanel" -->
+                               </th>
+                            </tr>
+                            <tr>
+                            <apex:repeat value="{!editableRates}" var="rateName">
+                               <tr class="editRateColor">
+                                  <td width="30%" >{!rateName}</td>
+                                  <td width="30%">  
+                                     <apex:outputText value="{!rateListOriginal[rateName].PSF_Rate__c}"/> 
+                                  </td>
+                                  <td width="35%">
+                                     <apex:inputField styleClass="Edit2" value="{!rateListForEditing[rateName].PSF_Rate__c}"  rendered="{!(rateSelectedForEditMap[rateName])}"/>
+                                     <span style="color:#ff6961; font-weight: bold">
+                                        <apex:outputField styleClass="Edited"  value="{!rateListForEditing[rateName].PSF_Rate__c}"  rendered="{!(rateEditedMap[rateName] && NOT(rateSelectedForEditMap[rateName]) )}"/>
+                                     </span>
+                                   </td>
+                                   <td width="5%">
+                                      <apex:outputPanel rendered="{!NOT(rateSelectedForEditMap[rateName])}">
+                                         <div class="slds-icon_container slds-icon_container_circle slds-icon-action-edit">
+                                         <a href="#" onclick="editRate('{!rateName}');return false;"><img class="slds-icon--x-small " src="{!$Resource.SLDS213}/assets/icons/action/edit_60.png" alt="Home" /></a>
+                                         </div>
+                                     </apex:outputPanel>
+                                   </td>
+                                 </tr>   
+                          </apex:repeat>
+                          </tr>
+                         </table>
+                       </apex:outputPanel>
+                       </apex:outputPanel>
+                     </td>
+                    </tr>  
+                    <apex:outputPanel id="pricingPanel">
+                      <apex:outputPanel id="pricingInfo"  rendered="{!selectedPlan != null && showDetails}"> 
+                      
+                      <tr>
+                        <th colspan="2">
+                            APPLY DISCOUNTS
+                        </th>
+                        <th>
+                            <apex:commandButton value="Apply" styleClass="slds-button slds-button--brand slds-button--small" action="{!applyDiscounts}" status="status"/> <!-- reRender="btnsId,plan,pricingPanel" -->
+                        </th>
+                      </tr>
+                      <tr>
+                        <td colspan="3">
+                        <table>
+                                    <tr>
+                                        <th width="40%" style="text-align:left"> Discount Type </th>
+                                        <th style="text-align:right"> Original Value </th>
+                                        <th style="text-align:right;"> PSF  </th>
+                                        <th style="text-align:right"> Lumpsum  </th>
+                                        <th style="text-align:right"> % </th>
+                                        <th style="text-align:left"> Apply </th>
+                                    </tr>
+                                    <apex:repeat value="{!dList}" var="d">
+                                        
+                                        <tr>
+                                            <td  width="20%">
+                                                <apex:outputField value="{!d.Reason__c}" />
+                                            </td>
+                                            <td  width="20%" style="text-align:right;">
+                                                <apex:outputField value="{!d.Original_Value__c}" />
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <apex:inputField style="text-align:right;" value="{!d.PSF_Amount__c}" rendered="{!d.Editable__c && d.Type__c == 'PSF'}" styleClass="Edit2"/>
+                                               <!-- <apex:outputField style="text-align:right;" value="{!d.PSF_Amount__c}" rendered="{!d.Type__c == 'Lumpsum' || d.Type__c == 'Percentage'}"  />
+                                                <apex:outputField style="text-align:right;" value="{!d.PSF_Amount__c}" rendered="{!(NOT(d.Editable__c) && d.Type__c == 'PSF')}" />
+                                                <apex:inputField style="text-align:right;" value="{!d.PSF_Amount__c}" rendered="{!d.Type__c == 'User Defined'}" styleClass="Edit2" /> -->
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <apex:inputField style="text-align:right;" value="{!d.Lumpsum_Amount__c}" rendered="{!d.Editable__c && d.Type__c == 'Lumpsum'}" styleClass="Edit2" />
+                                               <!-- <apex:outputField style="text-align:right;" value="{!d.Lumpsum_Amount__c}"  rendered="{!d.Type__c == 'PSF' || d.Type__c == 'Percentage'}"  />
+                                                <apex:outputField style="text-align:right;" value="{!d.Lumpsum_Amount__c}" rendered="{!(NOT(d.Editable__c) && d.Type__c == 'Lumpsum')}" />
+                                                <apex:inputField style="text-align:right;" value="{!d.Lumpsum_Amount__c}" rendered="{!d.Type__c == 'User Defined'}" styleClass="Edit2"/> -->
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <apex:inputField style="text-align:right;" value="{!d.Percentage_of_AV__c}" rendered="{!d.Editable__c && (d.Type__c == 'Percentage' || d.Type__c == 'Percentage Of Basic' ) }" styleClass="Edit2"/>
+                                                <apex:outputField style="text-align:right;" value="{!d.Percentage_of_AV__c}"  rendered="{!d.Type__c == 'PSF' || d.Type__c == 'Lumpsum' || d.Type__c == 'User Defined'}"  />
+                                                <apex:outputField style="text-align:right;" value="{!d.Percentage_of_AV__c}" rendered="{!(NOT(d.Editable__c) && (d.Type__c == 'Percentage'|| d.Type__c == 'Percentage Of Basic' ) )}" />
+                                            </td>
+                                            <td>
+                                                <apex:inputField value="{!d.Applied__c}" />
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                </table>
+                           </td>
+                           <td>
+                           </td>
+                          </tr>
+                          
+                          <apex:outputPanel id="discount">
+                         <!-- <apex:repeat value="" var="" rendered="">
+                          
+                          </apex:repeat> -->
+                      </apex:outputPanel>
+                      
+                      <tr>
+                          <td colspan="4">&nbsp;</td>
+                      </tr>                      
+                      <tr>
+                        <th colspan="1" width="35%"> ORIGINAL PRICE </th>
+                        <th colspan="1"  width="35%"> MODIFIED PRICE</th>
+                        <th colspan="1"  width="35%"> DISCOUNTS APPLIED</th>
+                      </tr>
+                      
+                      <tr>
+                            <td colspan="1" valign="top">
+                                <table>
+                                <apex:repeat value="{!chargeBucketMap}" var="bucket">
+                                            <tr>
+                                                <th colspan="3">
+                                                <apex:outputText value="{!bucket}" />
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="1">
+                                                <apex:outputText value="Charge Name" />
+                                                </th>
+                                                <th colspan="1">
+                                                <apex:outputText value="Amount (Rs)" />
+                                                </th>
+                                                <th colspan="1">
+                                                <apex:outputText value="Taxes (Rs)" />
+                                                </th>
+                                            </tr>
+                                            <apex:repeat value="{!chargeBucketMap[bucket]}" var="chargeName">
+                                                <tr>
+                                                    <td>{!chargeName} </td>
+                                                    <td style="text-align:right;">{!allChargesMapOriginalFormatted[chargeName]}</td>
+                                                    <td style="text-align:right;">{!allChargesMapOriginalFormatted[chargeName+' TAXTOTAL']}</td>
+                                                </tr>
+                                            </apex:repeat>
+                                            <tr>
+                                                <td>
+                                                Total (Rs)
+                                                </td>
+                                                <td style="text-align:right;">
+                                                    <apex:outputText value="{!allChargesMapOriginalFormatted[bucket+' AMOUNTTOTAL']}" />
+                                                </td>
+                                                <td style="text-align:right;">
+                                                    <apex:outputText value="{!allChargesMapOriginalFormatted[bucket+' TAXAMOUNTTOTAL']}" />
+                                                </td>
+                                            </tr>
+                            </apex:repeat>
+                            </table> 
+                            </td>
+                            <td colspan="1" valign="top">
+                                <table>
+                                <apex:repeat value="{!chargeBucketMap}" var="bucket">
+                                            <tr>
+                                                <th colspan="3">
+                                                <apex:outputText value="{!bucket}" />
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="1">
+                                                <apex:outputText value="Charge Name" />
+                                                </th>
+                                                <th colspan="1">
+                                                <apex:outputText value="Amount (Rs)" />
+                                                </th>
+                                                <th colspan="1">
+                                                <apex:outputText value="Taxes (Rs)" />
+                                                </th>
+                                            </tr>
+                                            <apex:repeat value="{!chargeBucketMap[bucket]}" var="chargeName">
+                                                <tr>
+                                                    <td><apex:outputText value="{!chargeName}" rendered="{!chargeDifferenceMap[chargeName]}" styleClass="modifiedCharge"/>
+                                                     <apex:outputText value="{!chargeName}" rendered="{!NOT(chargeDifferenceMap[chargeName])}" /></td>
+                                                    <td style="text-align:right;">{!allChargesMapFormatted[chargeName]}</td>
+                                                    <td style="text-align:right;">{!allChargesMapFormatted[chargeName+' TAXTOTAL']}</td>
+                                                </tr>
+                                            </apex:repeat>
+                                            <tr>
+                                                <td>
+                                                 <apex:outputtext value="Total (Rs)" rendered="{!chargeDifferenceMap[bucket+' AMOUNTTOTAL']}" styleClass="modifiedCharge"/>
+                                                 <apex:outputtext value="Total (Rs)" rendered="{!NOT(chargeDifferenceMap[bucket+' AMOUNTTOTAL'])}"/> <!--  styleClass="modifiedCharge" -->
+                                                </td>
+                                                <td style="text-align:right;">
+                                                    <apex:outputText value="{!allChargesMapFormatted[bucket+' AMOUNTTOTAL']}" />
+                                                </td>
+                                                <td style="text-align:right;">
+                                                    <apex:outputText value="{!allChargesMapFormatted[bucket+' TAXAMOUNTTOTAL']}" />
+                                                </td>
+                                            </tr>
+                            </apex:repeat>
+                            </table> 
+                            </td>
+                            <td valign="top">
+                                    <table>
+                                    <tr>
+                                        <th>
+                                            Discount Type
+                                        </th>
+                                        <th style="text-align:right;">
+                                            Amount
+                                        </th>
+                                    </tr>
+                                    <apex:repeat value="{!dList}" var="d">
+                                        <tr>
+                                            <td> <apex:outputText value="{!d.Reason__c}"  rendered="{!d.Applied__c}"/> </td>
+                                            <td style="text-align:right;"> <apex:outputText value="{!d.Total__c}"  rendered="{!d.Applied__c}"/> </td>
+                                        </tr>
+                                    </apex:repeat>
+                                    <tr>
+                                        <th>
+                                            Total Discount
+                                        </th>
+                                        <th style="text-align:right;">
+                                            {!totalDiscount}
+                                        </th>
+                                    </tr>
+                                </table>
+                                
+                                <table>
+                                            <tr>
+                                                <th colspan="3">OTHER DISCOUNTS</th>
+                                            </tr>
+                                            <tr>
+                                                <th style="width:40%">Discount Type</th>
+                                                <th style="width:30%">PSF/Lumpsum</th>
+                                                <th style="width:30%">Total Discount Amount</th>
+                                            </tr>
+                                            <tr>
+                                                <td>Freebies</td>
+                                                <td style="text-align:center;" align="center"><a id="freebiesPage" href="/apex/FreebiesPage?specId={!specsId}&selectedSpecs={!finalSelectedSpecs}" target="_blank">Click here</a> <!-- style="display:{!IF(hideLink == false,'block','none')};" --->
+                                               <!-- <apex:commandButton image="{!$Resource.RefreshImage}" style="width:30px;height:30px;" action="{!getFrebiesAmt}" rendered="{!hideLink && NOT(freebiesFetch)}" status="status" reRender="printPaymentPlan,messages,messages1"/> -->
+                                                   <apex:inputField value="{!q.Freebies__c}" id="freeId" style="background-color:pink;text-align:right;" html-disabled="true" rendered="{!hideLink}"/> 
+                                                </td>
+                                                <td><apex:outputField value="{!q.Freebies_80__c}" style="background-color:pink;text-align:right;"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Customization Credit</td>
+                                                <td style="text-align:right;"><apex:inputField value="{!q.Customization_Credit__c}" style="background-color:pink;text-align:right;"/></td>
+                                                <td style="text-align:right;"><apex:outputField value="{!q.Customization_Credit_Amount_80__c}"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Payment Schedule</td>
+                                                <td style="text-align:right;"><apex:inputField value="{!q.NPV_Discount_PSF__c}" style="background-color:pink;text-align:right;"/></td>
+                                                <td style="text-align:right;"><apex:outputField value="{!q.NPV_Discount_Lumpsum__c}"/></td>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="2">
+                                                    <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!applyOtherDiscount}" id="otherdiscount" value="Apply Discount" title="Apply Discount" status="status" rerender="printPaymentPlan,messages,messages1"/>
+                                                </th>
+                                                <th style="text-align:right;">
+                                                    Total: <apex:outputText value="{!totalotherDiscount}"></apex:outputText> 
+                                                </th>
+                                            </tr>
+                                        </table>
+                            </td>
+                        </tr>
+                          </apex:outputPanel>
+                          </apex:outputPanel>
+                          
+                          <apex:outputPanel rendered="{!selectedPlan != null && showDetails }" id="printPaymentPlan">
+                              <tr>
+                                  <th colspan="3"> Selected Payment Plan: {!selectedPlanName} </th>
+                              </tr>
+                              
+                              <tr>
+                                  <th colspan="3">
+                                      <apex:outputPanel id="btnsId">
+                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!showSchedulePlan}" id="showScheduleBtn" value="Show Schedule" title="Show Schedule" rendered="{!NOT(showSchedule) && (payPlanDetailsNew != NULL) }" status="status" rerender="plan,btnsId,messages,messages1"/>
+                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!editSchedule}" id="editScheduleBtn" value="Edit Schedule" title="Edit Schedule" rendered="{!NOT(editScheduleMode) && (payPlanDetailsNew != NULL) && showSchedule}" status="status" rerender="plan,btnsId,messages,messages1"/>
+                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!updatePlan}" id="updateScheduleBtn" value="Update Schedule" title="Update Schedule" status="status" rendered="{!editScheduleMode && showSchedule}" rerender="plan,btnsId,messages,messages1"/> &nbsp;&nbsp;
+                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!confirmEditSchedule}" id="confirmBtn" value="Confirm Schedule" title="Confirm Schedule"  status="status" rendered="{!editScheduleMode && showSchedule}" rerender="plan,btnsId,messages,messages1"/> &nbsp;&nbsp;
+                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" id="cancelEditBtn" action="{!cancelEditSchedule}" value="Cancel Schedule" title="Confirm Schedule"  status="status" rendered="{!editScheduleMode && showSchedule}" rerender="plan,btnsId,messages,messages1"/> 
+                                      </apex:outputPanel>
+                                  </th>
+                              </tr>
+                              <tr>
+                                  <td colspan="3">
+                                  <apex:outputPanel id="plan">
+                                    <apex:outputPanel rendered="{!Not(editScheduleMode) && showSchedule}">
+                                    <table>
+                                        
+                                    <tr>
+                                        <th>Milestone</th>
+                                        <th style="text-align:right;">Percentage</th>
+                                        <th style="text-align:right;">Estimated Date</th>
+                                        <th style="text-align:right;">Amount</th>
+                                        <th style="text-align:right;">Tax</th>
+                                        <th style="text-align:right;">Total</th>
+                                    </tr>
+                                        
+                                    <apex:repeat value="{!payplanDetailsNew}" var="p">
+                                        <tr>
+                                            <td><apex:outputText value="{!p.pm.Milestone_Name__c}"/></td>
+                                            <td><apex:outputText value="{!p.percentage}"/></td>
+                                            <td><apex:outputField value="{!p.pm.Milestone_Due_Date__c}"/></td>
+                                            <td><apex:outputText value="{!p.amount}"/></td>
+                                            <td><apex:outputText value="{!p.tax}"/></td>
+                                            <td><apex:outputText value="{!p.total}"/></td>
+                                        </tr>
+                                    </apex:repeat>
+                                    </table>
+                                </apex:outputPanel>
+                                  <apex:outputPanel rendered="{!editScheduleMode && showSchedule}" >
+                                            <apex:outputPanel id="messages1" >
+                                                <apex:PageMessages id="pageMsgs1" />
+                                            </apex:outputPanel>
+                                            <apex:variable var="index" value="{!0}"/>
+                                                <table>
+                                                    <tr>
+                                                        <th>Milestone</th>
+                                                        <th>Offset Type</th>
+                                                        <th>Days Offset</th>
+                                                        <th>Milestone Type</th>
+                                                        <th>Construction Stage</th>
+                                                        <th>Percentage</th> 
+                                                        <th>Due Date</th>
+                                                        <th>Amount</th>
+                                                        <th>Tax</th>
+                                                        <th>Total</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                        <apex:repeat value="{!payplanDetailsNew}" var="p">
+                                        <tr class="{!p.editedRowStyle}"> 
+                                            <td>
+                                                <apex:outputText value="{!p.pm.Milestone_Name__c}" rendered="{!(p.pm != null && !p.allowedEdit)}"/>
+                                                <apex:inputField value="{!p.pm.Milestone_Name__c}" rendered="{!(p.pm != null && p.allowedEdit)}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!p.pm.Time_Period__c}" rendered="{!(p.pm != null && !p.allowedEdit)}"/>
+                                                <apex:inputField value="{!p.pm.Time_Period__c}" rendered="{!(p.pm != null && p.allowedEdit)}"/>
+                                            </td>
+                                            <td>
+                                                <apex:inputField value="{!p.pm.Number_Of_Days__c}" rendered="{!p.pm != null && p.allowedEdit}"/>
+                                                <apex:outputField value="{!p.pm.Number_Of_Days__c}" rendered="{!p.pm != null && !p.allowedEdit}"/> <!-- && !p.allowedEdit -->
+                                            </td>
+                                            <td>
+                                                <apex:inputField value="{!p.pm.Milestone_Type_edit__c}" onChange="disableFieldFunction()" rendered="{!p.pm != null && p.allowedEdit}"/>
+                                                <apex:outputField value="{!p.pm.Milestone_Type_edit__c}" rendered="{!p.pm != null && !p.allowedEdit}"/>
+                                            </td>                                                                                             
+                                            <td>
+                                                <apex:outputPanel rendered="{!p.pm != null && p.allowedEdit}">
+                                                    <apex:selectList id="stageOptions" size="1" value="{!p.pm.Project_Construction_Stages__c}" styleclass="slds-select__small" multiselect="false">
+                                                        
+                                                        <apex:selectOptions value="{!p.lstConstructionStages}" />         
+                                                    </apex:selectList>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!p.pm != null && p.basicMilestone && !p.allowedEdit}">
+                                                    <apex:outputText value="{!p.pm.Milestone_Name__c}" />
+                                                </apex:outputPanel>
+                                            </td>
+                                            
+                                           <td>
+                                                <apex:outputText value="{!p.pm[p.fldMap['CHARGEPCT']]}"  rendered="{!p.pm != null && p.allowedEdit }" /><!--Chnage input to output-->
+                                                <apex:outputText value="{!p.pm[p.fldMap['CHARGEPCT']]}" rendered="{!p.pm != null &&  !p.allowedEdit}"/> 
+                                            </td>
+                                            <td>
+                                              <!--  <apex:outputField value="{!p.pm.Milestone_Due_Date__c}" rendered="{!(p.pm != null &&  p.pm.Milestone_Type_edit__c != 'Date Linked')}"/>
+                                                <apex:inputField value="{!p.pm.Milestone_Due_Date__c}" rendered="{!(p.pm != null &&  p.allowedEdit && p.pm.Milestone_Type_edit__c == 'Date Linked')}"/> -->
+                                                <apex:outputField value="{!p.pm.Milestone_Due_Date__c}"/>
+                                            </td>
+                                            
+                                            
+                                            <td>
+                                                <apex:outputText value="{!p.amount}" rendered="{!p.pm != null && !p.allowedEdit }"/>
+                                                <apex:inputField value="{!p.pm.C1_Amount__c}" rendered="{!p.pm != null && p.allowedEdit}"/> 
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!p.tax}" rendered="{!p.pm != null }"/> 
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!p.total}" rendered="{!p.pm != null }"/> 
+                                            </td>                                             
+                                            <td>
+                                                <apex:commandLink value="+ " onclick="rowModify({!index},'add');return false;"  rendered="{!p.pm != null && p.allowedEdit}" /> <!-- && p.allowedEdit -->
+                                                <apex:commandLink value=" -" onclick="rowModify({!index},'del');return false;"  rendered="{!p.pm != null && p.allowedEdit}" />
+                                                <apex:variable var="index" value="{!index + 1}" />
+                                            </td>    
+                                        </tr>
+                                    </apex:repeat>
+                                                 </table>
+                                    </apex:outputPanel>
+                                    </apex:outputPanel>
+                                        </td>
+                              </tr>
+                              </apex:outputPanel>
+                               
+                          </table>
+                          
+                      </td>
+                  </tr>
+              
+              </table>
+              </apex:repeat>
+              <apex:actionFunction name="rowModifyFunction" action="{!rowModify}" reRender="plan" status="status" >
+                                    <apex:param id="rowNumber" name="rowNumber" value="index" assignTo="{!rowNumber}"/>
+                                    <apex:param id="actionType" name="actionType" value="type" assignTo="{!actionType}"/>
+                                </apex:actionFunction>
+                                <apex:actionFunction name="disableFieldFunction" status="status" reRender="plan"></apex:actionFunction>
+                  </apex:actionRegion>  
+                  
+                  <apex:outputpanel >
+                      <apex:outputtext >You can upload a file only after entering all the details.</apex:outputtext><br/>
+                      <apex:inputFile value="{!file}" filename="{!fileName}"/>  
+                  </apex:outputPanel>
+
+              </apex:form>
+            </fieldset>
+            <!-- / BOXED AREA -->
+          </div>
+          <!-- / GENERATE QUOTE -->
+        </div>
+        <!-- / PRIMARY CONTENT WRAPPER -->
+      </div>
+        
+      <script>
+                function rowModify(index,type) {
+                    rowModifyFunction(index,type);
+                }
+            </script>
+    </body>
+    </html>
+</apex:page>
