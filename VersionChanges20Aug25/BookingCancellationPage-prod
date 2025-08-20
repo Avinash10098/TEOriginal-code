@@ -1,0 +1,270 @@
+<apex:page docType="html-5.0"  controller="BookingCancellationController" showHeader="false" sidebar="false" standardStylesheets="false">
+    <html
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink">
+        <head>
+            <title>Booking Cancellation</title>
+            <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+            <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+            <link href="https://fonts.googleapis.com/css?family=Lato:400,700&subset=latin,latin-ext" rel="stylesheet" type="text/css" />
+            <script src="/soap/ajax/9.0/connection.js"></script>
+            <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+            <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+        </head>
+        <style>
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th, .slds td {
+        font-family: 'Lato';
+        }
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th{
+        text-align: left;
+        }
+         .slds td{
+        text-align: left;
+        font-size:12px;
+        }
+        
+        .slds .slds-theme--shade {
+        background-color: aliceblue;
+        }
+        .slds .slds-button {
+            background-color:#191970;
+            line-height: 10px;
+            min-height: 22px;
+            color:white;
+            font-weight:normal;
+            border:1px solid black;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        .slds .slds-form-element__label {
+            color: #5c1628;
+            font-size: 12px;
+            font-weight: bold;
+            text-align:right;
+        }
+        body .bPageBlock .pbBody .pbSubheader {
+            background-color: #A9C1D9;
+            border-color: black;
+            color:white;
+        }
+       
+        .topTable table {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-size: 11px;
+            border-collapse: collapse;
+            empty-cells:show;
+            border:1px solid #E8D5B9;            
+        }
+
+        .topTable  th {
+            background-color:#F5F5F5;
+            color:#2B879E;
+            font-size: 10px;
+            border-collapse: collapse;
+            font-weight:normal;
+            }
+     
+        .topTable  td {
+            border-collapse: collapse;
+            border:1px solid #E8E8E8;
+            text-align: center;
+            vertical-align:left;
+        }
+                  
+        div.fadeMe {
+          opacity:    0.5; 
+          background: #D9E9FF; 
+          width:      100%;
+          height:     100%; 
+          z-index:    1000;
+          top:        0; 
+          left:       0; 
+          position:   fixed; 
+        }
+         
+        .messageTable {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-weight:700;
+            color: #BE2625;
+            width:100%;
+            background-color:#EEB4B4; !important
+            }
+            .slds .slds-icon-action-edit {
+                background-color: #111625;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        .taxColor {
+            border-color:"#EDEF85";
+            border-width: 1px;
+            border-style: dotted dotted dotted dotted;
+            color:red;
+        }
+        .amtColor {
+            border-color:"#ffc3e1";
+            border-width: 1px;
+            border-style: dotted dotted dotted dotted;
+            color:red;
+        }
+        
+    </style>
+        <body>
+            <!-- REQUIRED SLDS WRAPPER -->
+            <div class="slds">
+                <!-- PRIMARY CONTENT WRAPPER -->
+                <div class="myapp">
+                    <!-- RECEIPTS -->
+                    <div aria-labelledby="DSform">
+                        <!-- BOXED AREA -->
+                        <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+                            <legend id="dsForm" class="slds-text-heading--medium slds-p-vertical--medium">Booking Cancellation</legend>
+                            <apex:form id="receiptsForm">
+                                <apex:actionStatus id="status">
+                                    <apex:facet name="start">
+                                        <div class="fadeMe">
+                                            &nbsp;
+                                        </div>
+                                        <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                            <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                                <img src="{!$Resource.spinner}" style="float: left; margin: 0px;" />
+                                                <span style="display: inline-block;">Please Wait...</span>
+                                            </div>
+                                        </div>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                                <apex:outputPanel id="messages" >
+                                    <apex:PageMessages id="pageMsgs" />
+                                </apex:outputPanel>
+                                
+                                <apex:PageBlock rendered="{!NOT(isError)}">
+                                    <apex:outputPanel >
+                                    <apex:pageBlockSection id="customerBlock" title="Customer Details" collapsible="false" columns="2">
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Applicant Names</apex:outputLabel> 
+                                            <apex:outputText value="{!applicantNames}"/>
+                                        </apex:pageBlockSectionItem>
+                                        
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Unit</apex:outputLabel> 
+                                            <apex:outputField value="{!bookList[0].Unit__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                        
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Project</apex:outputLabel> 
+                                            <apex:outputField value="{!bookList[0].Project__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                        
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Opportunity Stage</apex:outputLabel> 
+                                            <apex:outputText value="{!bookList[0].Opportunity__r.stageName}"/>
+                                        </apex:pageBlockSectionItem>
+
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Cluster</apex:outputLabel> 
+                                            <apex:outputField value="{!bookList[0].Cluster__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Application Number</apex:outputLabel> 
+                                            <apex:outputText value="{!bookList[0].Application_Number__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                        
+
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Tower</apex:outputLabel> 
+                                            <apex:outputText value="{!bookList[0].Tower__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                        
+                                        
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Booking Date</apex:outputLabel> 
+                                            <apex:outputField value="{!bookList[0].Booking_Date__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                        
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Consideration Value</apex:outputLabel> 
+                                            <apex:outputText value="Rs.{!demandedAmount}"/>
+                                        </apex:pageBlockSectionItem>
+                                       <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Amount Apportioned(Consideration)</apex:outputLabel> 
+                                            <apex:outputText value="Rs.{!paidAmount}"/>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Amount Received</apex:outputLabel> 
+                                            <apex:outputText value="Rs.{!amtrecieved}"/>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Amount Apportioned(Tax)</apex:outputLabel> 
+                                            <apex:outputText value="Rs.{!paidGST}"/>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Amount Outstanding</apex:outputLabel> 
+                                            <apex:outputText value="Rs.{!outstandingAmount}"/>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Amount On Account</apex:outputLabel> 
+                                            <apex:outputText value="Rs.{!amountOnAccountSTR}"/>
+                                        </apex:pageBlockSectionItem>
+                                    </apex:pageBlockSection>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!amountdetails}" >
+                                   <apex:pageBlockSection id="cancelReasonBlock" title="Cancellation Details" collapsible="false" columns="2">
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Select Reason For Cancellation*</apex:outputLabel> 
+                                            <apex:inputField value="{!bookList[0].Reason_For_Cancellation_D__c}"/> 
+                                        </apex:pageBlockSectionItem>
+                                        
+                                         <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Pre-defined Cancellation Charges</apex:outputLabel> 
+                                            <apex:outputText value="{!cancellationAmt}"/>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Cancellation Charges</apex:outputLabel> 
+                                            <apex:inputField value="{!bookList[0].Cancellation_Charges__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                        
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label">Enter Remarks*</apex:outputLabel> 
+                                            <apex:inputField value="{!bookList[0].Reason_For_Cancellation__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Refund Amount</apex:outputLabel> 
+                                            <apex:outputText value="{!refundAmountStr}"/>
+                                            
+                                        </apex:pageBlockSectionItem> 
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  ></apex:outputLabel> 
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                        <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" style="font-size:11px;" value="Calculate Refund" action="{!CalculateRefund}" /> &nbsp;
+                                        </apex:pageBlockSectionItem>
+                                        
+                                                                                                                       
+                                        <!--<apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label"  >Reverse Demand</apex:outputLabel> 
+                                            <apex:inputField value="{!bookList[0].Reverse_Demand__c}"/>
+                                        </apex:pageBlockSectionItem>-->
+                                    </apex:pageBlockSection>
+                                    <br/><br/>
+                                    <apex:outputPanel id="btns">
+                                        <center>
+                                            <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" style="font-size:11px;" onclick="submitMethod();return false;" value="Submit" rendered="{!NOT(isError) && NOT(isSave)}"/> &nbsp;
+                                            <!--<apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" style="font-size:11px;" onclick="submitMethod();return false;" value="updateBooking" rendered="{!NOT(isError) && NOT(isSave)}"/> &nbsp;-->
+                                            <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" style="font-size:11px;" action="{!goBackMethod}" value="Go Back"/>
+                                        </center>
+                                        <apex:actionFunction name="submitMethod" action="{!submit}" status="status" reRender="messages,btns"/>
+                                        <!--<apex:actionFunction name="submitMethod" action="{!updateBooking}" status="status" reRender="messages,btns"/>-->
+                                    </apex:outputPanel>
+                                     </apex:outputPanel>
+                                </apex:PageBlock>
+                                
+                            </apex:form>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+        </body>
+    </html>
+</apex:page>
