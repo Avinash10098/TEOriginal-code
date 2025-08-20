@@ -1,0 +1,394 @@
+<apex:page docType="html-5.0" standardStylesheets="false" controller="ReceiptModule" showHeader="false" sidebar="false">
+    <html
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink">
+        <head>
+            <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+            <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+            <link href="https://fonts.googleapis.com/css?family=Lato:400,700&subset=latin,latin-ext" rel="stylesheet" type="text/css" />
+            <script src="/soap/ajax/9.0/connection.js"></script>
+            <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+            <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+        </head>
+        <style>
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th, .slds td {
+        font-family: 'Lato';
+        }
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th{
+        text-align: center;
+        }
+         .slds td{
+        text-align: left;
+        font-size:10px;
+        }
+        
+        .slds .slds-theme--shade {
+        background-color: aliceblue;
+        }
+        .slds .slds-button {
+            background-color:#191970;
+            line-height: 10px;
+            min-height: 22px;
+            color:white;
+            font-weight:normal;
+            border:1px solid black;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        .slds .slds-form-element__label {
+            color: #5c1628;
+            font-size: 10px;
+            font-weight: bold;
+            text-align:right;
+        }
+        body .bPageBlock .pbBody .pbSubheader {
+            background-color: #A9C1D9;
+            border-color: black;
+            color:white;
+        }
+       
+        .topTable table {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-size: 11px;
+            border-collapse: collapse;
+            empty-cells:show;
+            border:1px solid #E8D5B9;            
+        }
+
+        .topTable  th {
+            background-color:#F5F5F5;
+            color:#2B879E;
+            font-size: 10px;
+            border-collapse: collapse;
+            font-weight:normal;
+            }
+     
+        .topTable  td {
+            border-collapse: collapse;
+            border:1px solid #E8E8E8;
+            text-align: center;
+            vertical-align:left;
+        }
+                  
+        div.fadeMe {
+          opacity:    0.5; 
+          background: #D9E9FF; 
+          width:      100%;
+          height:     100%; 
+          z-index:    1000;
+          top:        0; 
+          left:       0; 
+          position:   fixed; 
+        }
+         
+        .messageTable {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-weight:700;
+            color: #BE2625;
+            width:100%;
+            background-color:#EEB4B4; !important
+            }
+            .slds .slds-icon-action-edit {
+                background-color: #111625;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        .taxColor {
+            border-color:"#EDEF85";
+            border-width: 1px;
+            border-style: dotted dotted dotted dotted;
+            color:red;
+        }
+        .amtColor {
+            border-color:"#ffc3e1";
+            border-width: 1px;
+            border-style: dotted dotted dotted dotted;
+            color:red;
+        }
+        
+    </style>
+        <body>
+            <!-- REQUIRED SLDS WRAPPER -->
+            <div class="slds">
+                <!-- PRIMARY CONTENT WRAPPER -->
+                <div class="myapp">
+                    <!-- RECEIPTS -->
+                    <div aria-labelledby="DSform">
+                        <!-- BOXED AREA -->
+                        <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+                            <legend id="dsForm" class="slds-text-heading--medium slds-p-vertical--medium">Apportion Receipts</legend>
+                            <apex:form id="receiptsForm">
+                                <apex:actionStatus id="status">
+                                    <apex:facet name="start">
+                                        <div class="fadeMe">
+                                            &nbsp;
+                                        </div>
+                                        <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                            <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                                <img src="{!$Resource.spinner}" style="float: left; margin: 0px;" />
+                                                <span style="display: inline-block;">Please Wait...</span>
+                                            </div>
+                                        </div>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                                <apex:outputPanel id="messages" >
+                                    <apex:PageMessages id="pageMsgs" />
+                                </apex:outputPanel>
+                                
+                                <apex:PageBlock >
+                                    <apex:outputPanel id="receiptsPanel">
+                                    <apex:outputPanel id="customerPanel">
+                                        <apex:pageBlockSection id="customerBlock" title="Customer Details" collapsible="false" columns="2"  rendered="{!oppList.size ==1 }">
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label"  >Applicant Names</apex:outputLabel> 
+                                                <apex:outputText value="{!applicantNames}"/>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label"  >Opportunity Stage</apex:outputLabel> 
+                                                <apex:outputText value="{!oppList[0].StageName}"/>
+                                            </apex:pageBlockSectionItem>
+                                        </apex:pageBlockSection>
+                                    </apex:outputPanel>
+                                   
+                                    <apex:pageBlockSection id="ins1readOnly" title="Instrument Details" collapsible="false" columns="2" rendered="{!adjustmentFlow && NOT(unitError)}">
+                                            <apex:pageBlockSectionItem >
+                                            <apex:outputLabel styleclass="slds-form-element__label">Project</apex:outputLabel>
+                                            <apex:outputField id="project" value="{!rmw.r.Project__c}" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Unit</apex:outputLabel>
+                                                <apex:outputField id="project" value="{!rmw.r.Project_Unit__c}" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Payment Mode</apex:outputLabel>
+                                                <apex:outputField id="mode" value="{!rmw.r.Mode__c}"/>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:PageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Posting Date</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Receipt_Date__c}"/>
+                                            </apex:PageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Instrument Date</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Cheque_DD_Date__c}"/>
+                                            </apex:pageBlockSectionItem>
+                                             <apex:PageBlockSectionItem rendered="{!instrumentType =='ins2'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">PAN of the Deductor</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.PAN_no_of_TDS_Deductor__c}" />
+                                            </apex:PageBlockSectionItem>
+                                            <apex:PageBlockSectionItem rendered="{!instrumentType =='ins2'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">PAN of the Deductee</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.PAN_no_of_TDS_Deductee__c}" />
+                                            </apex:PageBlockSectionItem>
+                                            <apex:pageBlockSectionItem rendered="{!instrumentType =='ins2'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Challan Number</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Challan_No__c}"/>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem rendered="{!instrumentType =='ins1'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Receipt Number</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Receipt_Number__c}"/>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem rendered="{!instrumentType =='ins1'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Drawee Bank</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.DraweeBank__c}"/>
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!instrumentType =='ins1'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Instrument Number</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Cheque_DD__c}" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem rendered="{!instrumentType =='ins1'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Drawee Bank(If Others)</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Drawee_Bank_If_Others__c}"/>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem rendered="{!instrumentType =='ins2'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">TDS Certificate Number</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Cheque_DD__c}" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem rendered="{!instrumentType =='ins1'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Drawn in favour of</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Drawn_in_favour_of__c}" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:PageBlockSectionItem rendered="{!rmw.r.Currency__c == 'Indian Rupee'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Currency</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Currency__c}" styleclass="slds-select"/>
+                                            </apex:PageBlockSectionItem>
+                                            <apex:PageBlockSectionItem rendered="{!rmw.r.Currency__c == 'Indian Rupee'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Amount</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Amount_Rs__c}" />
+                                            </apex:PageBlockSectionItem>
+                                            <apex:PageBlockSectionItem rendered="{!foreignCurrency}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Foreign Currency</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Currency__c}" />
+                                            </apex:PageBlockSectionItem>
+                                            <apex:PageBlockSectionItem rendered="{!foreignCurrency}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Amount in Foreign Currency</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Amount_in_Foreign_Currency__c}" />
+                                            </apex:PageBlockSectionItem>                                            
+                                            <apex:pageBlockSectionItem rendered="{!rmw.r.Currency__c == 'Indian Rupee'}">
+                                                <apex:outputLabel styleclass="slds-form-element__label" >On Account Money</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.On_Account_Money_Autocalculated__c}" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Date Of Apportionment</apex:outputLabel>
+                                                <apex:inputField value="{!rmw.r.Date_Of_Apportionment__c}" required="true"/>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Receipt Status</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.Receipt_Status__c}" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Remarks</apex:outputLabel>
+                                                <apex:outputField value="{!rmw.r.RemarksText__c}" />
+                                            </apex:pageBlockSectionItem>
+                                        </apex:pageBlockSection>
+                                        
+                                           <apex:pageBlockSection title="Pending Payment Details- Chargewise Breakup" rendered="{!hasPaymentDues}">
+                                        <apex:PageBlockTable value="{!outstandingChargesMap}" var="o" styleClass="topTable" >
+                                            <apex:column >
+                                                <div style="float:right;width:23%; text-align:center; font-size:11px; color:black; background-color:#F2BDCD;font-weight:Bold;"><apex:outputText value="Installment Details" /></div>
+                                                <div style="float:right;width:23%; text-align:center; font-size:11px; color:black; background-color:#FFFF99;font-weight:Bold;"><apex:outputText value="Tax Details"/></div>
+                                                <div style="float:right;width:38%; text-align:center; font-size:11px; color:black; background-color:#AFEEEE;font-weight:Bold;"><apex:outputText value="Interest Details"/></div>
+                                                <div style="float:right;width:16%; text-align:center; font-size:11px; color:black; background-color:#A9BA9D;font-weight:Bold;"><apex:outputText value="{!o} Demands" /></div>
+                                            </apex:column>
+                                            <apex:column breakBefore="true" colspan="1">
+                                                <apex:PageBlockTable value="{!outstandingChargesMap[o]}" var="dw" styleClass="topTable">
+                                                    <apex:column headerValue="Invoice #" style="width:7%;background-color:#A9BA9D;font-weight:Bold;">
+                                                        <apex:outputText value="{!dw.d.Invoice_Number__c}" />
+                                                    </apex:column>
+                                                    <apex:column headerValue="Due Date" style="width:5%;background-color:#A9BA9D;">
+                                                        <apex:outputtext value="{0, date, dd-MMM-YY}"><apex:param value="{!dw.d.Due_Date__c}" /></apex:outputtext>
+                                                    </apex:column>
+                                                    <apex:column headerValue="Overdue" style="width:1%;background-color:#A9BA9D;">
+                                                        <apex:outputText style="color:red;" value="✔"  rendered="{!dw.d.Due_Date__c ==null || dw.d.Due_Date__c < TODAY()}"/>
+                                                        <apex:outputText style="color:green;" value="✘"  rendered="{!dw.d.Due_Date__c !=null  && dw.d.Due_Date__c >= TODAY()}"/>
+                                                    </apex:column>
+                                                    <apex:column headerValue="Tax Due" style="width:5%;background-color:#AFEEEE;" >
+                                                        <apex:outputField value="{!dw.d[dw.fieldNameIntTax]}" />
+                                                    </apex:column>
+                                                    <apex:column headerValue="Settle Tax" style="width:5%;background-color:#AFEEEE;" >
+                                                        <apex:inputField value="{!dw.rd[dw.fieldNameIntTaxP]}" style="width:80px"/>
+                                                    </apex:column>
+                                                    <apex:column headerValue="Waive Tax" style="width:5%;background-color:#AFEEEE;" >
+                                                        <apex:inputField value="{!dw.rd[dw.fieldNameIntTaxW]}" style="width:80px"/>
+                                                    </apex:column>
+                                                    <apex:column headerValue="Amount Due" style="width:5%;background-color:#AFEEEE;">
+                                                        <apex:outputField value="{!dw.d[dw.fieldNameIntAmt]}" />
+                                                    </apex:column>
+                                                    <apex:column headerValue="Settle Amount" style="width:5%;background-color:#AFEEEE;">
+                                                        <apex:inputField value="{!dw.rd[dw.fieldNameIntAmtP]}" style="width:80px"/>
+                                                    </apex:column>
+                                                    <apex:column headerValue="Waive Amount" style="width:5%;background-color:#AFEEEE;">
+                                                        <apex:inputField value="{!dw.rd[dw.fieldNameIntAmtW]}" style="width:80px"/>
+                                                    </apex:column>
+                                                    <apex:column headerValue="Demanded Till Date" style="width:5%;background-color:#FFFF99;" >
+                                                        <apex:outputField value="{!dw.d[dw.fieldNameDT]}" />
+                                                    </apex:column>
+                                                    <apex:column headerValue="Paid Till Date" style="width:5%;background-color:#FFFF99;">
+                                                        <apex:outputField value="{!dw.d[dw.fieldNamePT]}" />
+                                                    </apex:column>
+                                                    <apex:column headerValue="Balance" style="width:5%;background-color:#FFFF99;">
+                                                        <apex:outputField value="{!dw.d[dw.fieldNameOT]}" />
+                                                    </apex:column>
+                                                    <apex:column headerValue="Pay Tax" style="width:5%;background-color:#FFFF99;">
+                                                        <apex:inputField styleClass="taxColor" value="{!dw.rd[dw.fieldNametoBePaidT]}"  rendered="{!dw.d[dw.fieldNameOT] != 0}" style="width:80px"/>
+                                                        <apex:outputField value="{!dw.rd[dw.fieldNametoBePaidT]}"  rendered="{!(dw.d[dw.fieldNameOT] == 0)}"/>
+                                                    </apex:column>
+                                                    <apex:column headerValue="Demanded Till Date" style="width:5%;background-color:#F2BDCD;"> <!-- rendered="{!NOT(rmw.r.Tax_Receipt__c)}" -->
+                                                        <apex:outputField value="{!dw.d[dw.fieldNameD]}" />
+                                                    </apex:column>
+                                                    <apex:column headerValue="Paid Till Date" style="width:5%;background-color:#F2BDCD;">
+                                                        <apex:outputField value="{!dw.d[dw.fieldNameP]}" />
+                                                    </apex:column>
+                                                    <apex:column headerValue="Balance" style="width:5%;background-color:#F2BDCD;">
+                                                        <apex:outputField value="{!dw.d[dw.fieldNameO]}" />
+                                                    </apex:column>
+                                                    <apex:column headerValue="Pay Amount" style="width:5%;background-color:#F2BDCD;">
+                                                        <apex:inputField styleClass="amtColor" value="{!dw.rd[dw.fieldNametoBePaid]}"  rendered="{!dw.d[dw.fieldNameO] != 0 && NOT(rmw.r.Tax_Receipt__c)}" style="width:80px"/>
+                                                        <apex:outputField value="{!dw.rd[dw.fieldNametoBePaid]}"  rendered="{!dw.d[dw.fieldNameO] == 0 || (rmw.r.Tax_Receipt__c)}"/>
+                                                    </apex:column>
+                                                    
+                                                </apex:PageBlockTable>
+                                            </apex:column>
+                                        </apex:PageBlockTable>
+                                        
+                                    </apex:pageBlockSection>
+                                    <apex:pageBlockSection title="Advance Receipts" rendered="{!isAdvanceRecipt}">
+                                        <apex:PageBlockTable value="{!listOfAdvanceReceipt}" var="rObj" styleClass="topTable">
+                                            <apex:column headerValue="Receipt Number">
+                                                <apex:outputField value="{!rObj.name}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Instrument">
+                                                <apex:outputField value="{!rObj.Mode__c}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="On Account Money">
+                                                <apex:outputField value="{!rObj.On_Account_Money_Autocalculated__c}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Currency">
+                                                <apex:outputField value="{!rObj.Currency__c}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Drawee Bank">
+                                                <apex:outputField value="{!rObj.DraweeBank__c}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Receipt Date">
+                                                <apex:outputField value="{!rObj.Receipt_Date__c}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Tax Receipt">
+                                                <apex:outputText style="color:red;" value="✔"  rendered="{!rObj.Tax_Receipt__c}"/>
+                                                <apex:outputText style="color:green;" value="✘"  rendered="{!NOT(rObj.Tax_Receipt__c )}"/>
+                                            </apex:column>
+                                        </apex:PageBlockTable>
+                                    </apex:pageBlockSection>
+                                    
+                                    </apex:outputPanel>
+                                    <!-- <apex:pageBlockButtons location="bottom">    -->
+                                                <apex:outputPanel id="buttonsPanel3">   
+                                                    <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" style="font-size:11px;" onclick="autoAdjustReceipt();return false;" value="Auto Adjust" rendered="{!$Profile.Name == 'Accounts receivable' || $Profile.Name == 'System Administrator'}" disabled="{!OnlyToken  || amountAdjusted || foreignCurrency || NOT(hasPaymentDues)}"/> &nbsp;
+                                                    <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" style="font-size:11px;" onclick="adjustRecFun();return false;" value="Adjust" rendered="{!$Profile.Name == 'Accounts receivable' || $Profile.Name == 'System Administrator'}" disabled="{!OnlyToken  || amountAdjusted || foreignCurrency || NOT(hasPaymentDues)}"/> &nbsp;
+                                                  <!--  <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" style="font-size:11px;" value="Create Advance Receipt" onclick="advanceRecFun();return false;" rendered="{!(NOT(hasPaymentDues) && moneyInHand > 0) && NOT(isAdvanceRecipt) && NOT(rmw.r.Advance_Receipt__c)}"> &nbsp; </apex:commandButton>--> 
+                                                    <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" style="font-size:11px;" value="Close" onclick="window.close();"/>
+                                                    
+                                                </apex:outputPanel> 
+                                            <!-- </apex:pageBlockButtons> -->
+                                            <apex:actionFunction name="autoAdjustReceipt" action="{!autoAdjustReceipt}" rerender="messages,receiptsPanel,buttonsPanel3" status="status"/>
+                                            <apex:actionFunction name="adjustAmount" action="{!saveReceipt}" rerender="messages,receiptsPanel,buttonsPanel3" status="status"/>
+                                            <apex:actionFunction name="createAdvanceReceipt" action="{!advanceReceipt}" rerender="messages,receiptsPanel,buttonsPanel3" status="status"/>
+                                            
+                                </apex:PageBlock>
+                            </apex:form>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+        </body>
+        
+        <script>
+            function advanceRecFun(){
+                 var x = confirm('On clicking this button the remaining money on this instrument will be converted into advance receipts. Please confirm.')
+                 if(x)
+                 {
+                    createAdvanceReceipt();
+                 }
+                 else{
+                      
+                 }
+            }
+            
+            function adjustRecFun(){
+                 var x = confirm('Clicking Adjust will apportion the money against the respective charge heads as entered in the amount fields. Please confirm.')
+                 if(x)
+                 {
+                    adjustAmount();
+                 }
+                 else{
+                      
+                 }
+            }
+            
+            
+        </script>
+        
+    </html>
+</apex:page>
