@@ -1,0 +1,429 @@
+<apex:page docType="html-5.0"  controller="Demands"  showHeader="false" sidebar="false" standardStylesheets="false" lightningStylesheets="true">
+    <html
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink">
+        <head>
+            <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+            <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+            <link href="https://fonts.googleapis.com/css?family=Lato:400,700&subset=latin,latin-ext" rel="stylesheet" type="text/css" />
+            <script src="/soap/ajax/9.0/connection.js"></script>
+            <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+            <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+            
+        </head>
+        <style>
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th, .slds td {
+        font-family: 'Lato';
+        }
+        .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th {
+        text-align: center;
+        }
+        .slds .slds-theme--shade {
+        background-color: aliceblue;
+        }
+        .slds .slds-button {
+            background-color:#191970;
+            line-height: 10px;
+            min-height: 22px;
+            color:white;
+            font-weight:normal;
+            border:1px solid black;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        .slds .slds-form-element__label {
+            font-size: 11px;
+            font-weight: bold;
+        }
+        body .bPageBlock .pbBody .pbSubheader {
+            background-color: #A9C1D9;
+            border-color: black;
+            color:white;
+            font-weight:bold;
+            font-size:11px;
+        }
+       
+        .topTable table {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-size: 11px;
+            border-collapse: collapse;
+            empty-cells:show;
+            border:1px solid #E8D5B9;
+           
+            
+        }
+
+        .topTable  th {
+            background-color:#F5F5F5;
+            color:black;
+            font-size: 11px;
+            text-align: left;
+            
+         }
+     
+        .topTable  td {
+            border-collapse: collapse;
+            border:1px solid #E8E8E8;
+            color:#778899;
+            font-size:11px
+        }
+            .color1 {
+                background-color: #F5F5F5;
+        }
+        .color2 {
+                background-color: #DCDCDC;
+        } 
+              
+        div.fadeMe {
+          opacity:    0.5; 
+          background: #D9E9FF; 
+          width:      100%;
+          height:     100%; 
+          z-index:    1000;
+          top:        0; 
+          left:       0; 
+          position:   fixed; 
+        }
+         
+        .messageTable {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-weight:700;
+            color: #BE2625;
+            width:100%;
+            background-color:#EEB4B4; !important
+            }
+            .slds .slds-icon-action-edit {
+                background-color: #111625;
+        }
+        .ui-accordion {
+            width: 100%;
+        }
+
+        .ui-accordion .ui-accordion-content {
+          width: 100%;
+          color: #16325c;
+        }
+        .ui-accordion  h4 {
+            background: #fff7f8;
+            color: black;
+            font-family: Lato,verdana, arial, sans-serif;
+            collapsible: true;
+            autoHeight: true;
+            navigation: true;
+        }
+        
+        .ui-accordion .accordion-body p {
+            text-transform: uppercase;
+            font-weight:500;
+            font-family: Lato,verdana, arial, sans-serif;
+        }
+        
+        .hidden {
+            text-align: left;
+        }
+    </style>
+        <body>
+            <a href="/home/home.jsp"><img src="{!$Resource.Home}" style="float:left; width:4%; height:4%;"></img></a>
+            <br/><br/>
+            <!-- REQUIRED SLDS WRAPPER -->
+            <div class="slds">
+                <!-- PRIMARY CONTENT WRAPPER -->
+                <div class="myapp">
+                    <!-- SEARCH DEMANDS-->
+                    <div aria-labelledby="DSform">
+                        <!-- BOXED AREA -->
+                        <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+                            <legend id="dsForm" class="slds-text-heading--medium slds-p-vertical--medium">Search and Send Demands</legend>
+                            <apex:form id="demandsform">
+                                <apex:actionStatus id="status">
+                                    <apex:facet name="start">
+                                        <div class="fadeMe">
+                                            &nbsp;
+                                        </div>
+                                        <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                            <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                                <img src="{!$Resource.spinner}" style="float: left; margin: 0px;" />
+                                                <span style="display: inline-block;">Please Wait...</span>
+                                            </div>
+                                        </div>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                                <apex:outputPanel id="messages" >
+                                    <apex:PageMessages id="pageMsgs" />
+                                </apex:outputPanel>
+                                
+                                <apex:actionFunction name="getCustomersFunction" action="{!getCustomersTowerWise}" rerender="demandsfortower,messages,towerHeader"  status="status">
+                                        <apex:param id="tName" name="towerName" value="" />
+                                        <apex:param id="pName" name="projectName" value="" />
+                                    </apex:actionFunction>
+                                    
+                                    <apex:actionFunction name="narrowResultsFunction" action="{!narrowResults}" rerender="demandsfortower,messages,towerHeader" status="status" >
+                                </apex:actionFunction>
+                                <apex:pageBlock >
+                                   <table width="100%">
+                                       <tr>
+                                           <td>
+                                               <apex:outputLabel styleclass="slds-form-element__label">Customer</apex:outputLabel>
+                                                <apex:inputText value="{!customerName}"/>
+                                           
+                                           </td>
+                                           
+                                           <td>
+                                           		<apex:outputLabel styleclass="slds-form-element__label">Unit</apex:outputLabel>
+                                                <apex:inputText value="{!unitName}"/>
+                                           </td>
+                                           
+                                           <td>
+                                           		<apex:outputLabel styleclass="slds-form-element__label">CustomerId</apex:outputLabel>
+                                                <apex:inputText value="{!customerId}"/>
+                                           </td>
+                                       </tr>
+                                       
+                                    </table>
+                                            
+                                       <!--  <apex:pageBlockSectionItem >
+                                            <apex:outputPanel styleclass="slds-form-element">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Start Date</apex:outputLabel>
+                                                <apex:input type="date" value="{!startDate}"/>
+                                             </apex:outputPanel>
+                                         </apex:pageBlockSectionItem>
+                                         <apex:pageBlockSectionItem >
+                                            <apex:outputPanel styleclass="slds-form-element">
+                                                <apex:outputLabel styleclass="slds-form-element__label">End Date</apex:outputLabel>
+                                                <apex:input type="date"  value="{!endDate}"/>
+                                             </apex:outputPanel>
+                                         </apex:pageBlockSectionItem> -->
+                                        
+                                       
+                                
+                                
+                                    <apex:outputPanel id="searchButton">
+                                        
+                                    <center>
+                                            <br/>
+                                        <apex:commandButton value="Search" action="{!quickSearch}"  styleClass="slds-button slds-button--brand slds-button--small" rerender="demandsfortower,messages,towerHeader" status="status" oncomplete="closeAccordion()" />
+                                        <br/><br/>
+                                    </center>
+                                        </apex:outputPanel>   
+                                    </apex:pageBlock>
+                                <apex:pageBlock >
+                                    
+                                    <table class="topTable">
+                                        <tr>
+                                            <th style="text-align:center;">
+                                            Click on the project name to view the pending demands under each tower
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <td width="30%">
+                                                <div id="accordion">
+                                                <apex:repeat value="{!ProjectTowerMap}" var="projectName">
+                                                    <h4>{!projectName}</h4>
+                                                    <div>
+                                                    <apex:repeat value="{!ProjectTowerMap[projectName]}" var="towerName">
+                                                        <div>
+                                                            <apex:outputLink value="#" onclick="getCustomers('{!towerName}', '{!projectName}');return false;">{!towerName}</apex:outputLink>
+                                                        </div>
+                                                    </apex:repeat>
+                                                    </div>
+                                                </apex:repeat>
+                                            </div>
+                                            </td>
+                                            
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <br/>
+                                            </td>                                           
+                                        </tr>
+                                        <tr>
+                                            <td  width="100%">
+                                                <apex:outputPanel id="demandsfortower">
+                                                     <apex:outputPanel id="messages" >
+                                    <apex:PageMessages id="pageMsgs" />
+                                </apex:outputPanel>
+                                                    <apex:outputPanel id="batchStatus">
+                                                    <apex:pageBlockSection title="Demands are being generated please wait....." rendered="{!batchStatusBool}">
+                                                        Status of demand generation is {!batchStatus}
+                                                        <apex:actionPoller interval="5" action="{!checkBatchStatus}" enabled="{!pollerBool}" reRender="demandsfortower" status="status"/>
+                                                </apex:pageBlockSection>
+                                                </apex:outputPanel>
+                                                    
+                                                <apex:pageBlockSection title="Pending Demands for units in {!towerName}" columns="1"  collapsible="false"  rendered="{!customerList != null && customerList.size > 0 && NOT(batchStatusBool)}">
+                                                    
+                                                    <apex:pageBlockTable value="{!u}" var="c" styleClass="topTable">
+                                                            <apex:column >
+                                                                <apex:outputPanel styleclass="slds-form-element">
+                                                                <apex:outputLabel styleclass="slds-form-element__label">Customer</apex:outputLabel>
+                                                                  <apex:inputText value="{!sCustomer}"/>
+                                                             </apex:outputPanel>
+                                                         </apex:column>
+                                                         <apex:column >
+                                                                <apex:outputPanel styleclass="slds-form-element">
+                                                                <apex:outputLabel styleclass="slds-form-element__label">Unit</apex:outputLabel>
+                                                                  <apex:inputText value="{!sUnit}"/>
+                                                             </apex:outputPanel>
+                                                         </apex:column>
+                                                         <apex:column >
+                                                                <apex:outputPanel styleclass="slds-form-element">
+                                                                <apex:outputLabel styleclass="slds-form-element__label">CustomerId</apex:outputLabel>
+                                                                  <apex:inputText value="{!sCustomerId}"/>
+                                                             </apex:outputPanel>
+                                                         </apex:column>
+                                                     <!-- <apex:column >
+                                                                <apex:outputPanel styleclass="slds-form-element">
+                                                                <apex:outputLabel styleclass="slds-form-element__label">Date Range</apex:outputLabel>
+                                                                 <apex:input type="date"  value="{!sStartDate}"/>
+                                                                    &nbsp;&nbsp;&nbsp;
+                                                                 <apex:input type="date"  value="{!sEndDate}"/>
+                                                             </apex:outputPanel>
+                                                         </apex:column>  -->    
+                                                         
+                                                         <apex:column >
+                                                                <apex:outputPanel styleclass="slds-form-element">
+                                                                <apex:outputLabel styleclass="slds-form-element__label">Construction Stage</apex:outputLabel>
+                                                             <apex:selectList id="stageOptions" size="1" value="{!selectedStage}" styleclass="slds-select__small" multiselect="false">
+                                                             <apex:selectOptions value="{!lstStages}"/>         
+                                                                </apex:selectList>
+                                                                </apex:outputPanel>
+                                                            </apex:column>
+                                                            
+                                                            <apex:column >
+                                                                <apex:outputPanel styleclass="slds-form-element">
+                                                                <apex:commandButton value="Search" action="{!narrowResults}" styleClass="slds-button slds-button--brand slds-button--small" rerender="demandsfortower,messages,towerHeader" status="status"/>
+                                                             </apex:outputPanel>
+                                                         </apex:column>
+                                                         
+                                                    </apex:pageBlockTable>
+                                                    <apex:pageBlockTable value="{!customerList}" var="customer" styleClass="topTable">
+                                                                
+                                                             <apex:column style="text-align:left;">
+                                                                <apex:facet name="header">
+                                                                   <!-- <apex:inputCheckbox onclick="selectAllCheckboxes(this,'selectId')"/> --><!--Making this change on 18/02/2025 to remove the checkboxes-->
+                                                                </apex:facet>
+                                                              <!--  <apex:inputCheckbox id="selectId" value="{!customerWrapperMap[customer].groupSelect}" rendered="{!AND(customerWrapperMap[customer].o.Primary_Email__c <> null && customerWrapperMap[customer].o.Primary_Email__c <> '')}"/> --><!--Making this change on 18/02/2025 to remove the checkboxes-->
+                                                            </apex:column>
+                                                                                                                        
+                                                                <apex:column style="background-color:#fff7f8; text-align:center;"><apex:outputText value="{!customerWrapperMap[customer].o.Primary_Name__c} : Unit  {!customerWrapperMap[customer].o.Unit__r.Name}- CustomerId {!customerWrapperMap[customer].o.Booking__r[0].Customer_Number__c}"/> &nbsp;&nbsp;&nbsp;
+                                                                <apex:facet name="header">
+                                                                     Customer Details 
+                                                                </apex:facet>
+                                                                <!-- <apex:commandLink style="color:#8A9B0F;" target="_blank" value="Preview" action="{!ShowPreview}">
+                                                                <apex:param name="groupdemandPreview;" value="{!customer}" assignTo="{!groupDemandPreviewId}" />
+                                                                <apex:param name="singledemandPreview;" value="" assignTo="{!singleDemandPreviewId}" />
+                                                              </apex:commandLink> &nbsp;&nbsp;&nbsp;
+                                                            <apex:commandLink style="color:#E97F02;"  value="Raise" action="{!RaiseGroupDemand}" status="status" reRender="demandsfortower">
+                                                                <apex:param name="groupdemandPreview;" value="{!customer}" assignTo="{!groupDemandPreviewId}" />
+                                                                <apex:param name="singledemandPreview;" value="" assignTo="{!singleDemandPreviewId}" />
+                                                              </apex:commandLink>  -->     
+                                                              </apex:column>
+                                                              
+                                                              
+                                                          <!--     <apex:column >
+                                                                <apex:facet name="header">
+                                                                    <apex:inputCheckbox onclick="selectAllCheckboxes(this,'permilestone')"/>
+                                                                </apex:facet>
+                                                                </apex:column> --> 
+                                                                                                            
+                                                            <apex:column breakBefore="true" colspan="3">
+                                                                <apex:pageBlockTable value="{!customerTowerMap[customer]}" var="c"  styleClass="topTable"  headerClass="show" >
+                                                                        <apex:column style="width:10%;" headerValue="Email Address" value="{!customerWrapperMap[customer].o.Primary_Email__c}"/>
+                                                                        <apex:column style="width:20%;" headerValue="Milestone Name" value="{!c.ptw.milestoneName}"/>
+                                                                    <apex:column style="width:10%;" headerValue="Demand Date" value="{!c.pm.Invoice_Date__c}"/>
+                                                                    <apex:column style="width:10%;" headerValue="Due Date" value="{!c.pm.Invoice_Due_Date__c}"/>
+                                                                    <apex:column style="width:10%;" headerValue="SGST" value="{!c.ptw.overAllTax1}"/>
+                                                                    <apex:column style="width:10%;" headerValue="CGST" value="{!c.ptw.overAllTax2}"/>
+                                                                    <apex:column style="width:10%;" headerValue="Amount" value="{!c.ptw.overallAmt}"/>
+                                                                   <!--  <apex:column headerValue="Charge Details">
+                                                                            <table>
+                                                                            
+                                                                            <apex:repeat value="{!c.pcwList}" var="charge">
+                                                                            <tr>
+                                                                                
+                                                                                <td><apex:outputText value="{!charge.chargeName}"/></td>
+                                                                                <td><apex:outputText value="{!charge.percentage}"/></td>
+                                                                                <td><apex:outputText value="{!charge.Amount}"/></td>
+                                                                                <td><apex:outputText value="{!charge.Tax1}"/></td>
+                                                                                <td><apex:outputText value="{!charge.Tax2}"/></td>
+                                                                            </tr>
+                                                                            </apex:repeat>
+                                                                            
+                                                                            </table>
+                                                                    </apex:column>  -->
+                                                                    <apex:column style="width:15%;" headerValue="Actions">
+                                                                            <apex:commandLink style="color:#8A9B0F;" target="_blank" value="Preview" action="{!ShowPreview}">
+                                                                             <apex:param name="groupdemandPreview;" value="{!customer}" assignTo="{!groupDemandPreviewId}" />
+                                                                            <apex:param name="singledemandPreview;" value="{!c.pm.Id}" assignTo="{!singleDemandPreviewId}" />
+                                                                          </apex:commandLink> &nbsp;&nbsp;
+                                                                        <apex:commandLink rendered="{!$Profile.Name == 'Accounts receivable' || $Profile.Name == 'System Administrator'}" style="color:#E97F02;"  value="Raise" action="{!raisePerMilestoneDemand}" status="status" reRender="demandsfortower">
+                                                                             <apex:param name="groupdemandPreview;" value="{!customer}" assignTo="{!groupDemandPreviewId}" />
+                                                                            <apex:param name="singledemandPreview;" value="{!c.pm.Id}" assignTo="{!singleDemandPreviewId}" />
+                                                                          </apex:commandLink>
+                                                                    </apex:column> 
+                                                                    <apex:column style="text-align:right;width:5%;">
+                                                                        <!--  <apex:inputCheckbox id="permilestone" value="{!c.perMilestoneSelect}" rendered="{!AND(customerWrapperMap[customer].o.Primary_Email__c <> null && customerWrapperMap[customer].o.Primary_Email__c <> '')}"/> --> <!--Making this change on 18/02/2025 to remove the checkboxes-->
+                                                                    </apex:column> 
+                                                                    <apex:outputPanel rendered="{!NOT(narrowResults)}">
+                                                                            <apex:facet name="footer">Showing Page # {!pageNumber} of {!totalPages}</apex:facet>
+                                                                    </apex:outputPanel>
+                                                                </apex:pageBlockTable>
+                                                            </apex:column>
+                                                    </apex:pageBlockTable>
+                                                  </apex:pageBlockSection>
+                                                  <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!Beginning}" title="Beginning" value="<<" disabled="{!disablePrevious}" reRender="demandsfortower" status="status"  rendered="{!customerList != null && customerList.size > 0 && NOT(narrowResults) && NOT(quickSearch)}"/>
+                                                  <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!Previous}" title="Previous" value="<" disabled="{!disablePrevious}" reRender="demandsfortower" status="status"  rendered="{!customerList != null && customerList.size > 0 && NOT(narrowResults) && NOT(quickSearch)}"/>        
+                                                  <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!Next}" title="Next" value=">" disabled="{!disableNext}" reRender="demandsfortower" status="status"  rendered="{!customerList != null && customerList.size > 0 && NOT(narrowResults) && NOT(quickSearch)}"/>
+                                                  <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!End}" title="End" value=">>" disabled="{!disableNext}" reRender="demandsfortower" status="status"  rendered="{!customerList != null && customerList.size > 0 && NOT(narrowResults) && NOT(quickSearch)}"/>
+                                                    <br/> <br/>
+                                                    <center>
+                                                     <!--   <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small"  action="{!raiseMultipleDemands}" value="Raise Demands" rendered="{!customerTowerMap != null && ($Profile.Name == 'Accounts receivable' || $Profile.Name == 'System Administrator')}" reRender="demandsfortower,messages" status="status"/> -->
+                                                    </center>
+                                            </apex:outputPanel>
+                                            </td>
+                                        </tr>
+                                    </table>    
+                                    </apex:pageBlock>                   
+                            </apex:form>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+            <!-- JAVASCRIPT -->
+            <script>
+            var j$ = jQuery.noConflict();
+     
+            j$(document).ready(function() {
+            });
+            
+            j$( function() {
+                j$("#accordion").accordion();
+                j$("#accordion").accordion({ header: "h4", collapsible: true, active: false });
+            } );
+            function closeAccordion() {
+                j$("#accordion").accordion({ header: "h4", collapsible: true, active: false });
+            }
+            function getCustomers(towerName, projectName) {
+                    getCustomersFunction(towerName, projectName);
+                }
+                function narrowResults(){
+                    narrowResultsFunction();
+                }
+                function openDatePicker(){                                
+                    var dtpckr= document.getElementById('{!$Component.datePicker1}');
+                    j$(dtpckr).datepicker();
+                }
+                function selectAllCheckboxes(obj,receivedInputID){
+                    console.log('obj:' + obj.id);
+                    var inputCheckBox = document.getElementsByTagName("input");                  
+                for(var i=0; i<inputCheckBox.length; i++){          
+                    if(inputCheckBox[i].id.indexOf(receivedInputID)!=-1){                                     
+                        inputCheckBox[i].checked = obj.checked;
+                    }
+                }
+            }
+          </script>
+     <!-- / JAVASCRIPT -->
+        </body>
+    </html>
+</apex:page>
