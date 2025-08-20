@@ -1,0 +1,76 @@
+<apex:page docType="html-5.0"
+           showHeader="false" 
+           sidebar="false"
+           standardController="Opportunity" 
+           extensions="CallActionControllerForOpportunity">
+    <head>
+        <apex:stylesheet value="{!URLFOR($Resource.MobileSample_Resources_jQueryMobile, 'jquery.mobile-1.3.0.min.css')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.MobileSample_Resources_jQueryMobile, 'jquery-1.9.1.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.MobileSample_Resources_jQueryMobile, 'jquery.mobile-1.3.0.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.MobileSample_Resources_jQueryMobile, 'backbone/underscore-1.4.4.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.MobileSample_Resources_jQueryMobile, 'force.entity.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.MobileSample_Resources_jQueryMobile, 'SObjectData.js')}"/>         
+    </head>
+    <body>
+        
+        <div data-role="content" id="contactList">            
+            <ul id="cList" data-filter="true" data-inset="true" data-role="listview" data-theme="c" data-dividertheme="b">
+            </ul>
+        </div>
+    </body>
+    <script language="JavaScript" src="/soap/ajax/10.0/connection.js"></script>
+    <script type="text/javascript">
+        var req = null;
+    sforce.connection.sessionId ="{!$Api.Session_ID}";
+    
+    var $j = jQuery.noConflict(); 
+    $j(document).ready(function() {
+        CallActionControllerForOpportunity.getPhoneFields('{!Id}', showPhoneFields,{escape:false});
+    });
+    
+    function showPhoneFields(recordMap, event) {
+        if(event.status) {
+            $j('#cList').empty();
+            for (var m in recordMap){
+                var newLi = $j('<li></li>'); 
+                var newLink = '<a data-theme="b" data-role="button" href="#" onclick=makeCall("{!Id}",' + recordMap[m] + ')> ' + m + '</a>';         
+                newLi.append(newLink);
+                newLi.appendTo('#cList');
+            } 
+            $j.mobile.hidePageLoadingMsg();
+            $j('#cList').listview('refresh');
+        }else if(event.type === 'exception') {
+            alert('event exception:' + event.message);
+        } else{
+            alert('event failed:' + event.message);
+        }    
+    }
+    
+    function makeCall(Id, Phone) {
+        var oppResult =  sforce.connection.query("select Id, AccountId from Opportunity where Id  = "+"'"+Id+"'");
+        var oppDoNotCall = oppResult.getArray("records"); 
+        
+        var accResult =  sforce.connection.query("select Id, Do_Not_Call__c from Account where Id = "+"'"+oppDoNotCall[0].AccountId+"'");
+        var accDoNotCall = accResult.getArray("records"); 
+        var isDoNotCall = accDoNotCall[0].Do_Not_Call__c;
+        if(isDoNotCall=='true'){
+            alert('This is a “Do Not Call” customer, please make this as Lost “Do Not Call”.');
+        }else{
+            alert('Making a call to ' + Id + ' on #' + Phone);
+            numbertoDial = "0" + Phone;
+            CallActionControllerForOpportunity.click2CallCloudagent(Id, numbertoDial, showResponse,{escape:false});
+        }
+    }
+    
+    function showResponse(message, event) {
+        if(event.status) {
+            alert('Response:' + message);
+        }else if(event.type === 'exception') {
+            alert('event exception:' + event.message);
+        } else{
+            alert('event failed:' + event.message);
+        }    
+    }
+    
+    </script>     
+</apex:page>
