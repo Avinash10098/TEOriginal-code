@@ -1,0 +1,325 @@
+<apex:page controller="MailDemandSendController" standardStylesheets="false" sidebar="false">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <head>
+            <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+            <script type="text/javascript">__sfdcSessionId = '{!$Api.Session_Id}';</script>
+            <link href="https://fonts.googleapis.com/css?family=Lato:400,700&subset=latin,latin-ext" rel="stylesheet" type="text/css" />
+            <script src="/soap/ajax/9.0/connection.js"></script>
+            <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+            <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+            
+        </head>
+        <style>
+            .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th, .slds td {
+            font-family: 'Lato';
+            }
+            .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th {
+            text-align: center;
+            }
+            .slds .slds-theme--shade {
+            background-color: aliceblue;
+            }
+            .slds .slds-button {
+            background-color:#191970;
+            line-height: 10px;
+            min-height: 22px;
+            color:white;
+            font-weight:normal;
+            border:1px solid black;
+            padding-left: 5px;
+            padding-right: 5px;
+            }
+            .slds .slds-form-element__label {
+            font-size: 11px;
+            font-weight: bold;
+            }
+            body .bPageBlock .pbBody .pbSubheader {
+            background-color: #A9C1D9;
+            border-color: black;
+            color:white;
+            font-weight:bold;
+            font-size:11px;
+            }
+            
+            table {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-size: 11px;
+            border-collapse: collapse;
+            empty-cells:show;
+            border:1px solid #E8D5B9;
+            text-align: left;
+            
+            }
+            
+            th {
+            background-color:#F5F5F5;
+            color:black;
+            font-size: 11px;
+            text-align: left;
+            
+            }
+            
+            td {
+            border-collapse: collapse;
+            border:1px solid #E8E8E8;
+            color:#778899;
+            font-size:11px
+            text-align: left;
+            }
+            .color1 {
+            background-color: #F5F5F5;
+            }
+            .color2 {
+            background-color: #DCDCDC;
+            } 
+            
+            div.fadeMe {
+            opacity:    0.5; 
+            background: #D9E9FF; 
+            width:      100%;
+            height:     100%; 
+            z-index:    1000;
+            top:        0; 
+            left:       0; 
+            position:   fixed; 
+            }
+            
+            .messageTable {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-weight:700;
+            color: #BE2625;
+            width:100%;
+            background-color:#EEB4B4; !important
+            }
+            .slds .slds-icon-action-edit {
+            background-color: #111625;
+            }
+            .ui-accordion {
+            width: 100%;
+            }
+            
+            .ui-accordion .ui-accordion-content {
+            width: 100%;
+            color: #16325c;
+            }
+            .ui-accordion  h4 {
+            background: #fff7f8;
+            color: black;
+            font-family: Lato,verdana, arial, sans-serif;
+            collapsible: true;
+            autoHeight: true;
+            navigation: true;
+            }
+            
+            .ui-accordion .accordion-body p {
+            text-transform: uppercase;
+            font-weight:500;
+            font-family: Lato,verdana, arial, sans-serif;
+            }
+            
+            .hidden {
+            text-align: left;
+            }
+        </style>
+        <script type="text/javascript">
+        function selectAllCheckboxes(obj,receivedInputID){
+            var inputCheckBox = document.getElementsByTagName("input");                  
+            for(var i=0; i<inputCheckBox.length; i++){          
+                if(inputCheckBox[i].id.indexOf(receivedInputID)!=-1){                                     
+                    inputCheckBox[i].checked = obj.checked;
+                }
+            }
+        }
+    </script>
+        <body>
+            <a href="/home/home.jsp"><img src="{!$Resource.Home}" style="float:left; width:4%; height:4%;"></img></a> 
+        <br/><br/>
+        <!-- REQUIRED SLDS WRAPPER -->
+        <div class="slds">
+            <!-- PRIMARY CONTENT WRAPPER -->
+            <div class="myapp">
+                <!-- SEARCH DEMANDS-->
+                <div aria-labelledby="DSform">
+                    <!-- BOXED AREA -->
+                    
+                    
+                    <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+                        <legend id="dsForm" class="slds-text-heading--medium slds-p-vertical--medium">Send Demand Mail Dashboard</legend>
+                        <apex:form id="demandsform">
+                            <apex:actionStatus id="status">
+                                <apex:facet name="start">
+                                    <div class="fadeMe">
+                                        &nbsp;
+                                    </div>
+                                    <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                        <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                            <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                                            <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>
+                                        </div>
+                                    </div>
+                                </apex:facet>
+                            </apex:actionStatus>
+                            <apex:outputPanel id="messages" >
+                                <apex:PageMessages id="pageMsgs" />
+                            </apex:outputPanel>
+                            
+                            <!--<apex:actionFunction name="getCustomersFunction" action="{!getCustomersTowerWise}" rerender="demandsfortower,messages,towerHeader"  status="status">
+<apex:param id="tName" name="towerName" value="" />
+<apex:param id="pName" name="projectName" value="" />
+</apex:actionFunction>-->
+                            
+                            <!--<apex:actionFunction name="narrowResultsFunction" action="{!narrowResults}" rerender="demandsfortower,messages,towerHeader" status="status" >
+</apex:actionFunction>-->
+                            <!--<apex:pageBlock >
+<table width="100%">
+<tr>
+<!--<td>
+<apex:outputLabel styleclass="slds-form-element__label">Project Name</apex:outputLabel>
+<apex:inputText value="{!projectName}"/>-->
+                            <!--  <apex:selectList id="abc" value="{!selectedVal}" size="1"> 
+<apex:selectOptions value="{!getProjects}" /> 
+<apex:actionSupport event="onchange">
+<apex:param name="selectedVal" value="{!getProjects}" assignTo="{!selectedVal}"/>
+</apex:actionSupport> 
+</apex:selectList>
+
+</td>
+
+<td>
+<apex:outputLabel styleclass="slds-form-element__label">Customer</apex:outputLabel>
+<apex:inputText value="{!customerName}"/>
+
+</td>
+
+<td>
+<apex:outputLabel styleclass="slds-form-element__label">Unit</apex:outputLabel>
+<apex:inputText value="{!unitName}"/>
+</td>
+
+<!-- <td>
+<apex:outputLabel styleclass="slds-form-element__label">CustomerId</apex:outputLabel>
+<apex:inputText value="{!customerId}"/>
+</td>-->
+                            <!--</tr>
+
+</table>
+
+
+<apex:outputPanel id="searchButton">
+<center>
+<br/>
+<apex:commandButton value="Search" action="{!quickSearch}"  styleClass="slds-button slds-button--brand slds-button--small" rerender="demandsfortower,messages,towerHeader" status="status" oncomplete="closeAccordion()" />
+<br/><br/>
+</center>
+</apex:outputPanel>   
+</apex:pageBlock>
+</apex:form>
+</fieldset> -->
+                            <apex:outputPanel id="FirstSection">
+                                <!--<apex:outputPanel rendered="{!quickSearch}"> 
+<apex:outputPanel rendered="{!AND(SuccessMessage != '')}">
+<apex:outputText ><b style="color:green;">{!SuccessMessage}</b></apex:outputText>
+</apex:outputPanel>-->
+                                <apex:pageBlock >
+                                    <apex:outputPanel id="batchStatus">
+                                        <apex:pageBlockSection title="Demands are being sent please wait....." rendered="{!batchStatusBool}">
+                                            Status of Sending Demand is {!batchStatus}
+                                            <apex:actionPoller interval="5" action="{!checkBatchStatus}" enabled="{!pollerBool}" reRender="FirstSection" status="status"/>
+                                        </apex:pageBlockSection>
+                                    </apex:outputPanel>
+                                </apex:pageBlock>
+                                <apex:outputPanel id="searchButton">
+                                    <table width="100%">
+                                        <tr>
+                                            <td>
+                                                <center>
+                                                    <apex:selectList id="abc" value="{!selectedVal}" size="1"> 
+                                                        <apex:selectOptions value="{!getProjects}" /> 
+                                                        <apex:actionSupport event="onchange">
+                                                            <apex:param name="selectedVal" value="{!getProjects}" assignTo="{!selectedVal}"/>
+                                                        </apex:actionSupport> 
+                                                    </apex:selectList>
+                                                </center>
+                                            </td>
+                                            
+                                            <td>
+                                                <apex:outputLabel styleclass="slds-form-element__label">CustomerId</apex:outputLabel>
+                                                <apex:inputText value="{!customerName}"/>
+                                                
+                                            </td>
+                                            
+                                            <td>
+                                                <apex:outputLabel styleclass="slds-form-element__label">Unit</apex:outputLabel>
+                                                <apex:inputText value="{!unitName}"/>
+                                            </td>
+                                            
+                                        </tr>
+                                        
+                                    </table>
+                                    
+                                    <center>
+                                        <br/>
+                                        <apex:commandButton value="Search Demand" action="{!quickSearch}"  styleClass="slds-button slds-button--brand slds-button--small" />
+                                        <br/><br/>
+                                    </center>
+                                </apex:outputPanel>
+                                
+                                <apex:outputPanel id="cname">
+                                   
+                                    <table width="100%" border="1 solid blue">
+                                        
+                                        <apex:repeat value="{!customerList}" var="c">
+                                            <tr>
+                                                <th colspan="8"><apex:outputText value="{!c}"/> </th>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Milestone Name</th>
+                                                <th style="text-align: left;">Demand Date</th>
+                                                <th style="text-align: left;">Due Date</th>
+                                                <th style="text-align: left;">CGST</th>
+                                                <th style="text-align: left;">SGST</th>
+                                                <th style="text-align: left;">Amount</th>
+                                                <!--<th style="text-align: left;" colspan="2">Action</th>-->
+                                            </tr>
+                                            <apex:repeat value="{!mapShowMilestoneNew[c]}" var="sm">
+                                                <tr>
+                                                    <td>{!sm.milestoneName}</td>
+                                                    <td>{!sm.demandDate}</td>
+                                                    <td>{!sm.dueDate}</td>
+                                                    <td>{!sm.Dtotaltax}</td>
+                                                    <td>{!sm.Dtotaltax}</td>
+                                                    <td>{!sm.Dtotalamt}</td>
+                                                    
+                                                    <td><apex:inputCheckbox value="{!sm.selected}" id="inputId"/></td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </apex:repeat>
+                                        
+                                    </table>
+                                </apex:outputPanel>
+                                <br/><br/>
+                                <table width="100%">
+                                    <tr>
+                                        <td colspan="7"><center><apex:commandButton value="Send Demand Mail" rendered="{!AND(customerList != Null,customerList.size > 0)}" action="{!SendPerMilestoneDemand}"  status="status" styleClass="slds-button slds-button--brand slds-button--small" /></center></td>
+                                    </tr>
+                                </table>
+                                <br/><br/><br/>
+                        <apex:panelGrid columns="4" rendered="{!pagebuttonvisible}">
+                        		<apex:commandButton action="{!Beginning}" title="Beginning" value="<<" disabled="{!disablePrevious}" style="margin-left:20%;"/>
+        <apex:commandButton action="{!Previous}" title="Previous" value="<" disabled="{!disablePrevious}" style="margin-left:25%;"/>        
+        <apex:commandButton action="{!Next}" title="Next" value=">" disabled="{!disableNext}" style="margin-left:30%;"/>
+        <apex:commandButton action="{!End}" title="End" value=">>" disabled="{!disableNext}" style="margin-left:35%;"/> 
+						</apex:panelGrid>
+        				
+                                
+                            </apex:outputPanel>
+                        </apex:form>
+                    </fieldset>
+                    
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+</apex:page>
