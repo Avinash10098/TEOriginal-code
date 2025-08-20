@@ -1,0 +1,683 @@
+<apex:page showHeader="false" controller="CustomerDocumentsController" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+    <html  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" lang="en">
+        <head>
+            <meta charset="utf-8" />
+            <title>Customer Document</title>
+            <apex:stylesheet value="{!URLFOR($Resource.SLDS213, 'assets/styles/salesforce-lightning-design-system-vf.min.css')}"/>
+            <link href="https://fonts.googleapis.com/css?family=Lato:400,700&subset=latin,latin-ext" rel="stylesheet" type="text/css" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"/>
+            <script src="/soap/ajax/9.0/connection.js"/> 
+        </head>
+        <style>
+            .DasraTest .slds h1, .slds h2, .slds h3, .slds h4, .slds h5, .slds h6, .slds th, .slds td {
+            font-family: 'Lato';
+            }
+            
+            .DasraTest .slds-theme--shade {
+            background-color:aliceblue;
+            }
+            .DasraTest  .slds-button {
+            background-color: #1C2130; 
+            color: white;
+            }
+            .DasraTest .slds-box {
+            border: 1px solid Black;
+            }
+            
+            .editPage .pbSubsection {
+            margin-top: 0px;
+            padding: 0px;
+            }
+            body .pbSubheader {
+            margin-top: 0px;
+            padding: 0px;
+            color:#16325c;
+            font-size:9.5px;
+            background-color:#1C2130;
+            }
+            
+            .DasraTest .header {
+            text-align:center;
+            }
+            .DasraTest table {
+            font-size: 11px;
+            empty-cells:show;
+            }
+            .DasraTest th {
+            padding: 2px;
+            text-align:center;
+            color:#DC5B3E;
+            }
+            
+            .DasraTest td {
+            text-align:left;
+            }
+            
+            .DasraTest .slds-container--large {
+            max-width: 100rem;
+            }
+            
+            .DasraTest .stage-container {
+            max-height: 100%;
+            overflow: hidden;
+            }
+            
+            .DasraTest .slds-grid--frame {
+            min-width: 767px;
+            overflow-y: auto;
+            }
+            
+            div.fadeMe {
+            opacity:    0.5; 
+            background: #D9E9FF; 
+            width:      100%;
+            height:     100%; 
+            z-index:    1000;
+            top:        0; 
+            left:       0; 
+            position:   fixed; 
+            }
+            .error {
+            border-color: red !important;
+            background-color: light blue !important;
+            border-width: 2px;
+            
+            }
+            
+            .separator {
+            color: red;
+            font-weight: bold;
+            font-size: large;
+            }
+            .picklist {
+            color: black;
+            font-weight:bold;
+            }
+            .red {
+            color: red;
+            font-weight:bold;
+            }
+            .blue {
+            color: blue;
+            font-weight:bold;
+            }
+            .green {
+            color: green;
+            font-weight:bold;
+            }
+            .frozen  {
+            color: #B2B39F;
+            }
+            .active  {
+            color: #5B527F;
+            font-weight:bold;
+            }
+            
+            .hourstable td {
+            text-align:center;
+            }
+            
+            div.fadeMe {
+            opacity:    0.5; 
+            background: #D9E9FF; 
+            width:      100%;
+            height:     100%; 
+            z-index:    1000;
+            top:        0; 
+            left:       0; 
+            position:   fixed; 
+            }
+            
+            .activeTab {
+            background-color: #838B8B; 
+            color: white;
+            background-image:none;
+            font-size: 13px;
+            text-align:center !important;
+            }
+            .inactiveTab { 
+            background-color: #BC8F8F;
+            background-image:none;
+            color: black;
+            font-size: 11px;
+            text-align:center !important
+            }
+            
+            /* ------------------------------------------------- */
+            #tabs {
+            overflow: hidden;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            }
+            
+            #tabs li {
+            float: left;
+            margin: 0 -15px 0 0;
+            }
+            
+            #tabs a {
+            float: left;
+            position: relative;
+            padding: 0 45px;
+            height: 0;
+            line-height: 30px;
+            text-transform: uppercase;
+            text-decoration: none;
+            color: #fff;   
+            border-right: 30px solid transparent;
+            border-bottom: 30px solid #3D3D3D;
+            border-bottom-color: #777\9;  <!-- #777\9  -->
+            opacity: .3;
+            filter: alpha(opacity=30);      
+            }
+            
+            #tabs a:hover,
+            #tabs a:focus {
+            border-bottom-color: #2ac7e1; <!-- #2ac7e1;  -->
+            opacity: 1;
+            filter: alpha(opacity=100);
+            }
+            
+            #tabs a:focus {
+            outline: 0;
+            }
+            
+            #tabs #current {
+            z-index: 3;
+            border-bottom-color: #4A536B; <!--  #3d3d3d  --> 
+            opacity: 2;
+            filter: alpha(opacity=100);      
+            }
+            
+            /* ----------- */
+            #content {
+            background: #D6DDDD; <!-- #D6DDDD; FFFAFA  -->
+            border-top: 0px solid #3d3d3d;
+            padding: 2em;
+            }
+            
+            #content h2, #content h3,
+            #content p {
+            margin: 0 0 15px 0;
+            }  
+            
+            .headerRow .TableTitle {
+            background-color: #F0F8FF !important;
+            ackground-image: none !important; 
+            color: #CC0000 !important; 
+            font-size:14px !important; 
+            }  
+            .DasraTest .slds-container--large {
+            max-width: 92%;
+            }
+            .DasraTest .slds-icon {
+            width: 50px;
+            height: 46px; 
+            } 
+            .apexp .bPageBlock.apexDefaultPageBlock .pbBody .pbSubheader h3 {
+            font-size: 1.4em;
+            padding-left:5px;
+            }
+            body .bPageBlock .pbBody .pbSubheader .showListButton {
+            background: transparent url(/img/alohaSkin/twisty_sprite.png) 0 0 no-repeat;
+            float: left;
+            }   
+            .apexp .bPageBlock.apexDefaultPageBlock .pbBody .pbSubheader .hideListButton {
+            background-position: 1px -36px;
+            float: left;
+            }  
+            .DasraTest button, .DasraTest select {
+            text-transform: none;
+            font-size: 12px;
+            padding: 2px 5px;
+            width: 50%;
+            }
+        </style>
+        <body>
+            
+            <!-- REQUIRED SLDS WRAPPER -->
+            <div class="DasraTest">
+                <!-- PRIMARY CONTENT WRAPPER -->
+                <div class="myapp" style="margin-top: 1%;">
+                    <!--  <a href="#" onClick="linkClick('Home')" style="margin-left: 1%;">
+<span class="slds-icon__container slds-icon-standard-opportunity slds-m-right--medium">
+<img class="slds-icon" src="{!$Resource.SLDS0100}/assets/icons/standard/home_60.png" alt="Home" />
+<span class="slds-assistive-text">Home</span>
+</span>
+</a> -->
+                    <!-- CREATE/EDIT TASK -->
+                    <div aria-labelledby="newform">
+                        <!-- BOXED AREA -->
+                        <fieldset class="slds-box slds-theme--shade slds-container--large slds-container--center slds-grid--align-spread">
+                            <legend id="moduleLegend" class="slds-text-heading--medium slds-p-vertical--medium">Customer Documents</legend>
+                            
+                            <apex:form id="moduleForm" styleClass="slds-form--inline" style="{!style2}">
+                                <center>
+                                    <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" value="Close" action="{!Cancel}"  immediate="true" />  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+                                    <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" value="Upload New Documents" onclick="uploadDocument();return false;" status="status" rendered="{!if(bookList.size > 0,true,false)}"/>   
+                                </center><br/>
+                                <apex:PageMessages id="pageMsgs"/>
+                                
+                                <apex:actionStatus id="status">
+                                    <apex:facet name="start">
+                                        <div class="fadeMe">&nbsp;</div>
+                                        <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                            <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                                <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                                                <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>
+                                            </div>
+                                        </div>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                                
+                                <apex:outputPanel id="custmrdetls">
+                                    <apex:pageBlock >
+                                        <apex:pageBlockSection title="Customer Details" columns="2" rendered="{!if(bookList.size > 0,true,false)}" collapsible="false">
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(optyList.size > 0,true,false)}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Customer Name</apex:outputLabel>
+                                                <apex:outputField value="{!optyList[0].Name}"/>    
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(bookList.size > 0,true,false)}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Booking</apex:outputLabel>
+                                                <apex:outputField value="{!bookList[0].Name}"/>    
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(bookList.size > 0,true,false)}">
+                                                
+                                                <apex:outputLabel styleclass="slds-form-element__label">Booking Date</apex:outputLabel>
+                                                <apex:outputField value="{!bookList[0].Booking_Date__c}"/> 
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(bookList.size > 0,true,false)}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Project Name</apex:outputLabel>
+                                                <apex:outputField value="{!bookList[0].Project__c}"/>  
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(bookList.size > 0,true,false)}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Unit</apex:outputLabel>
+                                                <apex:outputField value="{!bookList[0].Unit__c}"/>   
+                                            </apex:pageBlockSectionItem>
+                                            
+                                        </apex:pageBlockSection>
+                                    </apex:pageBlock> 
+                                </apex:outputPanel>
+                                <apex:outputPanel id="outputpId" rendered="{!if(bookList.size > 0,true,false)}">   
+                                    <ul id="tabs">
+                                        <li><a href="#" name="#tab1">Primary Applicant</a></li>
+                                        <li><a href="#" name="#tab2">Second Applicant</a></li>
+                                        <li><a href="#" name="#tab3">Third Applicant</a></li>
+                                        <li><a href="#" name="#tab4">Fourth Applicant</a></li>
+                                        <li><a href="#" name="#tab5">Fifth Applicant</a></li>
+                                    </ul>
+                                    
+                                    <div id="content">
+                                        <div id="tab1">
+                                            <apex:pageBlock id="appliBlock1" rendered="{!if(mainWrapperListforApp1.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="2">
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Name</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp1[0].applicantName}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Type</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp1[0].applicantType}"/>  
+                                                    </apex:pageBlockSectionItem>
+                                                    
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Type of Applicant</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp1[0].typeOfApplicant}"/>  
+                                                    </apex:pageBlockSectionItem>
+                                                    
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Residential Status</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp1[0].residentialStatus}"/>  
+                                                    </apex:pageBlockSectionItem>
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>
+                                            
+                                            <apex:pageBlock id="documBlock1" rendered="{!if(mainWrapperListforApp1.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="1">
+                                                    <apex:pageBlockTable id="documentTable" value="{!mainWrapperListforApp1[0].allDocumentMapNew}" var="item" width="100%" rendered="{!if(mainWrapperListforApp1[0].allDocumentList.size > 0,true,false)}">
+                                                        <apex:column headerValue="Document Name" headerClass="TableTitle"> <b>{!item}</b>  </apex:column>
+                                                        <apex:column headerValue="Is Document Upload" headerClass="TableTitle"> 
+                                                            <apex:outputtext style="font-size:16px;" value="✔" rendered="{!mainWrapperListforApp1[0].allDocumentMapNew[item]}"/>
+                                                            <apex:outputtext style="font-size:16px;" value="✘" rendered="{!NOT(mainWrapperListforApp1[0].allDocumentMapNew[item])}"/>
+                                                            <!-- <b>{!mainWrapperListforApp1[0].allDocumentMapNew[item]}</b> --> </apex:column>
+                                                    </apex:pageBlockTable>
+                                                    
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>  
+                                        </div>    
+                                        
+                                        <div id="tab2">
+                                            
+                                            <apex:pageBlock id="appliBlock2" rendered="{!if(mainWrapperListforApp2.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="2">
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Name</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp2[0].applicantName}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Type</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp2[0].applicantType}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Type Of Applicant</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp2[0].typeOfApplicant}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Residential Status</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp2[0].residentialStatus}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>
+                                            
+                                            <apex:pageBlock id="documBlock2" rendered="{!if(mainWrapperListforApp2.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="1">
+                                                    <apex:pageBlockTable id="documentTable" value="{!mainWrapperListforApp2[0].allDocumentMapNew}" var="item" width="100%" rendered="{!if(mainWrapperListforApp2[0].allDocumentList.size > 0,true,false)}">
+                                                        <apex:column headerValue="Document Name" headerClass="TableTitle"> <b>{!item}</b>  </apex:column>
+                                                        <apex:column headerValue="Is Document Upload" headerClass="TableTitle"> 
+                                                            <apex:outputtext style="font-size:16px;" value="✔" rendered="{!mainWrapperListforApp2[0].allDocumentMapNew[item]}"/>
+                                                            <apex:outputtext style="font-size:16px;" value="✘" rendered="{!NOT(mainWrapperListforApp2[0].allDocumentMapNew[item])}"/>
+                                                            <!-- <b>{!mainWrapperListforApp1[0].allDocumentMapNew[item]}</b> --> </apex:column>
+                                                    </apex:pageBlockTable>
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>  
+                                        </div> 
+                                        
+                                        <div id="tab3">
+                                            <apex:pageBlock id="appliBlock3" rendered="{!if(mainWrapperListforApp3.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="2">
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Name</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp3[0].applicantName}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Type</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp3[0].applicantType}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Type Of Applicant</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp3[0].typeOfApplicant}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Residential Status</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp3[0].residentialStatus}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>
+                                            
+                                            <apex:pageBlock id="documBlock3" rendered="{!if(mainWrapperListforApp3.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="1">
+                                                    <apex:pageBlockTable id="documentTable" value="{!mainWrapperListforApp3[0].allDocumentMapNew}" var="item" width="100%" rendered="{!if(mainWrapperListforApp3[0].allDocumentList.size > 0,true,false)}">
+                                                        <apex:column headerValue="Document Name" headerClass="TableTitle"> <b>{!item}</b>  </apex:column>
+                                                        <apex:column headerValue="Is Document Upload" headerClass="TableTitle"> 
+                                                            <apex:outputtext style="font-size:16px;" value="✔" rendered="{!mainWrapperListforApp3[0].allDocumentMapNew[item]}"/>
+                                                            <apex:outputtext style="font-size:16px;" value="✘" rendered="{!NOT(mainWrapperListforApp3[0].allDocumentMapNew[item])}"/>
+                                                            <!-- <b>{!mainWrapperListforApp1[0].allDocumentMapNew[item]}</b> --> </apex:column>
+                                                    </apex:pageBlockTable>
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>  
+                                        </div> 
+                                        
+                                        <div id="tab4">
+                                            
+                                            <apex:pageBlock id="appliBlock4" rendered="{!if(mainWrapperListforApp4.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="2">
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Name</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp4[0].applicantName}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Type</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp4[0].applicantType}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Type Of Applicant</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp4[0].typeOfApplicant}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Residential Status</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp4[0].residentialStatus}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>
+                                            
+                                            <apex:pageBlock id="documBlock4" rendered="{!if(mainWrapperListforApp4.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="1">
+                                                    <apex:pageBlockTable id="documentTable" value="{!mainWrapperListforApp4[0].allDocumentMapNew}" var="item" width="100%" rendered="{!if(mainWrapperListforApp4[0].allDocumentList.size > 0,true,false)}">
+                                                        <apex:column headerValue="Document Name" headerClass="TableTitle"> <b>{!item}</b>  </apex:column>
+                                                        <apex:column headerValue="Is Document Upload" headerClass="TableTitle"> 
+                                                            <apex:outputtext style="font-size:16px;" value="✔" rendered="{!mainWrapperListforApp4[0].allDocumentMapNew[item]}"/>
+                                                            <apex:outputtext style="font-size:16px;" value="✘" rendered="{!NOT(mainWrapperListforApp4[0].allDocumentMapNew[item])}"/>
+                                                            <!-- <b>{!mainWrapperListforApp1[0].allDocumentMapNew[item]}</b> --> </apex:column>
+                                                    </apex:pageBlockTable>
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>  
+                                        </div> 
+                                        
+                                        <div id="tab5">
+                                            
+                                            <apex:pageBlock id="appliBlock5" rendered="{!if(mainWrapperListforApp5.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="2">
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Name</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp5[0].applicantName}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Applicant Type</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp5[0].applicantType}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Type Of Applicant</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp5[0].typeOfApplicant}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                    <apex:pageBlockSectionItem >
+                                                        <apex:outputLabel styleclass="slds-form-element__label">Residential Status</apex:outputLabel>
+                                                        <apex:outputText value="{!mainWrapperListforApp5[0].residentialStatus}"/>    
+                                                    </apex:pageBlockSectionItem>
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>
+                                            
+                                            <apex:pageBlock id="documBlock5" rendered="{!if(mainWrapperListforApp5.size > 0,true,false)}">
+                                                <apex:pageBlockSection columns="1">
+                                                    <apex:pageBlockTable id="documentTable" value="{!mainWrapperListforApp5[0].allDocumentMapNew}" var="item" width="100%" rendered="{!if(mainWrapperListforApp5[0].allDocumentList.size > 0,true,false)}">
+                                                        <apex:column headerValue="Document Name" headerClass="TableTitle"> <b>{!item}</b>  </apex:column>
+                                                        <apex:column headerValue="Is Document Upload" headerClass="TableTitle"> 
+                                                            <apex:outputtext style="font-size:16px;" value="✔" rendered="{!mainWrapperListforApp5[0].allDocumentMapNew[item]}"/>
+                                                            <apex:outputtext style="font-size:16px;" value="✘" rendered="{!NOT(mainWrapperListforApp5[0].allDocumentMapNew[item])}"/>
+                                                            <!-- <b>{!mainWrapperListforApp1[0].allDocumentMapNew[item]}</b> --> </apex:column>
+                                                    </apex:pageBlockTable>
+                                                </apex:pageBlockSection>
+                                            </apex:pageBlock>  
+                                        </div> 
+                                        
+                                    </div>     
+                                    <apex:actionFunction name="showMethod" action="{!showMethod}" status="status2" reRender="pageMsgs,pageMsgs2,documentuploadpan"/>
+                                    
+                                </apex:outputPanel>  
+                            </apex:form>
+                            <apex:form id="secondForm">          
+                                <apex:PageMessages id="pageMsgs2"/>
+                                <apex:actionStatus id="status2">
+                                    <apex:facet name="start">
+                                        <div class="fadeMe">
+                                            &nbsp;
+                                        </div>
+                                        <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                            <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                                <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                                                <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>
+                                            </div>
+                                        </div>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                                
+                                <apex:actionStatus id="status3">
+                                    <apex:facet name="start">
+                                        <div class="fadeMe">
+                                            &nbsp;
+                                        </div>
+                                        <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                            <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                                <img src="{!$Resource.LoadingImage}" style="float: left; margin: 8px;" />
+                                                <!-- <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>  -->
+                                            </div>
+                                        </div>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                                
+                                <apex:outputPanel id="documentuploadpan" style="{!style}">
+                                    <div></div>
+                                    <apex:pageBlock >
+                                        <apex:pageBlockSection title="Customer Details" columns="2" rendered="{!if(bookList.size > 0,true,false)}">
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(optyList.size > 0,true,false)}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Customer Name</apex:outputLabel>
+                                                <apex:outputField value="{!optyList[0].Name}"/>    
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(bookList.size > 0,true,false)}">
+                                                <apex:outputLabel styleclass="slds-form-element__label">Booking</apex:outputLabel>
+                                                <apex:outputField value="{!bookList[0].Name}"/>    
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(bookList.size > 0,true,false)}">
+                                                <apex:outputLabel styleclass="slds-form-element__label" >Booking Date</apex:outputLabel>
+                                                <apex:outputField value="{!bookList[0].Booking_Date__c}"/>  
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(bookList.size > 0,true,false)}">
+                                                <apex:outputLabel styleclass="slds-form-element__label" >Project Name</apex:outputLabel>
+                                                <apex:outputField value="{!bookList[0].Project__c}"/>                                                    
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem rendered="{!if(bookList.size > 0,true,false)}">
+                                                <apex:outputLabel styleclass="slds-form-element__label" >Unit</apex:outputLabel>
+                                                <apex:outputField value="{!bookList[0].Unit__c}"/>    
+                                            </apex:pageBlockSectionItem>
+                                        </apex:pageBlockSection>
+                                        <apex:pageBlockSection title="Upload New Documents" columns="2" id="uploadSection">
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label" ></apex:outputLabel>
+                                            </apex:pageBlockSectionItem> 
+                                            
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label"></apex:outputLabel>
+                                            </apex:pageBlockSectionItem> 
+                                            
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Select Applicant</apex:outputLabel>
+                                                <apex:selectList id="selectappId" value="{!selectedApplicant}" size="1">
+                                                    <apex:selectOptions value="{!optns}"/> 
+                                                    <apex:actionSupport event="onchange" action="{!showMethod}" status="status"> <!-- action="{!showMethod2}"  -->
+                                                        <apex:param name="selectedApp" value="{!optns}" assignTo="{!selectedApplicant}"/>
+                                                    </apex:actionSupport>
+                                                </apex:selectList>     
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Type of Applicant</apex:outputLabel>
+                                                <apex:outputText value="{!typeOfApplicant2}"/>    
+                                            </apex:pageBlockSectionItem> 
+                                            
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Residential Status</apex:outputLabel>
+                                                <apex:outputText value="{!residentialStatus2}"/>    
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label"></apex:outputLabel>
+                                            </apex:pageBlockSectionItem>
+                                            
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label">Select Document Type</apex:outputLabel>
+                                                <apex:selectList id="selectappId" value="{!selectedDocument}" size="1">
+                                                    <apex:selectOptions value="{!optnsDocName}"/> 
+                                                    <apex:actionSupport event="onchange" action="{!displayHideMethod}" status="status">
+                                                        <apex:param name="selectedApp" value="{!optnsDocName}" assignTo="{!selectedDocument}"/>
+                                                    </apex:actionSupport>
+                                                </apex:selectList>     
+                                                
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel styleclass="slds-form-element__label" >Choose File</apex:outputLabel>
+                                                <apex:inputFile value="{!blobFile}" contentType="{!contentType}"></apex:inputFile>
+                                            </apex:pageBlockSectionItem>  
+                                            
+                                        </apex:pageBlockSection> <br/>
+                                        <br/>
+                                        
+                                        <center>
+                                            <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" value="Upload" action="{!uploadFile}" status="status3"/> &nbsp; &nbsp; &nbsp; &nbsp;<!-- onclick="uploadD('{!selectedApplicant}','{!selectedDocument}');return false;" action="{!uploadDocument}" onclick="uploadD();return false;"   -->
+                                            <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" action="{!refreshMethod}" value="Go to Previous Page" status="status2"/> &nbsp; &nbsp; &nbsp; &nbsp;  <!-- action="{!refreshPage}" action="{!refreshMethod}" -->
+                                            <apex:commandButton styleClass="slds-button slds-button--brand slds-button--small" value="Close" action="{!Cancel}"  immediate="true" />    
+                                        </center>
+                                    </apex:pageBlock>
+                                    <apex:actionRegion >    
+                                        <apex:actionFunction name="uploadFile" action="{!uploadFile}" reRender="pageMsgs2" status="status"/>
+                                    </apex:actionRegion> 
+                                    
+                                </apex:outputPanel> 
+                            </apex:form>
+                        </fieldset>  
+                    </div>           
+                </div>
+            </div>
+            <script>
+            
+            function refreshToo(){ 
+                refreshMethod();
+            }
+            
+            function uploadDocument(){ 
+                showMethod();
+                $("[id$='moduleForm']").toggle("explode");
+                $("[id$='custmrdetls']").prev().toggle("explode");
+                //$("[id$='content']").next().toggle("explode");
+                $("[id$='documentuploadpan']").next().toggle("explode");
+            }     
+            
+            function resetTabs(){
+                $("#content > div").hide(); //Hide all content
+                $("#tabs a").attr("id",""); //Reset ids      
+            }  
+            var myUrl = window.location.href; //get URL
+            var myUrlTab = myUrl.substring(myUrl.indexOf("#")); // For localhost/tabs.html#tab2, myUrlTab = #tab2     
+            var myUrlTabName = myUrlTab.substring(0,4); // For the above example, myUrlTabName = #tab
+            
+            (function(){
+                $("#content > div").hide(); // Initially hide all content
+                $("#tabs li:first a").attr("id","current"); // Activate first tab
+                $("#content > div:first").fadeIn(); // Show first tab content
+                
+                $("#tabs a").on("click",function(e) {
+                    e.preventDefault();
+                    if ($(this).attr("id") == "current"){ //detection for current tab
+                        return       
+                    }
+                    else{             
+                        resetTabs();
+                        $(this).attr("id","current"); // Activate this
+                        $($(this).attr('name')).fadeIn(); // Show content for current tab
+                    }
+                });
+                
+                for (i = 1; i <= $("#tabs li").length; i++) {
+                    if (myUrlTab == myUrlTabName + i) {
+                        resetTabs();
+                        $("a[name='"+myUrlTab+"']").attr("id","current"); // Activate url tab
+                        $(myUrlTab).fadeIn(); // Show url tab content        
+                    }
+                }
+            })()
+            </script>
+            
+        </body>    
+    </html> 
+</apex:page>
