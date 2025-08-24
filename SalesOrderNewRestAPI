@@ -1,0 +1,118 @@
+ @future(callout=true) 
+    public static void SalesOrderNew(Id bId){
+        List<Booking__c>bookingList = [Select id, Name,Quotation__r.Towards_Consideration__c,Quotation__r.Towards_Land__c,Project__r.Company_Code__c,Customer_Number__c,
+                                       Unit__r.Tower__r.Cluster__r.SAP_Plant_Code__c,Sales_Order_Number__c,Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,Project_Unit__c,Booking_Date__c,
+                                       Sales_Announcement_Date__c , Agreement_Value_With_Tax__c from Booking__c where id =: bId];
+        
+        if(bookingList.isEmpty()){
+            System.debug('No booking found with ID '+ bId);
+            return;
+        }
+        
+        API_Log__c api = new API_Log__c();
+        Booking__c book = new Booking__c();
+        Map<String, Object> payload = new Map<String, Object>();
+        
+        for(Booking__c b : bookingList){
+            
+            String companyCode = b.Project__r.Company_Code__c != null ? String.valueOf(b.Project__r.Company_Code__c) : '';
+            
+            String customerNumber = b.Customer_Number__c != null ? formatCustomerNumber(String.valueOf(b.Customer_Number__c)) : '';
+            
+            String SalesAnnouncementDate = formatDateDDMMYYYY(b.Sales_Announcement_Date__c);
+            
+            String plantCode = b.Unit__r?.Tower__r?.Cluster__r?.SAP_Plant_Code__c ?? ''; // Safe navigation other wise it throw NPE(Null Pointer Exception.)
+            
+            String ProjectUnitCode = b.Project_Unit__c != null ? b.Project_Unit__c : '';
+            
+            String BookingName = b.Name != null ? b.Name : '';
+            
+            String AgreementValueWithTax = b.Agreement_Value_With_Tax__c != null ? String.valueOf(b.Agreement_Value_With_Tax__c) : '';
+            
+            payload.put('AUART', 'ZHOM');
+            payload.put('VKORG',  companyCode); // company code from project
+            payload.put('VTWEG', '10');
+            payload.put('SPART', '10');
+            payload.put('VBELN', '');
+            payload.put('POSNR', '000010');
+            payload.put('KUNNR', customerNumber); // customer number with leading zero
+            payload.put('BSTKD', BookingName); // Booking Name
+            payload.put('BSTDK', SalesAnnouncementDate); // Booking Sales Announcement Date
+            payload.put('MATNR', 'UNIT'); 
+            payload.put('ARKTX', ProjectUnitCode); // concatination of the project code and unit number
+            payload.put('KWMENG', '10'); // unit saleble Area -- Not Done Need to confirm
+            payload.put('WERKS', plantCode); // SAP Plant Code from phase
+            payload.put('SO_URL', '');
+            payload.put('REASON', ''); 
+            payload.put('DOC_DATE', SalesAnnouncementDate); //Booking Sales Announcement Date
+            payload.put('IHREZ', '');
+            payload.put('KPOSN', '10');
+            payload.put('KSCHL', 'ZBSP');
+            payload.put('KBETR', AgreementValueWithTax); // Agreement Value with tax Booking
+        }
+        
+        // Make the Rest Callout
+        
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(endpoint());
+        req.setMethod('POST');
+        req.setHeader('Content-Type', 'application/json');
+        req.setHeader('Authorization', authorization()); 
+        
+        req.setBody(JSON.serialize(payload)); // Convert payload to JSON
+        
+        Http http = new Http();
+        HttpResponse res;
+        try{
+            
+            res = http.send(req);
+            
+            Object responseObj = JSON.deserializeUntyped(res.getBody()); // Parse JSON response - handle both Map and List cases
+            Map<String, Object> responseMap = new Map<String, Object>();
+            
+            if (responseObj instanceof List<Object>) {
+               
+                List<Object> responseList = (List<Object>)responseObj;  // If response is an array, take the first element if exists
+                if (!responseList.isEmpty()) {
+                    responseMap = (Map<String, Object>)responseList[0];
+                }
+            } else if (responseObj instanceof Map<String, Object>) {
+                responseMap = (Map<String, Object>)responseObj;
+            }
+            
+            String Salesdocno = responseMap.containsKey('SALES_DOC_NO') ? (String)responseMap.get('SALES_DOC_NO') : '';
+            String Res_Code = responseMap.containsKey('RET_CODE') ? (String)responseMap.get('RET_CODE') : 'No code';
+            try{
+                if(Salesdocno != null && Res_Code != '1'){
+                    book.Id = bId;
+                    book.Sales_Order_Number__c = Salesdocno;
+                    update book;
+                    
+                    system.debug('book.Sales_Order_Number__c:::'+book.Sales_Order_Number__c);
+                }else{
+                    System.debug('Salesdocno number is missing '+Salesdocno);
+                }
+            }catch(DmlException e) {
+                 System.debug('The following exception has occurred: ' + e.getMessage());
+            } 
+            
+            api.API_Name__c = 'SalesOrder API (REST)';
+            api.Message__c = responseMap.containsKey('MESSAGE') ? (String)responseMap.get('MESSAGE') : 'No message';
+            api.Response_Code__c = Res_Code;
+            api.Booking__c = bId;
+            api.Response__c = res.getBody();
+            api.Request__c = JSON.serializePretty(payload);
+            insert api;
+            
+        }catch(Exception e) {
+            System.debug('Exception: ' + e.getMessage());
+            api.API_Name__c = 'SalesOrder API (REST) - Error';
+            api.Message__c = e.getMessage();
+            api.Booking__c = bId;
+            api.Response__c = res != null ? res.getBody() : 'No response';
+            api.Request__c = JSON.serializePretty(payload);
+            insert api;
+       }
+
+        
+    }
