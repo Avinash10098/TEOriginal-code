@@ -1,0 +1,461 @@
+// test class ----> TestSAPIntegrationServicesRest
+public with sharing class SAPIntegrationServices
+{
+    public static String authorization() {
+            String authHeader;
+            SAP_Credential__mdt sapSetting;
+            sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                                from SAP_Credential__mdt 
+                                where QualifiedApiName = 'Create_Customer'];
+            authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+            return authHeader;
+    }
+    
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Create_Customer'];
+        system.debug('f:::'+fiSetting.Endpoint__c);
+        return fiSetting.Endpoint__c;
+    }
+
+   
+      
+    @future(callout=true) // test class ----> TestSAPIntegrationServicesRest
+    public static void createCustomerInSAPNew(Id bId) {
+        System.debug('Create Customer via REST');
+        
+        // Get applicant details
+        List<Applicant_Details__c> appDetails = [SELECT Id , Name , Booking__r.Project__r.Company_Code__c , 
+                                                 Salutation__c, Booking__r.Customer_Number__c,Booking__r.Project_Unit__c , 
+                                                 Mailing_Address__c , Mailing_City__c,
+                                                 Mailing_Pincode__c, Mailing_Country__c
+                                                 FROM Applicant_Details__c 
+                                                 WHERE booking__c = :bId 
+                                                 AND Applicant_Number__c = 'Primary Applicant'];
+        
+        if(appDetails.isEmpty()) {
+            System.debug('No applicant details found');
+            return;
+        }
+        
+        // Initialize objects
+        Booking__c bk = new Booking__c(Id = bId);
+        API_Log__c api = new API_Log__c();
+        String CustomerNo = '';
+        
+        if(appDetails[0].Booking__r.Customer_Number__c != null) {
+            CustomerNo = String.valueOf(appDetails[0].Booking__r.Customer_Number__c);
+        }
+        
+        Map<String, Country_Code__c> countrycode = Country_Code__c.getAll();
+        
+        // Build REST payload
+        Map<String, Object> payload = new Map<String, Object>();
+        for(Applicant_details__c ap : appDetails) {
+            
+            payload.put('SALESOFC', '');
+            payload.put('SALESGRP', '');
+            payload.put('SORTKEY', '');  
+            payload.put('DELIPLANT', '');
+            payload.put('PAYTTERMS', 'Z001');
+            payload.put('ACCTASSGGR', '01');
+            payload.put('CUSTPRICPROC', '01');
+            payload.put('CUSTSTATGRP', '');
+            payload.put('CURRENCY', 'INR');
+            payload.put('RECACCOUNT', '0000107001');
+            payload.put('FAXNUMBER', '');
+            payload.put('TELEPH1', '');
+            String countryCodes = countrycode.containsKey(ap.Mailing_Country__c) ? countrycode.get(ap.Mailing_Country__c).Country_Code__c : '';
+            payload.put('COUNTRY', countryCodes);
+            payload.put('POSTALCODE', String.valueOf(ap.Mailing_Pincode__c));
+            payload.put('CITY', ap.Mailing_City__c);
+            
+            String mailingAddress = ap.Mailing_Address__c;
+            Integer firstLineLimit = 60;  
+            Integer otherLineLimit = 40;  
+            
+            String Street1 = '';
+            String Street2 = '';
+            String Street3 = '';
+            String Street4 = '';
+            String Street5 = '';
+            //String mailingAddress = 'dfj fdsfjdsfjsdbfjdsbfjsdbfjsdb fsdbf  sdhjfbdsfds fb hdsfb hdsb fhds bfsdbfsdb fsdb gjd bfhsdb hf dhf bdsf bdf hds fhjds hjdsbhf jh fjdsfjsdfjsd fjdsf jds hf';
+            
+            if (String.isNotBlank(mailingAddress)) {
+                List<String> addressChunks = new List<String>();
+                String remaining = mailingAddress;
+            
+                
+                if (remaining.length() > firstLineLimit) {
+                    Integer breakIndex = remaining.substring(0, firstLineLimit).lastIndexOf(' ');
+                    if (breakIndex == -1) breakIndex = firstLineLimit;
+                    addressChunks.add(remaining.substring(0, breakIndex).trim());
+                    remaining = remaining.substring(breakIndex).trim();
+                } else {
+                    addressChunks.add(remaining);
+                    remaining = '';
+                }
+            
+                
+                while (String.isNotBlank(remaining)) {
+                    Integer breakIndex = remaining.length() > otherLineLimit 
+                                         ? remaining.substring(0, otherLineLimit).lastIndexOf(' ')
+                                         : remaining.length();
+                    if (breakIndex <= 0) breakIndex = Math.min(otherLineLimit, remaining.length());
+                    addressChunks.add(remaining.substring(0, breakIndex).trim());
+                    remaining = remaining.substring(breakIndex).trim();
+                }
+            
+                
+                Street1 = addressChunks.size() > 0 ? addressChunks[0] : '';
+                Street2 = addressChunks.size() > 1 ? addressChunks[1] : '';
+                Street3 = addressChunks.size() > 2 ? addressChunks[2] : '';
+                Street4 = addressChunks.size() > 3 ? addressChunks[3] : '';
+                Street5 = addressChunks.size() > 4 ? addressChunks[4] : '';
+             
+                // Debug with length check
+                // System.debug('Street 1: ' + Street1 + ' (' + (Street1 != null ? Street1.length() : 0) + ')');
+                // System.debug('Street 2: ' + Street2 + ' (' + (Street2 != null ? Street2.length() : 0) + ')');
+                // System.debug('Street 3: ' + Street3 + ' (' + (Street3 != null ? Street3.length() : 0) + ')');
+                // System.debug('Street 4: ' + Street4 + ' (' + (Street4 != null ? Street4.length() : 0) + ')');
+                // System.debug('Street 5: ' + Street5 + ' (' + (Street5 != null ? Street5.length() : 0) + ')');
+            }
+                        
+            
+            // logic for the Street End
+            payload.put('STREET5', Street5);
+            payload.put('STREET4', Street4);
+            payload.put('STREET3', Street3);
+            payload.put('STREET2', Street2);
+            payload.put('STREET', Street1);
+    
+            payload.put('FUGUECUS', '');
+            payload.put('SEARCHTERM', ap.Booking__r.Project_Unit__c);
+            payload.put('NAME', ap.Name);
+            
+             Map<String, String> salutationMap = new Map<String, String>{
+                'Mr.' => '0002',
+                'Ms.' => '0001',
+                'Company' => '0003',
+                'Mrs.' => '0006',
+                'Dr.' => '0007',
+                'Prof.' => '0008',
+                'M/s.' => '0004',
+                'Mr and Mrs.' => '0005'
+            };
+            String applicantSalutation = ap.Salutation__c;
+            String salutationCode = '';
+            if(salutationMap.containsKey(applicantSalutation)){
+                salutationCode = salutationMap.get(applicantSalutation);
+            }else{
+                salutationCode = '';
+            }
+            
+            payload.put('TITLE', salutationCode);
+            payload.put('DIV', '10');
+            payload.put('DISTCHANNEL', '10');
+            payload.put('SALESORG', ''); // sales org is blank
+            payload.put('COMPCODE', String.valueOf(ap.Booking__r.Project__r.Company_Code__c));
+            //payload.put('COMPCODE', '2000');
+            payload.put('ACCGRP', 'ZDOC');
+            payload.put('CUSTOMERNO', '');
+            
+        }
+        // Note: Reverse the payload to ensure the request body is stored in the correct JSON order.  
+        // Without this, the Map may return keys in an arbitrary (unordered) sequence.
+        
+        // Make REST callout
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(endpoint());
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setHeader('Authorization', authorization()); 
+            
+            // Convert payload to JSON
+            req.setBody(JSON.serialize(payload));
+            
+            Http http = new Http();
+            HttpResponse res;
+            /*
+            try {
+                res = http.send(req);
+                System.debug('Response Status: ' + res.getStatusCode());
+                System.debug('Response Body: ' + res.getBody());
+                
+                // Parse JSON response
+                Map<String, Object> responseMap = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
+                
+                
+                if(responseMap.containsKey('CUSTOMERNO') && responseMap.get('RET_CODE') != '1') {
+                    bk.Customer_Number__c = Integer.valueOf((String)responseMap.get('CUSTOMERNO'));
+                    update bk;
+                }
+                
+                
+                api.API_Name__c = 'Customer Number API (REST)';
+                api.Message__c = (String)responseMap.get('MESSAGE');
+                api.Response_Code__c = (String)responseMap.get('RET_CODE');
+                api.Booking__c = bId;
+                api.Response__c = res.getBody();
+                api.Request__c = JSON.serializePretty(payload);
+                insert api;
+                
+            } catch(Exception e) {
+                System.debug('Exception: ' + e.getMessage());
+                // Log error
+                api.API_Name__c = 'Customer Number API (REST) - Error';
+                api.Message__c = e.getMessage();
+                api.Booking__c = bId;
+                api.Response__c = res != null ? res.getBody() : 'No response';
+                api.Request__c = JSON.serializePretty(payload);
+                insert api;
+            }*/
+
+			try {
+                res = http.send(req);
+                System.debug('Response Status: ' + res.getStatusCode());
+                System.debug('Response Body: ' + res.getBody());
+                
+                // Parse JSON response - handle both Map and List cases
+                Object responseObj = JSON.deserializeUntyped(res.getBody());
+                Map<String, Object> responseMap = new Map<String, Object>();
+                
+                if (responseObj instanceof List<Object>) {
+                    // If response is an array, take the first element if exists
+                    List<Object> responseList = (List<Object>)responseObj;
+                    if (!responseList.isEmpty()) {
+                        responseMap = (Map<String, Object>)responseList[0];
+                    }
+                } else if (responseObj instanceof Map<String, Object>) {
+                    responseMap = (Map<String, Object>)responseObj;
+                }
+                
+                if(responseMap.containsKey('CUSTOMERNO') && responseMap.get('RET_CODE') != '1') {
+                    bk.Customer_Number__c = Integer.valueOf((String)responseMap.get('CUSTOMERNO'));
+                    update bk;
+                }
+                
+                System.debug('CUSTOMERNO from response: ' + responseMap.get('CUSTOMERNO'));
+                System.debug('RET_CODE from response: ' + responseMap.get('RET_CODE'));
+                System.debug('MESSAGE from response: ' + responseMap.get('MESSAGE'));
+                
+                api.API_Name__c = 'Customer Number API (REST)';
+                api.Message__c = responseMap.containsKey('MESSAGE') ? (String)responseMap.get('MESSAGE') : 'No message';
+                api.Response_Code__c = responseMap.containsKey('RET_CODE') ? (String)responseMap.get('RET_CODE') : 'No code';
+                api.Booking__c = bId;
+                api.Response__c = res.getBody();
+                api.Request__c = JSON.serializePretty(payload);
+                insert api;
+                
+            } catch(Exception e) {
+                System.debug('Exception: ' + e.getMessage());
+                // Log error
+                api.API_Name__c = 'Customer Number API (REST) - Error';
+                api.Message__c = e.getMessage();
+                api.Booking__c = bId;
+                api.Response__c = res != null ? res.getBody() : 'No response';
+                api.Request__c = JSON.serializePretty(payload);
+                insert api;
+            }
+    }
+
+
+    @future(callout = true)
+    public static void createCustomerInSAP(Id bId)
+    {
+        System.debug('Create Customer');
+        /*totalEnvironmentPiCreatecustomer3.HTTPS_Port apiCallOunt = new totalEnvironmentPiCreatecustomer3.HTTPS_Port();
+        totalEnvironmentPiCreatecustomer3.itemres_element[] apiResponse = new totalEnvironmentPiCreatecustomer3.itemres_element[]{};
+        totalEnvironmentPiCreatecustomer3.itemreq_element request_x = new totalEnvironmentPiCreatecustomer3.itemreq_element();
+        list<totalEnvironmentPiCreatecustomer3.itemreq_element> listItemElement = new list<totalEnvironmentPiCreatecustomer3.itemreq_element>();*/
+        //List<totalEnvironmentPiCreatecustomer3.CreateCustomerRes> callOutResponse = new List<totalEnvironmentPiCreatecustomer3.CreateCustomerRes>();
+        
+        List<Applicant_Details__c> appDetails = [Select id, Name, Booking__r.Project__r.Company_Code__c, Salutation__c,Booking__r.Customer_Number__c,
+                                                 street__c, Street_2__c, Street_3__c, Street_4__c, Street_5__c,Mobile_Number__c,
+                                                 Country__c, city__c, Pincode__c,Applicant_Unique_No__c,Booking__r.Project_Unit__c
+                                                 from applicant_details__c where booking__c =: bId and Applicant_Number__c = 'Primary Applicant' ];
+        Booking__c bk = new Booking__c();
+        API_Log__c api = new API_Log__c();
+        String CustomerNo = '';
+        system.debug('AppDetails' +appDetails);
+        if(appDetails[0].Booking__r.Customer_Number__c != null){
+            CustomerNo = String.valueOf(appDetails[0].Booking__r.Customer_Number__c) ;
+        }
+        
+        Map <String, Country_Code__c> countrycode = Country_Code__c.getAll();
+        
+        totalEnvironmentPiCreatecustomer.HTTPS_Port apiCallOunt = new totalEnvironmentPiCreatecustomer.HTTPS_Port();
+        totalEnvironmentPiCreatecustomer.item_element[] apiResponse = new totalEnvironmentPiCreatecustomer.item_element[]{};
+        totalEnvironmentPiCreatecustomer.item_element request_x = new totalEnvironmentPiCreatecustomer.item_element();
+        list<totalEnvironmentPiCreatecustomer.item_element> listItemElement = new list<totalEnvironmentPiCreatecustomer.item_element>();
+        
+        for(Applicant_details__c ap : appDetails)
+        {
+            request_x.CUSTOMERNO = CustomerNo ;
+            request_x.ACCGRP = '0001';
+            request_x.COMPCODE = string.valueof(ap.Booking__r.Project__r.Company_Code__c);
+            request_x.SALESORG = string.valueof(ap.Booking__r.Project__r.Company_Code__c);
+            request_x.DISTCHANNEL ='10';
+            request_x.DIV ='10';
+            
+            if(ap.Salutation__c == 'Mr.')
+                request_x.TITLE ='0002';
+            if(ap.Salutation__c == 'Ms.')
+                request_x.TITLE ='0001';
+            if(ap.Salutation__c == 'Company')
+                request_x.TITLE ='0003';
+            if(ap.Salutation__c == 'Mrs.')
+                request_x.TITLE ='0006';
+            if(ap.Salutation__c == 'Dr.')
+                request_x.TITLE ='0007';
+            if(ap.Salutation__c == 'Prof.')
+                request_x.TITLE = '0008';
+            if(ap.Salutation__c == 'M/s.')
+                request_x.TITLE = '0006';
+            if(ap.Salutation__c == 'Mr and Mrs.')
+                request_x.TITLE = '0005';
+                
+            request_x.NAME =ap.Name;
+            request_x.SEARCHTERM= ap.Booking__r.Project_Unit__c;
+            request_x.FUGUECUS= ap.Applicant_Unique_No__c;
+            request_x.STREET= ap.street__c;
+            request_x.STREET2= ap.Street_2__c;
+            request_x.STREET3= ap.Street_3__c;
+            request_x.STREET4= ap.Street_4__c;
+            request_x.STREET5= ap.Street_5__c;
+            request_x.CITY= ap.city__c;
+            request_x.POSTALCODE= string.valueof(ap.Pincode__c);
+            String con = ap.Country__c;
+            String con1='';
+            if(countrycode.containskey(con)){
+                con1 = countrycode.get(con).Country_Code__c;
+            }
+            system.debug('COUNTRY CODE' + con1);
+            request_x.COUNTRY= con1;
+            request_x.TELEPH1= ap.Mobile_Number__c;
+            request_x.FAXNUMBER='';
+            request_x.RECACCOUNT='0000123100';
+            request_x.CURRENCY_x='INR';
+            request_x.CUSTSTATGRP='1';
+            request_x.CUSTPRICPROC='1';
+            request_x.ACCTASSGGR='01';
+            request_x.PAYTTERMS='0001';
+            request_x.DELIPLANT='';
+            request_x.SORTKEY='076';
+            request_x.SALESGRP='';
+            request_x.SALESOFC='';
+            request_x.Field1='';
+            request_x.Field2='';
+            request_x.Field3='';
+            request_x.Field4='';
+            request_x.Field5='';
+            request_x.STCD3='';
+            request_x.REGION='';
+            request_x.FUGUEID='';
+            request_x.ALAND='';
+            request_x.TATYP='';
+            request_x.TAKLD='';
+            
+            listItemElement.add(request_x);
+        }
+        //totalEnvironmentPiCreatecustomer tep = new totalEnvironmentPiCreatecustomer();
+        if(!test.isRunningTest()){
+        apiResponse = apiCallOunt.CreateCustomer_Out(listItemElement);
+        system.debug('Createcustomer' +apiResponse[0].CUSTOMERNO);
+        String tempRequest = JSON.serializePretty(request_x);
+        
+        try{
+        if(apiResponse[0].CUSTOMERNO != null && apiResponse[0].RET_CODE != '1'){
+            bk.Id = bId;
+            bk.Customer_Number__c =  integer.ValueOf(apiResponse[0].CUSTOMERNO);
+            system.debug('bk.Customer_Number__c:::'+bk.Customer_Number__c);
+            update bk;
+        }
+        }catch(DmlException e) {
+   		 System.debug('The following exception has occurred: ' + e.getMessage());
+		}
+        
+        try{
+        	api.API_Name__c = 'Customer Number API';
+            api.Message__c = apiResponse[0].MESSAGE;
+            api.Response_Code__c = apiResponse[0].RET_CODE;
+       		api.Booking__c = bId;
+            api.Response__c = String.valueOf(apiResponse);
+            api.Request__c = tempRequest;
+            insert api;
+        
+        }catch(DmlException e) {
+   		 System.debug('The following exception has occurred: ' + e.getMessage());
+		}
+        
+        
+        }else{
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            
+        }
+    }
+       
+   
+    
+   
+}
