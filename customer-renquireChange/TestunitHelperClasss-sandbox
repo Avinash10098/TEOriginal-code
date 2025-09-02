@@ -1,0 +1,267 @@
+@isTest
+public class TestunitHelperClass {
+	@isTest
+    public static void unitTestMethod(){
+         // account creation 
+        Account objac = new Account();
+        objac.FirstName = 'name';
+        objac.LastName = 'Test';
+        objac.Correspondence_Address__c = 'Delhi';
+        objac.Phone = '1655246165' ;
+        objac.PersonEmail = 'test12322@stetig.in';
+        objac.PersonMobilePhone = '7875225343';
+        objac.Category__c = 'General';
+        //  objac.Unit__c = objPU1.Id;
+        insert objac;
+        
+        
+        
+        Land_Owner__c land = new Land_Owner__c();
+        land.Name = 'LandOwner';
+        land.Land_Owner_Name__c = 'LandOwner1';
+        land.Address_for_communication__c = 'Address';
+        land.Photograph_of_Authorised_Signatory__c = 'photo';
+        land.GPA_holder__c = 'Gpa';
+        insert land;
+        
+        Promoter__c promo = new Promoter__c();
+        promo.Name = 'Promotor1';
+        promo.Authorised_Signatory__c = 'ACBDS';
+        promo.PAN__c = 'FCOPG7886G';
+        promo.Photograph__c = 'ABCD';
+        promo.Registered_office__c = 'Pune';
+        insert promo;
+        
+        // Project Creation
+        Project__c objpr = new Project__c();
+        objpr.Project_Code__c = 'T351';
+        objpr.Name = 'pname1';
+        objpr.Start_Date__c = System.today().addDays(-5);
+        objpr.Project_Stage__c='Launch1';
+        objpr.Address__c = '14013, Fantasy Land, Utopia, Planet Mars, OUTERWORLD CODE -11011';
+        objpr.Project_Property_Type__c = 'Residential';                      
+        objpr.NPV__c = 12;    
+        objpr.Future_NPV__c = 12;
+        objpr.Car_Park_Type_1__c = 'Open';
+        objpr.Charge_Value_1__c = 100000; 
+        objpr.Promoter__c = promo.Id;
+        objpr.Land_Owner__c = land.Id;
+        objpr.Schedule_F_Property__c = 'Schdule F';
+        objpr.IDSA_Preamble__c = 'preamble';
+        insert objpr;
+        
+        End_Time_for_Event__c ed = new End_Time_for_Event__c();
+        ed.Name = 'End Time Minutes';
+        ed.End_Minutes__c = 120;
+        insert ed;  
+        
+        // opportunity creation              
+        Opportunity objOpportunity = new Opportunity();
+        objOpportunity.Name = 'Test';
+        objOpportunity.CloseDate = System.today();
+        objOpportunity.AccountId = objac.Id;           
+        objOpportunity.StageName = 'Qualification'; 
+        objOpportunity.Project__c = objpr.Id;
+        objOpportunity.Date_of_Agreement__c = System.today();
+        
+        insert objOpportunity;
+        
+        
+        Cluster__c ph = new Cluster__c();
+        ph.Name = 'test phase';
+        ph.Project__c  = objpr.Id;
+        ph.MAHA_RERA_No__c = '12345';
+        ph.CompanyName_Escrow__c = 'ABCD';
+        ph.CompanyName_Tax__c = 'XYZ';
+      //  ph.Schedule_E_Property__c = 'Schedule E';
+        ph.Phase_Land__c = 'Phase Land';
+        ph.Project_Land__c = 'Project Land';
+        ph.Schedule_A_Property__c = 'Schedule A';
+        ph.Schedule_B_Property__c = 'Schedule B';
+        ph.Schedule_C_Property__c = 'Schedule C';
+        ph.Schedule_D_Property__c = 'Schedule D';
+        ph.Schedule_F_Property__c = 'Schedule F';
+        ph.Phase_Land__c = 'Phase Land';
+        ph.Project_Land__c = 'Project land';
+        ph.Plan_01_Master_Development__c = 'Plan 01';
+        ph.Plan_02_Residential_Development__c = 'Plan 02';
+        ph.Plan_03_Project__c = 'Plan 03';
+        insert ph;
+        
+        // tower creation 
+        Tower__c t = new Tower__c();
+        t.Name = 'Tower X';
+        t.Project__c = objpr.Id;
+        //t.RDS_Company_Code__c=objlglentity.Id;
+        t.Cluster__c= ph.Id;
+        insert t;
+        
+        TE_Product__c pd = new TE_Product__c();
+        pd.Name = 'C20';
+        pd.Product_Type__c = 'Apartment';
+        insert pd;
+        
+        Project_Product__c ppr = new Project_Product__c();
+        ppr.name = 'ppr';
+        ppr.Project__c = objpr.id;
+        ppr.Product__c = pd.id;
+        ppr.Car_Park_Type_1__c = 'Open';
+        ppr.Car_Park_Count_1__c = 1;
+        ppr.Default_Customisation__c = 'Online';
+        ppr.Default_Specification__c = 'Green';
+        insert ppr;
+        
+        Sub_Product__c sb = new Sub_Product__c();
+        sb.name = 'C20a1';
+        sb.Project__c = objpr.id;
+        sb.Product__c = pd.id;
+        sb.Active__c = true;
+        sb.Status__c = 'Approved';
+        sb.Carpet_Area__c = 1650;
+        sb.Super_Builtup_Area__c = 2000;
+        sb.RERA_Carpet_Area__c = 1650;
+        sb.Saleable_Area__c = 2000;
+        sb.Builtup_Area__c = 1800;
+        insert sb; 
+        
+        Unit__c objPU1 = new Unit__c();    
+        objPU1.Name = 'TestFive';      
+        objPU1.Project__c = objpr.Id;
+        objPU1.Unit_status__c='Available';
+        //objPU1.Chargeable_Area__c = 936;
+        // objPU1.Carpet_Area__c = 452;
+        objPU1.Tower__c = t.Id;
+        objPU1.Active_Inactive__c = 'Active';
+        //objPU1.Carpet_Area_in_Sq_Mts__c = 45.02;
+        //objPU1.Cupboard_Area_in_Sq_Mtrs__c = 3.95;
+        //objPU1.Enclosed_Balcony_in_Sq_Mtrs__c = 2.66;
+        objPU1.Floor__c = 2;
+        objPU1.Product_Type__c = sb.id; 
+        objPU1.Floor__c = 2;
+        objPU1.Configuration__c = '1 BHK';
+        objPU1.TE_Product__c = pd.id;
+        objPU1.Additional_Land__c = 150;
+        objPU1.Default_Specification_new__c = 'Green';
+        //objPU1.Default_Customisation__c = 'Online';
+        objPU1.Floor_Rise_PSF__c = 250;
+        objPU1.Customization_Charge_PSF__c = 0;
+        objPU1.Additional_Land_PSF__c = 100;
+        objPU1.Premium_1__c = 'View Premium';
+        objPU1.Premium_2__c = 'Ground Level Premium';
+        objPU1.View_Premium_PSF__c = 10;
+        objPU1.Vastu_Premium_PSF__c = 10;
+        objPU1.MBR_Premium_Garden_Orientation_PSF__c= 19;
+        objPU1.Ground_Level_Premium_PSF__c = 10;
+        objPU1.Permitted_Use__c = 'Commercial';
+        objPU1.Parent_Carpet_Area__c = 123;
+        objPU1.Parent_Saleable_Area__c = 234;
+        objPU1.Parent_Unit__c = 'Parent Unit';
+        objPU1.Parent_Unit_Plan__c = 'Unit Plan';
+        objPU1.TE_Product__c = pd.Id;
+        objPU1.Default_Specification_new__c = 'Green';
+        //  objPU1.Builtup_Area_Sub_Product__c = 2345;
+        // objPU1.Carpet_Area_Sub_Product__c = 4567;
+        // objPU1.Outdoor_Area_Sub_Product__c = 2345;
+        objPU1.Floor__c = 4;
+        objPU1.Unit_Ownership__c = 'TE';
+        insert objPU1;
+        
+        Quotation__c qController = new Quotation__c();
+        
+        qController.Opportunity__c = objOpportunity.Id;
+        qController.Unit__c = objPU1.Id;
+        //  qController.Payment_Plan__c = recordMap.get('PLAN');
+        qController.Quote_Status__c = 'Valid';
+        qController.Charge1Name__c = 'Basic';
+        qController.Charge2Name__c = 'Amenities';
+        qController.Charge3Name__c = 'Utilities';
+        qController.Charge4Name__c = 'Floor Rise';
+        qController.Charge5Name__c = 'Additional Land'; 
+        qController.Charge6Name__c = 'Personalized';
+        qController.Charge7Name__c = 'Maintenance';
+        
+        qController.Charge1Value__c = 100;
+        qController.Charge2Value__c = 100;
+        qController.Charge3Value__c = 100;
+        qController.Charge4Value__c = 100;
+        qController.Charge5Value__c = 100;
+        qController.Charge6Value__c = 100;
+        qController.Charge7Value__c = 100;
+        
+        qController.Charge1Rate__c = 100;
+        qController.Charge2Rate__c = 100;
+        qController.Charge3Rate__c = 100;
+        qController.Charge4Rate__c = 100;
+        qController.Charge5Rate__c = 100;
+        qController.Charge6Rate__c = 100;
+        qController.Charge7Rate__c = 100;
+        
+        qController.Charge1Area__c = 100;
+        qController.Charge2Area__c = 100;
+        qController.Charge3Area__c = 100;
+        qController.Charge4Area__c = 100;
+        qController.Charge5Area__c = 100;
+        qController.Charge6Area__c = 100;
+        qController.Charge7Area__c = 100;
+        insert qController;
+        
+        
+        MS_Definition__c ms = new MS_Definition__c();
+        ms.Name = 'Internal Plaster';
+        insert ms;
+        
+        Project_Construction_Stages__c pc = new Project_Construction_Stages__c();
+        pc.Project__c = objpr.id;
+        pc.MS_Definition__c = ms.id;
+        pc.Actual_date_of_completion__c = Date.today();
+        pc.Tower__c = t.id;
+        pc.Planned_date_of_completion__c = System.today().addDays(30);
+        pc.Actual_date_of_completion__c = System.today().addDays(10);
+        pc.Is_Unit_Linked__c = true; // add for 2nd ssl
+        insert pc;
+        
+        Payment_Milestones__c pm1 = new Payment_Milestones__c();
+        pm1.Milestone_Type_edit__c = 'Construction Linked';
+        pm1.Milestone_Name__c = 'Test';
+        pm1.Project_Construction_Stages__c = pc.Id;
+        pm1.Number_Of_Days__c = 0;
+        pm1.Milestone_Due_Date__c = System.Today().addDays(10);
+        pm1.Quotation__c =  qController.id;
+        pm1.is_demand_raised__c = false;
+        pm1.Is_Unit_Linked__c = True;
+        insert pm1;
+        
+        
+        Customization_Payment_Milestones__c custPm = new Customization_Payment_Milestones__c();
+        custPm.SGST__c = 20;
+        custPm.CGST__c = 20;
+        custPm.Amount__c = 100;
+        custPm.Milestone_type__c = 'Construction Linked'; // add for 2ssl
+        insert custPm;
+        
+        
+        Booking__c b = new Booking__c();
+        b.Booking_Date__c = system.today();
+        b.Project__c = objpr.Id;
+        b.Opportunity__c = objOpportunity.Id;
+        b.Unit__c = objPU1.Id;
+        
+        b.Audit_Approval_Date__c = system.today().addMonths(3);
+        b.status__c = 'Processed';
+        b.Quotation__c = qController.Id;
+        b.Primary_Applicant_Email__c = 'abc.abc@abc.com';
+        b.Future_Correspondence_Contact__c = 'First Applicant';
+        b.Total_Customization_Cost__c = 1000;
+        insert b;
+        
+        objPU1.Booking__c = b.id;
+        update objPU1;
+        
+        objOpportunity.Booking__c = b.Id;
+        
+        update objOpportunity;
+        
+        objPU1.Actual_Internal_Plaster__c = System.today();
+        update objPU1;
+    }
+}
