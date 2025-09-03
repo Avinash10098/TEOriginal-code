@@ -1,0 +1,275 @@
+public class saleDeedController {
+    public string recordId {get;set;}
+    public List<Booking__c> bkList {get;set;}
+    Public List<Applicant_Details__c> appList {get;set;}
+    Public List<Authorised_Signatory__c> authList {get;set;}
+    Public List<Receipt__c> recList {get;set;}
+    Public List<Quotation__c> qList {get;set;}
+    public String allApplicantNames {get;set;} 
+    public Project__c prj{get;set;}
+    public Unit__c Unt{get;set;}
+    public Tower__c tw{get;set;}
+    public Cluster__c phase{get;set;} 
+    public Promoter__c promo {get;set;}
+    public String DateFormatted {get;set;} 
+    public String SaleDeedDateBR {get;set;} 
+    public String DateinWords {get;set;}
+    Public List<Annexure_01__c> anxList {get;set;}
+    Public List<appWrapper> appWrapList {get;set;}
+    public String amtwithoutTaxF {get;set;} 
+    public String amtwithoutTax {get;set;} 
+    public String TDS {get;set;} 
+    public String TDSF {get;set;} 
+    public decimal totalCarParks {get;set;}
+    public integer saleableArea {get;set;} 
+    public integer builtupArea {get;set;} 
+    public integer carpetArea {get;set;} 
+    public string type1 {get;set;} 
+    public string type2 {get;set;} 
+    public string type3 {get;set;} 
+    public decimal count1 {get;set;}
+    public decimal count2 {get;set;}
+    public decimal count3 {get;set;}
+    public Map<string,decimal> allCarParksMap {get;set;}
+    public string resaleValue {get;set;} 
+    public boolean isShowoutPannel {get; set;}
+	public saleDeedController(){
+        recordId = apexpages.currentpage().getparameters().get('id');
+   //     recordId = 'a0Cp0000008TylpEAC';
+        system.debug('recordId::'+recordId);
+        appWrapList = new List<appWrapper>();
+        allCarParksMap = new Map<String,Decimal>();
+        
+        // for the project = "Pursuit of a Radical Rhapsody" and only for Phase One
+		List<Booking__c>booking = [Select Id , Name , Project__c, Cluster__c  from Booking__c where Id =: recordId And Project__r.Name  = 'Pursuit of a Radical Rhapsody' and Unit__r.Tower__r.Cluster__r.Name  = 'Phase 1' ];
+        if (!booking.isEmpty()) {
+            
+            isShowoutPannel = true;
+            system.debug('is true');
+        } else {
+            isShowoutPannel = false;
+            system.debug('is False');
+        }
+		// for the project = "Pursuit of a Radical Rhapsody" and only for Phase One end
+        
+        salemethod(recordId);
+        
+    }
+    public void salemethod(Id BookId){
+        bkList = [select id,Quotation__c,Project__r.Name,Unit__r.Name,Project__r.Address__c,Design_Fee_for_IDSA__c,Project__r.State__c,Project__r.City__c,Project__c,Unit__c,
+                  Authorised_Signatory_Sale_Deed__r.Name,Sale_Deed_Date__c,Agreement_Value__c,
+                  Original_Applicant_1__c,Original_Applicant_2__c,Original_Applicant_3__c,Original_Applicant_4__c,Original_Applicant_5__c,
+                  Resale_Value__c,Resale_Doc_Type__c,Resale_Doc_Date__c,DoA_Date__c,Authorised_Signatory_Sale_Deed__c
+                  from Booking__c where Id =:BookId];
+        appList = [Select Salutation__c,Mailing_Address__c,Name,PancardNo__c,DOB__c,Father_Husband_s_Name__c,Permanent_Address__c,State__c,City__c,Type_Of_Applicant__c,
+                   CIN_No_1__c,Pincode__c,Authorised_signatory_or_GPA_holder__c,Date_of_Board_Resolution__c
+                   from Applicant_Details__c WHERE Booking__c = : BookId];
+        prj = [SELECT Id,Name, Address__c,Color_Code__c,Promoter__c,Land_Owner__c,Is_Landowner_Required_In_AFS__c,State__c FROM Project__c WHERE id=:bkList[0].Project__c];
+        promo = [select Id, name, PAN__c, Registered_office__c, Authorised_Signatory__c, Photograph__c from Promoter__c where id=:prj.Promoter__c];
+        
+        Unt = [Select Id,Name,Tower__c,Product_Type__c,Type_Master__c, Permitted_Use__c,Parent_Unit_Plan__c,Unit_Ownership__c,
+               Level__c,Floor__c,Booking__r.Quotation__r.TotalAdditionalCarpark__c,Booking__r.Quotation__r.TotalEarmarkedCarpark__c,UDI__c,
+               Builtup_Area_Sub_Product__c,Carpet_Area_Sub_Product__c,Saleable_Area_Sub_Product__c,CAM_Area__c,UDI_Product_Variant__c from Unit__c where id=:bkList[0].Unit__c];
+        
+        tw = [select Id, Name,Cluster__c from Tower__c where id=: Unt.Tower__c];
+        phase = [Select Id,Name,New_Phase__c,Project_Amenities__c,Landowner_Signatory__c,
+                 Sale_Deed_Schedule_A_Property__c,Schedule_B_Property_Sale_Deed__c,Schedule_C_Property_Sale_Deed__c,Schedule_D_Property_Sale_Deed__c
+                 from Cluster__c where id=: tw.Cluster__c];
+        anxList = [SELECT Id, Heading_A_Description_Sale_Deed__c,Heading_A_Name_Sale_Deed__c , Annexure_Description_Sale_Deed__c FROM Annexure_01__c where Phase__c =: phase.Id];
+        authList = [SELECT Id, Name, Photograph__c, Project__c, Email_ID__c, BR_Date_for_Sale_Deed__c FROM Authorised_Signatory__c where id =: bkList[0].Authorised_Signatory_Sale_Deed__c];
+        recList = [select id,TDS_Towards_ID__c,Total_Amount__c from Receipt__c where Booking__c =: BookId and Credit_Note__c = true and Sub_Type_Credit_Note__c = 'TDS' and Accounting_Document_Number__c != null 
+                   and Receipt_Status__c = 'Cleared' and TDS_Towards_ID__c != 'True'];
+        qList = [SELECT Id, Name,
+                 Earmarked_Type_1__c,Earmarked_Type_2__c,Earmarked_Type_3__c,Earmarked_Type_4__c,Earmarked_Type_5__c,
+                 Earmarked_Type_6__c,Earmarked_Type_7__c,Earmarked_Type_8__c,Earmarked_Type_9__c,Earmarked_Type_10__c,
+                 Earmarked_Count_1__c,Earmarked_Count_2__c,Earmarked_Count_3__c,Earmarked_Count_4__c,Earmarked_Count_5__c,
+                 Earmarked_Count_6__c,Earmarked_Count_7__c,Earmarked_Count_8__c,Earmarked_Count_9__c,Earmarked_Count_10__c,
+                 Car_Park_Type_1__c,Car_Park_Type_2__c,Car_Park_Type_3__c,Car_Park_Type_4__c,Car_Park_Type_5__c,
+                 Car_Park_Type_6__c,Car_Park_Type_7__c,Car_Park_Type_8__c,Car_Park_Type_9__c,Car_Park_Type_10__c,
+                 Car_Park_Count_1__c,Car_Park_Count_2__c,Car_Park_Count_3__c,Car_Park_Count_4__c,Car_Park_Count_5__c,
+                 Car_Park_Count_6__c,Car_Park_Count_7__c,Car_Park_Count_8__c,Car_Park_Count_9__c,Car_Park_Count_10__c
+                 FROM Quotation__c where id =: bkList[0].Quotation__c];
+        
+         
+        Map<String,Decimal> EarmarkedMap = new Map<String,Decimal>();
+        Map<String,Decimal> additionalMap = new Map<String,Decimal>();
+        
+        for(integer i=1; i<11; i++){
+            if(String.valueOf(qList[0].get('Earmarked_Type_' + String.valueOf(i) + '__c')) != null && decimal.valueOf(String.valueOf(qList[0].get('Earmarked_Count_' + String.valueOf(i) + '__c'))) != null){
+                EarmarkedMap.put( String.valueOf(qList[0].get('Earmarked_Type_' + String.valueOf(i) + '__c')) ,  decimal.valueOf(String.valueOf(qList[0].get('Earmarked_Count_' + String.valueOf(i) + '__c'))) );
+            }
+            if(String.valueOf(qList[0].get('Car_Park_Type_' + String.valueOf(i) + '__c')) != null && decimal.valueOf(String.valueOf(qList[0].get('Car_Park_Count_' + String.valueOf(i) + '__c'))) != null){
+                additionalMap.put( String.valueOf(qList[0].get('Car_Park_Type_' + String.valueOf(i) + '__c')) , decimal.valueOf(String.valueOf(qList[0].get('Car_Park_Count_' + String.valueOf(i) + '__c'))) );
+            }
+        }
+        
+        for(string s : EarmarkedMap.keySet()){
+            if(allCarParksMap != null && !allCarParksMap.containsKey(s)){
+                allCarParksMap.put(s,EarmarkedMap.get(s));
+            }  
+        }
+        
+        for(string s : additionalMap.keySet()){
+            if(allCarParksMap != null && !allCarParksMap.containsKey(s)){
+                allCarParksMap.put(s,additionalMap.get(s));
+            }
+            else{
+                decimal tempAdd = allCarParksMap.get(s);
+                allCarParksMap.put(s,additionalMap.get(s)+tempAdd);
+            }
+        }
+        system.debug('allCarParksMap::'+allCarParksMap);
+        
+        if(appList.size() == 1){
+            allApplicantNames = appList[0].Salutation__c+''+appList[0].Name; 
+        }
+        else if(appList.size() == 2){
+            allApplicantNames = appList[0].Salutation__c+''+appList[0].Name+' & '+appList[1].Salutation__c+''+appList[1].Name;
+        }
+        else if(appList.size() == 3){
+            allApplicantNames = appList[0].Salutation__c+''+appList[0].Name+' & '+appList[1].Salutation__c+''+appList[1].Name+' & '+appList[2].Salutation__c+''+appList[2].Name;
+        }
+        else if(appList.size() == 4){
+            allApplicantNames = appList[0].Salutation__c+''+appList[0].Name+' & '+appList[1].Salutation__c+''+appList[1].Name+' & '+appList[2].Salutation__c+''+appList[2].Name+' & '+appList[3].Salutation__c+''+appList[3].Name;
+        }
+        else if(appList.size() == 5){
+            allApplicantNames = appList[0].Salutation__c+''+appList[0].Name+' & '+appList[1].Salutation__c+''+appList[1].Name+' & '+appList[2].Salutation__c+''+appList[2].Name+' & '+appList[3].Salutation__c+''+appList[3].Name+' & '+appList[4].Salutation__c+''+appList[4].Name;
+        }
+        
+        totalCarParks = Unt.Booking__r.Quotation__r.TotalAdditionalCarpark__c + Unt.Booking__r.Quotation__r.TotalEarmarkedCarpark__c;
+        saleableArea = Integer.valueOf(Unt.Saleable_Area_Sub_Product__c);
+        carpetArea = Integer.valueOf(Unt.Carpet_Area_Sub_Product__c);
+        builtupArea = Integer.valueOf(Unt.Builtup_Area_Sub_Product__c);
+        
+        for(Applicant_Details__c app :appList ){
+            Integer Appyear = app.DOB__c.Year();
+            Integer Todayyear = system.today().Year();
+            string apAge = String.valueOf(Todayyear - Appyear);
+            appWrapper wrap = new appWrapper(app.Name,app.Salutation__c,apAge,app.Father_Husband_s_Name__c, app.Mailing_Address__c,app.City__c,app.State__c,
+                                             app.Type_Of_Applicant__c,app.CIN_No_1__c,app.Pincode__c,app.Authorised_signatory_or_GPA_holder__c,app.Date_of_Board_Resolution__c);
+            appWrapList.add(wrap);
+        }
+        if(bkList[0].Resale_Value__c != null){
+            decimal resaleValInt = 0;
+            resaleValInt = bkList[0].Resale_Value__c;
+            resaleValue = InventoryCostServices.INFormat(resaleValInt);   
+        }
+        Integer totalc = Integer.valueOf(bkList[0].Agreement_Value__c);
+        amtwithoutTax = InventoryCostServices.INFormat(bkList[0].Agreement_Value__c);
+        amtwithoutTaxF =  S_NumberToWord.convertNumbertoWords(totalc);
+        
+        SaleDeedDateBR = authList[0].BR_Date_for_Sale_Deed__c.format();
+        if(bkList[0].Sale_Deed_Date__c != null){
+            DateFormatted = bkList[0].Sale_Deed_Date__c.format();
+            DateinWords = convertDateToWords(bkList[0].Sale_Deed_Date__c);
+        }
+        decimal totalTds = 0;
+        for(Receipt__c r : recList){
+            totalTds += r.Total_Amount__c;
+        }
+        Integer tdstemp = Integer.valueOf(totalTds);
+        TDS = InventoryCostServices.INFormat(tdstemp);
+        TDSF =  S_NumberToWord.convertNumbertoWords(tdstemp);
+    }
+     public static String convertDateToWords(Date inputDate) {
+            String dayPattern = 'EEEE';
+            String monthPattern = 'MMMM';
+            String dayOfMonthPattern = 'dd';
+            String yearPattern = 'yyyy';
+            
+            Datetime dt = DateTime.newInstance(inputDate.year(), inputDate.month(), inputDate.day());
+            
+            String month = dt.format(monthPattern);
+            String day = getDayInWords(dt.day());
+            String year = getYearInWords(dt.year());
+            
+            String dateInWords = day +' day of '+ month+', '+ year;
+            return dateInWords;
+        }
+        
+        private static String getDayInWords(Integer day) {
+            String[] dayWords = new String[]{
+                '', 'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth',
+                    'Eleventh', 'Twelfth', 'Thirteenth', 'Fourteenth', 'Fifteenth', 'Sixteenth', 'Seventeenth', 'Eighteenth', 'Nineteenth', 'Twentieth',
+                    'Twenty-First', 'Twenty-Second', 'Twenty-Third', 'Twenty-Fourth', 'Twenty-Fifth', 'Twenty-Sixth', 'Twenty-Seventh', 'Twenty-Eighth', 'Twenty-Ninth', 'Thirtieth', 'Thirty-First'
+                    };
+                        
+                        if (day >= 1 && day <= 31) {
+                            return dayWords[day];
+                        }
+            return '';
+        }
+        
+        private static String getYearInWords(Integer year) {
+            String[] yearWords = new String[]{
+                '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'
+                    };
+                        
+                        if (year >= 1 && year <= 9999) {
+                            Integer thousands = year / 1000;
+                            Integer hundreds = Math.mod(year / 100, 10);
+                            Integer tens = Math.mod(year / 10, 10);
+                            Integer ones = Math.mod(year, 10);
+                            
+                            String yearInWords = '';
+                            
+                            if (thousands > 0) {
+                                yearInWords += yearWords[thousands] + ' Thousand ';
+                            }
+                            
+                            if (hundreds > 0) {
+                                yearInWords += yearWords[hundreds] + ' Hundred ';
+                            }
+                            
+                            if (tens > 1) {
+                                String[] tensWords = new String[]{
+                                    '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
+                                        };
+                                            yearInWords += tensWords[tens] + ' ';
+                            }
+                            
+                            if (tens == 1) {
+                                String[] teensWords = new String[]{
+                                    'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'
+                                        };
+                                            yearInWords += teensWords[ones] + ' ';
+                            } else if (ones > 0) {
+                                yearInWords += yearWords[ones] + ' ';
+                            }
+                            
+                            return yearInWords.trim();
+                        }
+            return '';
+        }
+    
+    public class appWrapper{
+        public string salut {get;set;}
+        public string appName {get;set;}
+        public string age {get;set;}
+        public string fathersName {get;set;}
+        public string address {get;set;}
+        public string state {get;set;}
+        public string city {get;set;}
+        public string appType {get;set;}
+        public string CIN {get;set;}
+        public string pincode {get;set;}
+        public string authSig {get;set;}
+        public string dateofBoard {get;set;}
+        
+        public appWrapper (string Name,string salut,string age,string fatherName, string address, string city, string state, string appType,string cin,decimal pincode,string authSig,date dateofBoard){
+            this.salut = salut;
+            this.appName = Name;
+            this.age = age;
+            this.fathersName = fatherName;
+            this.address = address;
+            this.city = city;
+            this.state = state;
+            this.appType = appType;
+            this.CIN = cin;
+            this.pincode = string.valueof(pincode);
+            this.authSig = authSig;
+            this.dateofBoard = string.valueof(dateofBoard);
+        }
+    
+    }
+}
