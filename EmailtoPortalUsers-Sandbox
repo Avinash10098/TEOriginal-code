@@ -1,0 +1,215 @@
+// Testclass : testEmailtoPortalUsers
+
+global class EmailtoPortalUsers implements  Database.Batchable<sObject> {
+    
+    Set<id> ProIds=new Set<id>();
+    Public string url;
+    list<Project__c> projectList = new list<Project__c>();
+    List<ContentVersion> cvList = new List<ContentVersion>();
+    Public String projectName='';
+    Id cvId ;
+    global EmailtoPortalUsers(Set<Id> ProjIds,Id contVerId){
+        system.debug('inside batch');
+        ProIds = ProjIds;
+        cvId = contVerId;
+   //     list<Project__c> projectList = new list<Project__c>();
+        list<contentDistribution> conDis = new list<contentDistribution>();
+        conDis = [SELECT Id, ContentVersionId, ContentDocumentId, DistributionPublicUrl, ContentDownloadUrl, PdfDownloadUrl FROM 
+                  ContentDistribution where ContentVersionId =: cvId];
+        url = conDis[0].DistributionPublicUrl;
+        system.debug('cvId::'+cvId);
+        system.debug('url::'+url);
+        cvList = [SELECT Id, Title FROM ContentVersion where id =:cvId ];
+        projectList = [Select id,Name,Project_Short_Code__c from Project__c where Id IN: ProIds];
+        projectName += projectList[0].Name;
+    }
+    
+    
+    global Database.QueryLocator start(Database.BatchableContext BC)
+    {
+       
+        
+        // Query on Project based on received project Ids.
+        List<Project__c> projects = new List<Project__c>();
+        projects = [Select id from Project__c where Id IN: ProIds];
+        system.debug('projects::'+projects);
+        
+        // Query all Users of DM Profile.
+        List<User> uList = new List<User>();
+        uList = [Select id,Name from User where Profile.Name =:'Design Manager'];
+        
+        // Query all Bookings based on above Projects and RM profile of Design Manager
+        List<Booking__c> bookList = new List<Booking__c>();
+        bookList = [Select id,Name,Account__c,unit__r.Handover_Date__c from Booking__c where Project__c IN: projects and Relationship_Manager__c IN: uList 
+                    and Status__c = 'Processed' and unit__c != null and unit__r.Handover_Date__c = null];
+        system.debug('bookList::'+bookList);
+        
+        
+        return Database.getQueryLocator([Select Id,Email_Address__c,Salutation__c,Name,Booking__c from Applicant_Details__c where Booking__c IN: bookList 
+                                         and Email_Address__c != null]);
+        
+    }
+    
+    
+    
+        global void execute(Database.BatchableContext BC, List<Applicant_Details__c> scope) {  
+            OrgWideEmailAddress[] owea = [select Id from OrgWideEmailAddress where Address = 'care@total-environment.com'];
+          //  OrgWideEmailAddress[] owea = [select Id from OrgWideEmailAddress where Address = 'no-reply@total-environment.com'];
+            List<Messaging.SingleEmailMessage> emailList = new List<Messaging.SingleEmailMessage>();
+           
+            for(Applicant_Details__c u : scope)
+            {    
+                system.debug('url1::'+url);
+                    List<String> toaddress = new List<String>();
+                    List<String> ccaddress = new List<String>();
+                    
+                    Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+                    
+                    
+                    toaddress.add(u.Email_Address__c);
+                    
+                    system.debug('toaddress::'+toaddress);
+              //      ccaddress.add('vishwajeet.patil@stetig.in');
+                    email.setOrgWideEmailAddressId(owea.get(0).Id);
+                    email.setToAddresses(toaddress);
+                    email.setCcAddresses(ccaddress);
+                    email.setSubject(cvList[0].Title);
+                    
+                String body = '';                
+                body += 'Dear ' + u.Salutation__c + '&nbsp;' + u.Name + ',<br/><br/>' +
+                    'Hope you and the family are doing well.<br/>' +
+                    'The latest update on your home at '+''+'<b>'+projectName+'</b> is now live on your Portal.<br/><br/>' +
+                    '<a href="' + url + '" style="color:#0066cc;text-decoration:none;">Click here</a> to view the update directly.<br/><br/>' +
+                    'If you face any difficulty accessing the portal, please feel free to write to us at ' +
+                    '<a href="mailto:care@total-environment.com">care@total-environment.com</a> from your registered email ID.<br/><br/>' +
+                    '<table>' +
+                    '<tr><td style="font-size:15px;border:none;padding:1px;margin:1px;font-family:Helvetica Light;">Warm regards,</td></tr>' +
+                    '<tr><td style="font-size:15px;border:none;padding:1px;margin:1px;font-family:Helvetica Light;">Customer Experience Team</td></tr>' +
+                    '<tr><td style="font-size:15px;border:none;padding:1px;margin:1px;font-family:Helvetica Light;">Total Environment</td></tr>' +
+                    '</table>';
+                    
+                
+                 body = '<p style="font-family:Helvetica Light;font-size:14px">' + body + '</p>';
+                
+                
+                email.setHtmlBody(body);
+                email.setSaveAsActivity(true);
+                email.setWhatId(u.Booking__c);
+                emailList.add(email);
+            }
+
+            try {
+                
+                Messaging.SendEmailResult[] results = Messaging.sendEmail(emailList);
+                System.debug('test:'+results );
+                
+            } catch (Exception e) {
+                System.debug('The following exception has occurred: ' + e.getMessage());
+            }
+            
+        }
+        
+            
+    global void finish(Database.BatchableContext BC) {
+        // Send Extra Email to a User ------------------------------------------------------------------------03-07-2025
+        OrgWideEmailAddress[] owea = [SELECT Id FROM OrgWideEmailAddress WHERE Address = 'care@total-environment.com'];
+        
+        Messaging.SingleEmailMessage extraEmail = new Messaging.SingleEmailMessage();
+        extraEmail.setToAddresses(new List<String>{'vishwajeet.patil@stetig.in'});
+        extraEmail.setOrgWideEmailAddressId(owea.get(0).Id);
+        extraEmail.setSubject(cvList[0].Title);
+        
+        String tempbody = '';        
+        tempbody += 'Dear Mr.&nbsp;Kamal Sagar,<br/><br/>'+
+                'Hope you and the family are doing well.<br/>' +
+                'The latest update on your home at '+''+'<b>'+projectName+'</b> is now live on your Portal.<br/><br/>' +
+                '<a href="' + url + '" style="color:#0066cc;text-decoration:none;">Click here</a> to view the update directly.<br/><br/>' +
+                'If you face any difficulty accessing the portal, please feel free to write to us at ' +
+                '<a href="mailto:care@total-environment.com">care@total-environment.com</a> from your registered email ID.<br/><br/>' +
+                '<table>' +
+                '<tr><td style="font-size:15px;border:none;padding:1px;margin:1px;font-family:Helvetica Light;">Warm regards,</td></tr>' +
+                '<tr><td style="font-size:15px;border:none;padding:1px;margin:1px;font-family:Helvetica Light;">Customer Experience Team</td></tr>' +
+                '<tr><td style="font-size:15px;border:none;padding:1px;margin:1px;font-family:Helvetica Light;">Total Environment</td></tr>' +
+                '</table>';
+        
+        tempbody = '<p style="font-family:Helvetica Light;font-size:14px">' + tempbody + '</p>';
+        
+        
+        extraEmail.setHtmlBody(tempbody);
+        extraEmail.setSaveAsActivity(false);
+        
+        try {
+            Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ extraEmail });
+        } catch (Exception e) {
+            System.debug('Exception in finish(): ' + e.getMessage());
+        }
+    }
+        
+}
+
+
+/*
+// Class to send email to portal users at once.
+  
+public class EmailtoPortalUsers {
+    @future
+    public static void sendEmail(Set<Id> ProjIds){
+        
+        system.debug('ProjIds::'+ProjIds);
+        
+        // Query on Project based on received project Ids.
+        List<Project__c> projects = new List<Project__c>();
+        projects = [Select id from Project__c where Id IN: ProjIds];
+        system.debug('projects::'+projects);
+        
+        // Query all Bookings based on above Projects.
+        List<Booking__c> bookList = new List<Booking__c>();
+        bookList = [Select id,Name,Account__c from Booking__c where Project__c IN: projects];
+        system.debug('bookList::'+bookList);
+        
+        //Loop on Bookings to separate Account Ids.
+        Set<Id> accIdset = new Set<Id>();
+        for(Booking__c b : bookList){
+            accIdset.add(b.Account__c);
+        }
+        
+        //Query on Users to get users with above Account Ids.
+        List<User> userList = new List<User>();
+        userList = [Select Id,AccountId,Email from User where AccountId IN: accIdset AND IsActive = True AND Profile.name = 'Customer Portal User'];
+        System.debug('userList::'+userList);
+        
+        List<String> toaddress = new List<String>();
+        List<String> ccaddress = new List<String>();
+        
+        OrgWideEmailAddress[] owea = [select Id from OrgWideEmailAddress where Address = 'customer.contracts@total-environment.com'];
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        
+        for(User u : userList){
+           toaddress.add(u.Email);
+        }
+        system.debug('toaddress::'+toaddress);
+        ccaddress.add('vishwajeet.patil@stetig.in');
+        
+        email.setOrgWideEmailAddressId(owea.get(0).Id);
+        email.setToAddresses(toaddress);
+        email.setCcAddresses(ccaddress);
+        
+        email.setSubject('File Uploaded to project update');
+        
+        String body = '';
+        body += 'Dear Customer,'+'<br/> '+
+                        'Greetings from Total Environment! <br/><br/>'+
+                        'Project update file is uploaded. ';
+        
+        email.setHtmlBody(body);
+        
+        try {
+             
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+        
+        } catch (Exception e) {
+            System.debug('The following exception has occurred: ' + e.getMessage());
+        }
+    }
+}
+*/
