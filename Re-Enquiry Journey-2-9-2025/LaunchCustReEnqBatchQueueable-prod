@@ -1,0 +1,14 @@
+public class LaunchCustReEnqBatchQueueable implements Queueable {
+    Set<Id> enquiryIds;
+    String methodType;
+
+    public LaunchCustReEnqBatchQueueable(Set<Id> enquiryIds, String methodType) {
+        System.debug('Inside Queueable');
+        this.enquiryIds = enquiryIds;
+        this.methodType = methodType;
+    }
+
+    public void execute(QueueableContext context) {
+        Database.executeBatch(new custReEnq4EnqBatch(enquiryIds, methodType), 50);
+    }
+}
