@@ -1,0 +1,52 @@
+try {
+    ContentVersion cv = [SELECT VersionData, Title, FileType, FileExtension 
+                       FROM ContentVersion WHERE Id = :cvId LIMIT 1];
+    
+    // Check if it's an image file
+    Set<String> imageTypes = new Set<String>{'jpg', 'jpeg', 'png', 'gif', 'bmp'};
+    String fileExt = cv.FileExtension != null ? cv.FileExtension.toLowerCase() : cv.FileType.toLowerCase();
+    
+    if(imageTypes.contains(fileExt)) {
+        
+        // Create ContentDistribution for public access
+        ContentDistribution cd = new ContentDistribution();
+        cd.Name = 'Email Distribution ' + System.now();
+        cd.ContentVersionId = cv.Id;
+        cd.PreferencesAllowOriginalDownload = true;
+        cd.PreferencesAllowPDFDownload = false;
+        cd.PreferencesAllowViewInBrowser = true;
+        cd.PreferencesPasswordRequired = false;
+        cd.PreferencesNotifyOnVisit = false;
+        cd.PreferencesExpires = false;
+        
+        insert cd;
+        
+        // SOLUTION 1: Use ContentDownloadUrl (Direct Image Link)
+        ContentDistribution insertedCD = [SELECT ContentDownloadUrl 
+                                        FROM ContentDistribution 
+                                        WHERE Id = :cd.Id LIMIT 1];
+        
+        String directImageUrl = insertedCD.ContentDownloadUrl;
+        System.debug('Direct Image URL: ' + directImageUrl);
+        
+        contentEmbed = '<div style="text-align: center; margin: 20px 0;">' +
+                      '<h3 style="color: #d2691e; font-family: Arial, sans-serif; margin-bottom: 15px;">Project Update</h3>' +
+                      '<img src="' + directImageUrl + '" ' +
+                      'style="max-width: 100%; height: auto; border: 2px solid #d2691e; border-radius: 8px; max-width: 600px;" ' +
+                      'alt="Project Update Image"/>' +
+                      '<p style="color: #666; margin-top: 15px; font-family: Arial, sans-serif;">' + cv.Title + '</p>' +
+                      '</div>';
+        
+    } else {
+        contentEmbed = '<div style="text-align: center; padding: 20px; background: #f9f9f9; margin: 20px 0; border-radius: 5px; border-left: 4px solid #d2691e;">' +
+                      '<p style="color: #666; font-family: Arial, sans-serif; margin: 0;">📎 <strong>' + cv.Title + '</strong></p>' +
+                      '<p style="color: #999; font-family: Arial, sans-serif; margin: 5px 0 0 0; font-size: 12px;">File uploaded - Please check the portal to view</p>' +
+                      '</div>';
+    }
+    
+} catch(Exception e) {
+    System.debug('Error creating image embed: ' + e.getMessage());
+    contentEmbed = '<div style="text-align: center; padding: 20px; background: #f0f0f0; margin: 20px 0; border-radius: 5px;">' +
+                  '<p style="color: #666; font-family: Arial, sans-serif;">Project image could not be displayed. Please check the portal for updates.</p>' +
+                  '</div>';
+}
