@@ -1,0 +1,165 @@
+trigger trgOpportunity on Opportunity (before insert, before update, after insert, after update) {
+    system.debug('Opty trigger');
+    set<Id> opsetId = new set<Id>();
+    List<Opportunity> oplist = new List<Opportunity>();
+    /* Creating SV and Event Record when SIte visit is confirmed and SM is not blank */
+    if(Trigger.IsAfter){
+        if(Trigger.IsInsert){
+            N_CreateSV.afterInsert(Trigger.new);   
+            for(Opportunity opObj : Trigger.new){    
+                 if(opObj.Sourcing_Managers__c != null)        
+                 opsetId.add(opObj.Id);       
+            
+            } 
+             oplist = [Select Id,name,Sourcing_Managers__c,LeadSource from Opportunity where Id IN:opsetId AND LeadSource =:'Partner']; 
+          if(oplist!= null && oplist.size() >0)   
+              opportunitySharing.sharerecord(oplist);
+     
+        }            
+        if(Trigger.IsUpdate){
+            system.debug('Update opty');
+            N_CreateSV.afterUpdate(Trigger.new, Trigger.oldMap);    
+            
+            for(Opportunity op : Trigger.new){          
+                if(op.StageName == 'Site Visit Done' && Trigger.oldMap.get(op.Id).StageName != 'Site Visit Done' &&  op.Is_Send_To_Fugue__c == false &&  Trigger.oldMap.get(op.Id).Is_Send_To_Fugue__c  == false){
+                    system.debug('to call FugueAPIIntegration');
+                    opsetId.add(op.id);                 
+                }
+                if(Trigger.newMap.get(op.Id).Sourcing_Managers__c != Trigger.oldMap.get(op.Id).Sourcing_Managers__c ){      
+                   opsetId.add(op.Id);                 
+                   oplist = [Select Id,name,Sourcing_Managers__c,LeadSource from Opportunity where Id IN:opsetId AND LeadSource =:'Partner'];  
+                   system.debug('oplist @@'+oplist);
+                   if(oplist!= null && oplist.size() >0)   
+                      opportunitySharing.sharerecord(oplist);
+                 }
+                      
+            }
+            
+            if(!opsetId.isEmpty())
+                FugueAPIIntegration.sendOpportunity(opsetId); 
+            
+        }           
+    } 
+    
+    /* Validation to check there is no multiple Active opportunity for same Project */
+    if(Trigger.isBefore){
+        if(Trigger.isInsert){
+            set<Id> accountId = new set<Id>();
+            set<Id> projectId = new set<Id>();
+            set<Id> oppIdSet = new set<Id>();
+            
+            for(Opportunity op: Trigger.new){
+                oppIdSet.add(op.Id);
+                if(op.AccountId != null){
+                    accountId.add(op.AccountId);
+                }
+                if(op.Project__c != null){
+                    projectId.add(op.Project__c);
+                }                
+            }
+            if(!projectId.isEmpty() && !accountId.isEmpty()){                  
+                List<Opportunity> oppList = new List<Opportunity>();                  
+                oppList = [Select Id, Name, AccountId, Project__c, Active_Opt__c, StageName 
+                           FROM Opportunity
+                           WHERE AccountId IN :accountId AND Project__c IN :projectId AND  StageName NOT IN ('Closed Won','Resale','Cancelled','Booking confirmed','Token Amount Received - BIP','Proposal')];//Active_Opt__c = TRUE AND Removed by aniket on 02-08-22                
+                System.debug('Opportunity List' + oppList);                
+                
+                for(Opportunity opp:Trigger.New){
+                    if(oppList != null && oppList.size() > 0){
+                        for(Opportunity op: oppList){
+                            if(op.AccountId == opp.AccountId){
+                                opp.addError('An Opportunity for the same project already exists. You cannot create a duplicate opportuntiy.');    
+                            }    
+                        }                    
+                    }
+                }                               
+            }            
+        }
+        
+        if(Trigger.isUpdate){
+            set<Id> accountId = new set<Id>();
+            set<Id> projectId = new set<Id>();
+            set<Id> oppIdSet = new set<Id>();
+            Date LatestDemandDueDate;  
+            
+            for(Opportunity op:Trigger.New){
+                LatestDemandDueDate = op.Latest_Demand_Due_Date__c;
+                oppIdSet.add(op.Id);
+                if(op.AccountId != null){
+                    accountId.add(op.AccountId);
+                }
+                if(op.Project__c != null){
+                    projectId.add(op.Project__c);
+                }                
+            }
+
+            
+            if(!projectId.isEmpty() && !accountId.isEmpty()){                
+                List<Opportunity> oppList=new List<Opportunity>();                
+                oppList = [Select Id, Name, AccountId, Project__c, Active_Opt__c, StageName 
+                           FROM Opportunity
+                           WHERE AccountId IN :accountId AND Project__c IN :projectId AND  StageName NOT IN ('Closed Won','Closed Lost','Resale','Cancelled','Booking confirmed','Token Amount Received - BIP','Qualification','Proposal') AND Id Not IN : oppIdSet];//Active_Opt__c = TRUE AND Removed by aniket on 02-08-22
+               Set<String> oppStages = new Set<String>{'Closed Won', 'Closed Lost', 'Resale', 'Cancelled', 'Booking confirmed', 'Token Amount Received - BIP', 'Qualification', 'Proposal'};
+                for(Opportunity opp: Trigger.New){
+                    if(oppList != null && oppList.size() > 0 && trigger.oldMap.get(opp.id).StageName != trigger.newMap.get(opp.id).StageName){
+                        if(!oppStages.contains(opp.StageName)){
+                            for(Opportunity op: oppList){
+                                //   if(op.AccountId == opp.AccountId){
+                                //       opp.addError('An Opportunity for the same project already exists. You cannot create a duplicate opportuntiy.');    
+                                //   } 
+                                if(trigger.oldMap.get(opp.id).Latest_Demand_Due_Date__c != trigger.NewMap.get(opp.id).Latest_Demand_Due_Date__c){
+                                    system.debug('Inside 1');
+                                }
+                                else if(opp.Latest_Demand_Due_Date__c == LatestDemandDueDate && LatestDemandDueDate != Null){
+                                    system.debug('Inside 2');
+                                }
+                                else if(op.AccountId == opp.AccountId){
+                                    opp.addError('An Opportunity for the same project already exists. You cannot create a duplicate opportuntiy.'); 
+                                    system.debug('Inside 3');
+                                }
+                            }
+                       }
+                    }
+                }                                
+            }            
+        }
+    }
+    
+    if(Trigger.IsAfter && Trigger.IsInsert){
+        Set<Id> oppSet = new Set<Id>();
+        for(Opportunity opp :Trigger.new){
+            if(opp.Enquiry_Details__c != null){
+                oppSet.add(opp.Enquiry_Details__c);
+            }
+        }
+        if (!checkRecursion.opportunityTriggerFired && oppSet != null) {
+            checkRecursion.opportunityTriggerFired = true;
+            System.enqueueJob(new LaunchCustReEnqBatchQueueable(oppSet, 'Opportunity Created'));
+        }
+    }
+    
+    if (Trigger.isAfter && Trigger.isUpdate) {
+            
+        system.debug('Trigger fired');
+        
+        Set<Id> opportunityChanged = new Set<Id>();
+        
+        for (Opportunity opp : Trigger.new) {
+            Opportunity  oldOpp = Trigger.oldMap.get(opp.Id);
+            if (opp.Last_Call_Description__c != oldOpp.Last_Call_Description__c && opp.Last_Call_Description__c != null) {
+                opportunityChanged.add(opp.Id);
+            }
+        }
+        
+        system.debug('set of opp for presales '+opportunityChanged);
+        
+        if (!opportunityChanged.isEmpty() && !checkRecursion.opportunityTriggerFired) {
+            checkRecursion.opportunityTriggerFired = true;
+            system.debug('Inside this method Opp presales call');
+            System.enqueueJob(
+                new LaunchCustReEnqBatchQueueable(opportunityChanged, 'Opportunity Presales Call Update')
+            );
+        }
+    }
+    
+}
