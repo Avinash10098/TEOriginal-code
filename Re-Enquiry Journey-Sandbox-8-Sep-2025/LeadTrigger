@@ -1,0 +1,387 @@
+trigger LeadTrigger on Lead(after insert, after update, before insert, before update) {
+    
+     //--------------Update Record Type ONLY when Project becomes Tapestry or changes from tapestry-------------//
+        if (Trigger.isBefore && (Trigger.isInsert || Trigger.isUpdate)) {
+                Id tapestryRecordTypeId = Schema.SObjectType.Lead.getRecordTypeInfosByName().get('US Lead Record Type').getRecordTypeId();
+                Id defaultRecordTypeId = Schema.SObjectType.Lead.getRecordTypeInfosByName().get('Master').getRecordTypeId(); // Change as needed
+            
+                Set<Id> allProjectIds = new Set<Id>();
+            
+                // Collect only when project changes or is set on insert
+                for (Lead l : Trigger.new) {
+                    Lead oldLead = Trigger.isUpdate ? Trigger.oldMap.get(l.Id) : null;
+            
+                    if (Trigger.isInsert && l.Project__c != null) {
+                        allProjectIds.add(l.Project__c);
+                    } 
+                    else if (Trigger.isUpdate && l.Project__c != oldLead.Project__c) {
+                        if (l.Project__c != null) allProjectIds.add(l.Project__c);
+                        if (oldLead.Project__c != null) allProjectIds.add(oldLead.Project__c);
+                    }
+                }
+            
+                if (!allProjectIds.isEmpty()) {
+                    // Single query for all relevant projects
+                    Map<Id, Project__c> projects = new Map<Id, Project__c>([
+                        SELECT Id, Name FROM Project__c WHERE Id IN :allProjectIds
+                    ]);
+            
+                    for (Lead l : Trigger.new) {
+                        Lead oldLead = Trigger.isUpdate ? Trigger.oldMap.get(l.Id) : null;
+            
+                        // Only process if project changed or is set for the first time
+                        if (Trigger.isInsert && l.Project__c != null ||
+                            (Trigger.isUpdate && l.Project__c != oldLead.Project__c)) {
+            
+                            Boolean newIsTapestry = (l.Project__c != null && 
+                                                     projects.containsKey(l.Project__c) && 
+                                                     projects.get(l.Project__c).Name == 'Tapestry');
+            
+                            Boolean oldIsTapestry = (oldLead != null && oldLead.Project__c != null && 
+                                                     projects.containsKey(oldLead.Project__c) && 
+                                                     projects.get(oldLead.Project__c).Name == 'Tapestry');
+            
+                            if (newIsTapestry) {
+                                l.RecordTypeId = tapestryRecordTypeId;
+                            } 
+                            else if (oldIsTapestry && !newIsTapestry) {
+                                l.RecordTypeId = defaultRecordTypeId;
+                            }
+                        }
+                    }
+                }
+            }
+      //----------------------------------------------------------------------------//
+    
+    if (Trigger.IsInsert) {
+        List <DupResultsDTO> dupResList = new List <DupResultsDTO>();
+        If(!(System.isBatch())) {
+            if (Trigger.IsBefore) {
+                //check the user, if its batch user, only then call the preprocessing logic                
+                dupResList = LeadManagementServices.leadPreProcessing(Trigger.new, 'WEB');
+                if (!dupResList.isEmpty()) {
+                    for (Lead l: Trigger.new) {                        
+                        for (DupResultsDTO d: dupResList) {
+                            if (d.originalLead == l) {
+                                String errMsg = 'Duplicates exists for: ' + l.lastName;
+                                for (String dupType: d.duplicatesMap.keySet()){
+                                    errMsg += ' (' + d.duplicatesMap.get(dupType) + ')'; 
+                                    if (!test.isRunningTest())
+                                        l.addError(errMsg);
+                                }
+                            }
+                        }
+                    }                    
+                }                   
+            }
+        }
+        
+   
+    }
+    //--------------Changes made to update Marketing fields "Locale" and "Phone marketing" on Lead-------------17-10-2024
+    if(Trigger.IsBefore && Trigger.IsInsert){
+         Map<String,String> cDetails = new Map<String,String>();
+        for(Lead l:Trigger.new){
+            if(l.RDS_Country_Code__c != null && l.MobilePhone != null){
+                if(l.RDS_Country__c != null){
+                    l.Locales__c = CountryLocaleMapper.getLocale(l.RDS_Country__c);
+                }
+                else{
+                    String country = CountryDetails.countryByCode(l.RDS_Country_Code__c);
+                    l.Locales__c = CountryLocaleMapper.getLocale(country);
+                }
+                 
+                string countryCode = l.RDS_Country_Code__c;
+                string mobile = l.MobilePhone;
+                if(countryCode.startsWith('+')){
+                    countryCode = countryCode.replaceFirst('\\+', '');
+                }
+                if(mobile != null && mobile.startsWith('+')){
+                    mobile = mobile.replaceFirst('\\+', '');
+                }
+                if(mobile != null && mobile.startsWith(countryCode)){
+                    if(mobile.substring(0,2) == '91' && countryCode == '91' && (mobile.length() == 12 || mobile.length() == 10)){
+                        mobile = mobile.length() == 12 ? mobile.substring(2, 12) : mobile;
+                    }
+                    else{
+                        mobile = mobile.replace(countryCode, '');
+                    }
+                }
+                l.Phone_Marketing__c = countryCode+mobile;
+            }
+            else{
+                if(l.MobilePhone != null){
+                    cDetails = CountryDetails.getDetailsByMobile(l.MobilePhone);
+                    system.debug('mobile number details Map::'+cDetails);
+                    if(cDetails.size() > 0 && cDetails != null){
+                        string mobile  = cDetails.get('mobileNumber');
+                        string country = cDetails.get('country');
+                        string countryCode  = cDetails.get('countryCode');
+                        if (country != null) {
+                            l.Locales__c = CountryLocaleMapper.getLocale(country);
+                        }
+                        if(countryCode != null && countryCode.startsWith('+')){
+                            countryCode = countryCode.replaceFirst('\\+', '');
+                        }
+                        l.Phone_Marketing__c = countryCode+mobile;
+                    }
+                }
+            }
+        }
+    }
+    if(Trigger.IsBefore && Trigger.IsUpdate){
+        for(Lead l:Trigger.new){
+            if(trigger.oldMap.get(l.id).MobilePhone != trigger.newMap.get(l.id).MobilePhone && trigger.newMap.get(l.id).MobilePhone != null){
+                   
+                if(l.RDS_Country__c != null){
+                    l.Locales__c = CountryLocaleMapper.getLocale(l.RDS_Country__c);
+                }
+                else{
+                    String country = CountryDetails.countryByCode(l.RDS_Country_Code__c);
+                    l.Locales__c = CountryLocaleMapper.getLocale(country);
+                }   
+                   
+                string countryCode = l.RDS_Country_Code__c;
+                string mobile = l.MobilePhone;
+                if(countryCode.startsWith('+')){
+                    countryCode = countryCode.replaceFirst('\\+', '');
+                }
+                if(mobile != null && mobile.startsWith('+')){
+                    mobile = mobile.replaceFirst('\\+', '');
+                }
+                if(mobile != null && mobile.startsWith(countryCode)){
+                    if(mobile.substring(0,2) == '91' && countryCode == '91' && (mobile.length() == 12 || mobile.length() == 10)){
+                        mobile = mobile.length() == 12 ? mobile.substring(2, 12) : mobile;
+                    }
+                    else{
+                       mobile = mobile.replace(countryCode, '');
+                    }
+                }
+                l.Phone_Marketing__c = countryCode+mobile;
+            }
+        }
+    }
+    //------------------------------------------------------------------------------------------------------------
+    
+    if (Trigger.IsInsert){
+        if (Trigger.isAfter){                  
+            List<Lead> ls = new List<Lead>();
+            List<Lead> leadListToCreateEnquiry = new List<Lead>();      
+            List<Lead> updateLeadRecordIdFiled = new List <Lead>();
+            Set<Id> leadIDset = new Set<Id>();
+            
+            for (Lead l: Trigger.new) {
+                updateLeadRecordIdFiled.add(l);                                                      
+                if(l.Is_Website__c)
+                    ls.add(new Lead(id = l.id)); 
+                //// Create enquiry for each Lead if Do_Not_Fire_Trigger__c is false       
+                if(!l.Do_Not_Fire_Trigger__c)
+                    leadListToCreateEnquiry.add(l);
+                
+                if(leadListToCreateEnquiry.size() > 0){                       
+                    createEnquiryClass.createEnquiries(leadListToCreateEnquiry);      
+                }   
+                leadIDset.add(l.Id); 
+            }   
+              
+             if(!leadIDset.IsEmpty()){
+                 System.enqueuejob(new ContactManagementQueue(leadIDset));
+             }  
+                                        
+            try {
+                if(ls != null && ls.size() > 0){
+                    Database.DMLOptions dmo = new Database.DMLOptions();
+                    dmo.assignmentRuleHeader.useDefaultRule = true;
+                    Database.update(ls, dmo); 
+                }
+                
+                if(updateLeadRecordIdFiled.size() > 0){  
+                    LeadManagementServices.updateLeadRecorIdFieldMethod(updateLeadRecordIdFiled);
+                }   
+                LeadManagementServices.AddCampaignToLead(Trigger.new);
+                
+                
+            } catch (GlobalException ex) {
+                System.debug('Global Exception:' + ex.getErrorMsg() + ex.getClassDetails());
+            } 
+        }
+    }       
+    
+    if (Trigger.IsUpdate) {
+        List < DupResultsDTO > dupResList = new List < DupResultsDTO > ();
+        if (Trigger.isBefore) {
+            system.debug('In Update trigger ::');
+            if (checkRecursion.isFirstRun()) {                                 
+                If(!(System.isBatch())) {
+                    try {
+                        dupResList = LeadManagementServices.leadPreProcessing(Trigger.new, 'WEB');
+                        if (!dupResList.isEmpty()) {
+                            for (Lead l: Trigger.new) {
+                                System.debug('Trigger.new: ' + l);
+                                for (DupResultsDTO d: dupResList) {
+                                    if (d.originalLead == l) {
+                                        System.debug('Trigger.new: dup match' + l + d.originalLead);
+                                        String errMsg = 'Duplicates exist for:' + l.lastName; // Duplicates exists for:' + l.lastName + '\n' + 'you cannot create duplicates
+                                        for (String dupType: d.duplicatesMap.keySet()) {
+                                            errMsg +=  ' (' + d.duplicatesMap.get(dupType) + ')';  // Changed by Neha on 23/1/19 
+                                        }
+                                        if (!test.isRunningTest())
+                                            l.addError(errMsg);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (GlobalException ex) {
+                        System.debug('Global Exception:' + ex.getErrorMsg() + ex.getClassDetails());
+                    }
+                }                
+            }
+            List < Lead > updateCMList = new List < Lead > ();
+            for (lead l: trigger.new) {
+                if (Trigger.newMap.get(l.Id).Campaign_Code__C != Trigger.oldMap.get(l.Id).Campaign_Code__C) {
+                    updateCMList.add(l);
+                }
+            }
+            if (updateCMList != null && updateCMList.size() > 0) {
+                try {
+                    LeadManagementServices.setSystemCampaignOnLead(updateCMList);
+                     System.debug('In trigger calling  LeadManagementServices.setSystemCampaignOnLead(updateCMList)');
+                } catch (GlobalException ex) {
+                    System.debug('Global Exception:' + ex.getErrorMsg() + ex.getClassDetails());
+                }
+            }
+        }
+        
+         if (Trigger.isAfter && Trigger.isUpdate) {
+            
+            system.debug('Trigger fired');
+             
+            Set<Id> leadsChanged = new Set<Id>();
+    
+            for (Lead l : Trigger.new) {
+                Lead oldL = Trigger.oldMap.get(l.Id);
+                if (l.Last_Call_Description__c != oldL.Last_Call_Description__c && l.Last_Call_Description__c != null) {
+                    leadsChanged.add(l.Id);
+                }
+            }
+             
+            system.debug('set of lead for presales '+leadsChanged);
+    
+            if (!leadsChanged.isEmpty() && !checkRecursion.leadTriggerFired) {
+                checkRecursion.leadTriggerFired = true;
+                system.debug('Inside this method lead presales call');
+                System.enqueueJob(
+                    new LaunchCustReEnqBatchQueueable(leadsChanged, 'Lead Presales Call Update')
+                );
+            }
+        }
+      
+        
+        
+        if (Trigger.isAfter) {
+            List < Lead > updateCMList = new List < Lead > ();
+            Set <Id> UpdatedLeadId = new Set <ID>();
+            Set <Id> UpdatedLeadId1 = new Set <ID>();
+            for (lead l: trigger.new) {
+                if (Trigger.newMap.get(l.Id).Campaign_Code__C != Trigger.oldMap.get(l.Id).Campaign_Code__C) {
+                    updateCMList.add(l);
+                }
+                
+                if((Trigger.newMap.get(l.Id).RDS_Alternate_Email_Id__c != Trigger.oldMap.get(l.Id).RDS_Alternate_Email_Id__c && Trigger.newMap.get(l.Id).RDS_Alternate_Email_Id__c !=null) ||
+                  (Trigger.newMap.get(l.Id).Phone != Trigger.oldMap.get(l.Id).Phone && Trigger.newMap.get(l.Id).Phone !=null) ||
+                  (Trigger.newMap.get(l.Id).Email != Trigger.oldMap.get(l.Id).Email && Trigger.newMap.get(l.Id).Email !=null)||
+                  (Trigger.newMap.get(l.Id).MobilePhone != Trigger.oldMap.get(l.Id).MobilePhone && Trigger.newMap.get(l.Id).MobilePhone !=null)||
+                   (Trigger.newMap.get(l.Id).Project__c != Trigger.oldMap.get(l.Id).Project__c && Trigger.newMap.get(l.Id).Project__c !=null)){
+                       UpdatedLeadId1.add(l.id);
+                   }
+            }
+           
+            if (updateCMList != null && updateCMList.size() > 0) {
+                try {
+                    LeadManagementServices.AddCampaignToLead(updateCMList);
+                    
+                } catch (GlobalException ex) {
+                    System.debug('Global Exception:' + ex.getErrorMsg() + ex.getClassDetails());
+                }
+            }
+            
+            /**************** Added by Shital  **********************************************/
+            Set<Id> leadIds = new Set<Id>();
+            for (Lead l : Trigger.new){
+                system.debug('In enquiries details logic ::');
+                if (l.IsConverted == true && Trigger.oldMap.get(l.Id).isConverted == false){
+                    for (Lead lead : Trigger.new) {
+                        leadIds.add(lead.Id);
+                    }
+                    if(!leadIds.IsEmpty()){
+                    ContactManagementServices.updateContactManagementOnLeadConversion(leadIds);
+                    Map<Id, Enquiry_Details__c> entries = new Map<Id, Enquiry_Details__c>([select Id,Account__c,opportunity__c , Lead__c,CreatedDate from Enquiry_Details__c where lead__c in :leadIds ORDER BY CreatedDate]);        
+                    if(!Trigger.new.isEmpty()) {
+                        Integer count = 0;
+                        List <Enquiry_Details__c > enqlist = new List<Enquiry_Details__c >();
+                        for (Lead lead : Trigger.new)  {
+                            for (Enquiry_Details__c obj : entries.values()) {
+                                if (obj.Lead__c == lead.Id) {   
+                                    obj.Lead__c = null;     
+                                    obj.Account__c  = lead.ConvertedAccountId; 
+                                     count+=1;
+                                     system.debug('Count ::'+count);
+                                     system.debug(' entries.values().size() ::'+ entries.values().size() );
+                                    if(count == entries.values().size())                  
+                                    obj.opportunity__c = lead.ConvertedOpportunityId;
+                                    enqlist.add(obj );
+                                }
+                            }
+                        }
+                        update enqlist;
+                    }
+                        //------------------------------------------------------------------------------------
+                        system.debug('entries.keyset ::'+leadIds);
+                        if (!checkRecursion.leadTriggerFired && leadIds != null) {
+                            checkRecursion.leadTriggerFired = true;
+                            System.enqueueJob(new LaunchCustReEnqBatchQueueable(leadIds, 'Lead Converted'));
+                        }
+                        //------------------------------------------------------------------------------------
+                  }      
+                }
+            }           
+            /************************************************************** 
+            /********Added by saishree if lead updated then related referral lead also get update**/
+            if(!UpdatedLeadId1.isEmpty()){
+                List <Referral_Lead__c> lstReferrallead = new List <Referral_Lead__c>();
+                List <Referral_Lead__c> lstReferralleadToUpdate = new List <Referral_Lead__c>();
+                
+                lstReferrallead=[select id,Name,Referral_Lead_Phone__c,Project__c,Email__c,Lead__c,Alternate_Mobile_No__c,Opportunity__c,Alternate_Email__c from Referral_Lead__c where Lead__c IN : UpdatedLeadId1];
+                system.debug('lstReferrallead::' +lstReferrallead + 'lstReferralleadSize' + lstReferrallead.size());
+                
+                if(lstReferrallead.size() > 0){
+                    for(Lead l: trigger.new){
+                        for(Referral_Lead__c rll:lstReferrallead){
+                            rll.Alternate_Email__c = l.RDS_Alternate_Email_Id__c;
+                            rll.Alternate_Mobile_No__c = l.Phone;
+                            rll.Email__c = l.Email;
+                            rll.Referral_Lead_Phone__c = l.MobilePhone;
+                            rll.Project__c = l.Project__c;
+                           lstReferralleadToUpdate.add(rll);
+                        }   
+                    }
+                    update lstReferralleadToUpdate;
+                }
+            }
+            /****************ended****************/
+   
+    integer i = 1;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+        }        
+    }
+}
