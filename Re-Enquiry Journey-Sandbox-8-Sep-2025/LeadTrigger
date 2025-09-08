@@ -252,6 +252,8 @@ trigger LeadTrigger on Lead(after insert, after update, before insert, before up
             }
         }
         
+        /*============================ Update the Presales Last Call Desc =================================================== */
+        
          if (Trigger.isAfter && Trigger.isUpdate) {
             
             system.debug('Trigger fired');
@@ -275,7 +277,7 @@ trigger LeadTrigger on Lead(after insert, after update, before insert, before up
                 );
             }
         }
-      
+      	 /*============================ Update the Presales Last Call Desc End  =================================================== */
         
         
         if (Trigger.isAfter) {
