@@ -1,0 +1,109 @@
+public class CustpayMileHelperClass {
+    
+    private static Map<string,date> nameDateMap = new Map<string,date>();
+    
+    public static void updatePM(List<Customization_New__c> InteriorDesignNew){
+        Set<Id> bookSet = new Set<Id>();
+        Set<Id> IdSet = new Set<Id>();
+        List<Customization_New__c> IdList = new List<Customization_New__c>([Select id,Booking__c, Actual_Customer_Sign_Off__c from Customization_New__c where id =: InteriorDesignNew[0].id]);
+        for(Customization_New__c c: IdList){
+            bookSet.add(c.Booking__c);
+            IdSet.add(c.id);
+        }
+        list<Booking__c> bookList = new list<Booking__c>();
+        bookList = [select id,Quotation__c from Booking__c where Id IN: bookSet];
+        
+        List<Unit__c> uList = [Select Id,Actual_Internal_Plaster__c,Actual_On_Virtual_Completion__c,Actual_Unit_s_Doors_Windows_Fenestra__c,Actual_Flooring__c,
+                               Actual_Plumbing__c,Actual_Masonry__c,Actual_Shell_Completion__c,Actual_1st_SSL__c,Actual_Foundation__c,Actual_Excavation__c from 
+                              Unit__c where Booking__c IN: bookSet];
+        
+        
+        set<id> quoteId = new set<id>();
+        for(Booking__c b : bookList){
+            quoteId.add(b.Quotation__c);
+        }
+        Map<Id,Quotation__c> quoteMap = new Map<Id,Quotation__c>([Select id from Quotation__c where Id IN: quoteId and Quote_Status__c = 'Valid']);
+        List<Customization_Payment_Milestones__c> cpmListtoUpdate = new List<Customization_Payment_Milestones__c>();
+        
+        for(Unit__c uNew : uList){
+            
+            createNameFieldMap(uNew.Actual_Internal_Plaster__c,'Internal Plaster');
+            createNameFieldMap(uNew.Actual_On_Virtual_Completion__c,'On Virtual Completion');
+            createNameFieldMap(uNew.Actual_Unit_s_Doors_Windows_Fenestra__c,'Doors and Windows');
+            createNameFieldMap(uNew.Actual_Flooring__c,'Flooring');
+            createNameFieldMap(uNew.Actual_Plumbing__c,'Plumbing');
+            createNameFieldMap(uNew.Actual_Masonry__c,'Masonry');
+            createNameFieldMap(uNew.Actual_Shell_Completion__c,'Shell Completion');
+            createNameFieldMap(uNew.Actual_1st_SSL__c,'1st Structural Slab');
+            createNameFieldMap(uNew.Actual_Foundation__c,'Foundation');
+            createNameFieldMap(uNew.Actual_Excavation__c,'Excavation');
+            
+            system.debug('nameDateMap:'+nameDateMap);
+        }
+        
+        List<Customization_Payment_Milestones__c> cpmtemp = new List<Customization_Payment_Milestones__c>();
+        cpmtemp = [SELECT Id,Customization__c,Due_Date__c,Milestone_type__c FROM Customization_Payment_Milestones__c where Customization__c IN: IdSet and 
+                   Milestone_type__c = 'Construction Linked'];
+        system.debug('cpmtemp ::'+cpmtemp);
+        //--- For Interior Design linked Payment Milestones start  28/08/2024-----------------------------------------------------------
+        for(Customization_Payment_Milestones__c cpm : [SELECT Id, Name, Number_of_days_months__c,Customization__c,Due_Date__c,Milestone_type__c,Project_Construction_Stages__r.MS_Definition__r.Name,
+                                                       Milestone_Date_Calculation__c,Booking__r.Relationship_Manager__c,Booking__r.Relationship_Manager__r.Email,Milestone_Status__c,
+                                                       Customization__r.OwnerId,Customization__r.Owner.Email,Project_Construction_Stages__r.Actual_date_of_completion__c,Milestone_Status_Update_Date__c,
+                                                       Project_Construction_Stages__r.Is_Unit_Linked__c
+                                                       FROM Customization_Payment_Milestones__c where Customization__c IN: IdSet and 
+                                                       Milestone_type__c = 'Construction Linked']){
+                                                           system.debug('pm >>>'+cpm);
+                                                           if(cpm.Project_Construction_Stages__r.Is_Unit_Linked__c == True && 
+                                                              nameDateMap.containsKey(cpm.Project_Construction_Stages__r.MS_Definition__r.Name)){
+                                                               system.debug('inside if >>>');
+                                                               Date d = nameDateMap.get(cpm.Project_Construction_Stages__r.MS_Definition__r.Name);
+                                                               cpm.Milestone_Status__c = 'Submitted';
+                                                               cpm.Milestone_Status_Update_Date__c = Datetime.now();
+                                                            //   if(cpm.Number_of_days_months__c != 0){
+                                                                   if(cpm.Milestone_Date_Calculation__c == 'Days'){
+                                                                       cpm.Due_Date__c = d.addDays(Integer.valueOf(cpm.Number_of_days_months__c));  
+                                                                   }
+                                                                   else{
+                                                                       cpm.Due_Date__c = d.addDays(Integer.valueOf(cpm.Number_of_days_months__c) * 30); 
+                                                             //      }
+                                                               }
+                                                               cpm.Is_Due__c = True;
+                                                               cpmListtoUpdate.add(cpm);
+                                                           } 
+                                                           else if(cpm.Project_Construction_Stages__r.Is_Unit_Linked__c == False && 
+                                                                   cpm.Project_Construction_Stages__r.Actual_date_of_completion__c != null){
+                                                               system.debug('inside else if >>>');
+                                                               Date d = cpm.Project_Construction_Stages__r.Actual_date_of_completion__c;
+                                                               cpm.Milestone_Status__c = 'Submitted';
+                                                               cpm.Milestone_Status_Update_Date__c = Datetime.now();
+                                                            //   if(cpm.Number_of_days_months__c != 0){
+                                                                   if(cpm.Milestone_Date_Calculation__c == 'Days'){
+                                                                       cpm.Due_Date__c = d.addDays(Integer.valueOf(cpm.Number_of_days_months__c));  
+                                                                   }
+                                                                   else{
+                                                                       cpm.Due_Date__c = d.addDays(Integer.valueOf(cpm.Number_of_days_months__c) * 30); 
+                                                                   }
+                                                            //   }
+                                                               cpm.Is_Due__c = True;
+                                                               cpmListtoUpdate.add(cpm);
+                                                           }
+                                                       }    
+        
+        if(!cpmListtoUpdate.isEmpty()){
+            system.debug('inside cpmListtoUpdate >>>');
+            Set<Id> CustPMIds = new Set<Id>();
+            List<Customization_Payment_Milestones__c> custPms = new List<Customization_Payment_Milestones__c>();
+            Database.SaveResult[] srList = Database.update(cpmListtoUpdate, false);
+        }
+        //--- For Interior Design linked Payment Milestones end-----------------------------------------------------------     
+        
+    }
+    
+    //--Method to create map of string(Unit Internal Work) and date(Changed date) where date has been changed ex Map={Internal Plaster,01/01/2000}
+    public static void createNameFieldMap(date newValue,string milestoneName){
+        system.debug('newVal:'+newValue+' '+'name:'+milestoneName);
+        if(newValue != Null){
+            nameDateMap.put(milestoneName,newValue);
+        }
+    }
+}
