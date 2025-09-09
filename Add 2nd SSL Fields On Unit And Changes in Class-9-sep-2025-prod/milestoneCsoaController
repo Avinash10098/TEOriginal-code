@@ -1,0 +1,507 @@
+// Test Class : TestCustomerCsoa 
+public class milestoneCsoaController {
+    
+    public string recordId {get;set;}
+    Public List<Booking__c> bkList {get;set;}
+    public List<Unit__c> uList {get;set;}
+    public string todaysDate {get;set;}
+    public string allApplicantNames {get;set;}
+    //Normal Demands----------------------------------
+    public List<Payment_Milestones__c> pmList {get;set;}
+    public List<Customization_New__c> custList {get;set;}
+    public List<Customization_Payment_Milestones__c> cpmList {get;set;}
+    
+    public List<Demand__c> demandlist {get;set;}
+    public List<demandRaisedController> dmrList {get;set;}
+    public string a1Toralstr {get;set;}   
+    public string a1TaxTotalstr {get;set;}   
+    public string a1ConsiTotalstr {get;set;} 
+    //------------------------------------------------
+    //Debit Notes-------------------------------------
+    public List<Demand__c> dlist {get;set;}
+    public List<debitnote> dnlist {get;set;}
+    public string a2Toralstr {get;set;} 
+    public string a2TaxTotalstr {get;set;}   
+    public string a2ConsiTotalstr {get;set;} 
+    //------------------------------------------------
+    // Normal Receipts--------------------------------
+    public List<Receipt__c> rList {get;set;}
+    public List<receiptController> rtList {get;set;}
+    public string b1Toralstr {get;set;}  
+    //------------------------------------------------
+    //Credit Notes--------------------------------------
+    public List<Receipt__c> creditNotesList {get;set;}
+    public List<creditNoteController> cNoteWrapperList {get;set;}
+    public string b2Toralstr {get;set;} 
+    public List<Demand__c> transferDebitNotes {get;set;}
+    //--------------------------------------------------
+    //Variables for Total Vales-------------------------
+    public Decimal ATotal {get;set;} 
+    public string AToralstr {get;set;} 
+    public Decimal BTotal {get;set;} 
+    public string BToralstr {get;set;}
+    public Decimal AminusB {get;set;} 
+    public string AminusBstr {get;set;} 
+    public Decimal totalConsi {get;set;} 
+    public string totalConsiStr {get;set;}
+    public Decimal totalTax {get;set;} 
+    public string totalTaxStr {get;set;} 
+    //--------------------------------------------------
+    public String logolink{get;set;}
+    public String renderAs{get;set;}
+    
+    public milestoneCsoaController(){
+      //  recordId = 'a0Cp0000008TylpEAC';
+        recordId = apexpages.currentpage().getparameters().get('id');
+      //  renderAs = apexpages.currentpage().getparameters().get('renderAs');
+        renderAs = 'pdf';
+        system.debug('recordId::'+recordId);
+        Date myDate = Date.today();
+        todaysDate = myDate.format();
+        
+        demandlist = new List<Demand__c>();
+        dmrList = new List<demandRaisedController>();
+        
+        dlist = new List<Demand__c>();
+        dnlist = new List<debitnote>();
+        
+        rList = new List<Receipt__c>();
+        rtList = new List<receiptController>();
+        
+        creditNotesList = new List<Receipt__c>();
+        cNoteWrapperList = new List<creditNoteController>();
+        transferDebitNotes = new List<Demand__c>();
+        
+        ATotal = 0;
+        BTotal = 0;
+        AminusB = 0;
+        totalConsi = 0;
+        totalTax = 0;
+        
+        CsoaMethod(recordId);
+    }
+    
+    public void CsoaMethod(Id BookId){
+       //  Query on Booking 
+        bkList = [Select id , name , Opportunity__r.Name ,Unit__c, Unit__r.Name , Project__r.Promoter__r.name,Project__r.Promoter__r.Registered_office__c,Quotation__c,
+                 Project__r.Project_Logo__c,Change_Order_Applicant__c,Primary_Applicant_Name__c,Appliacnt_Change_Approver__c,Apllicant_change_Approve_status__c,
+                 Project__r.Project_Logo_Commercial__c from Booking__c where id =:BookId];
+                System.debug('appList size::'+bkList);
+
+        //  Query on Unit
+        uList = [Select id, Permitted_Use__c,Actual_Excavation__c,Actual_Foundation__c,Actual_1st_SSL__c,Actual_Shell_Completion__c,Actual_Masonry__c,Actual_Plumbing__c,
+                 Actual_Internal_Plaster__c,Actual_Flooring__c,Actual_Unit_s_Doors_Windows_Fenestra__c,Actual_Roof_Waterproofing__c,Actual_Bathroom_Waterproofing__c,
+                 Actual_DADO__c,Actual_Electrical_Wires_Switches__c,Actual_False_Ceiling__c,Actual_Furniture__c,Actual_HVAC_VAC__c,Actual_Landscape__c,
+                 Actual_Metal_Works__c,Actual_Painting__c,Actual_Plumbing_Sanitary__c,Actual_FIS__c,Actual_On_Virtual_Completion__c
+                 from Unit__c WHERE id = : bkList[0].Unit__c];
+        System.debug('uList>>'+uList);
+        //Query on all Applicants and concat applicant names------------------------------------------------------------------------------------------------
+        List<Applicant_Details__c> appList = new List<Applicant_Details__c>();
+        if(bkList != Null){
+            appList = [select Id,Name,Email_Address__c,Salutation__c from Applicant_Details__c where Booking__c =: bkList[0].id order by Sr_No__c asc];
+        }
+        System.debug('appList size::'+appList.size());
+        System.debug('appList::'+appList);
+        allApplicantNames = '';
+        if(appList.size() == 1){
+                allApplicantNames = appList[0].Salutation__c+' '+appList[0].Name; 
+            }
+            else if(appList.size() == 2){
+               allApplicantNames = appList[0].Salutation__c+' '+appList[0].Name+' & '+appList[1].Salutation__c+' '+appList[1].Name;
+            }
+            else if(appList.size() == 3){
+               allApplicantNames = appList[0].Salutation__c+' '+appList[0].Name+' & '+appList[1].Salutation__c+' '+appList[1].Name+' & '+appList[2].Salutation__c+' '+appList[2].Name;
+            }
+            else if(appList.size() == 4){
+               allApplicantNames = appList[0].Salutation__c+' '+appList[0].Name+' & '+appList[1].Salutation__c+' '+appList[1].Name+' & '+appList[2].Salutation__c+' '+appList[2].Name+' & '+appList[3].Salutation__c+' '+appList[3].Name;
+            }
+            else if(appList.size() == 5){
+                allApplicantNames = appList[0].Salutation__c+' '+appList[0].Name+' & '+appList[1].Salutation__c+' '+appList[1].Name+' & '+appList[2].Salutation__c+' '+appList[2].Name+' & '+appList[3].Salutation__c+' '+appList[3].Name+' & '+appList[4].Salutation__c+' '+appList[4].Name;
+            }
+        //--------------------------------------------------------------------------------------------------------------------------------------
+        //Commercial csoa logo image
+        if(bkList[0].Project__r.Project_Logo_Commercial__c != null){
+        System.debug('logourl: ' + bkList[0].Project__r.Project_Logo_Commercial__c);
+        String firstSubString = bkList[0].Project__r.Project_Logo_Commercial__c.substringBetween('<img', 'img>');
+        System.debug('First substring: ' + firstSubString);
+        
+        String secondSubString = firstSubString.substringBetween('src="', '"');
+        System.debug('Second substring: ' + secondSubString);
+        
+        logolink = secondSubString.replace('amp;', '');
+        System.debug('logolink: ' + logolink);
+        }
+        //Query on Pay Milestones and Customization Pay Milestones----------------------------------------------------------------------------------------------
+        Map<string,date> unitLinkedPM = new Map<string,date>();
+        unitLinkedPM.put('Excavation',uList[0].Actual_Excavation__c);
+        unitLinkedPM.put('Foundation',uList[0].Actual_Foundation__c);
+        unitLinkedPM.put('1st Structural Slab',uList[0].Actual_1st_SSL__c);
+        unitLinkedPM.put('Shell Completion',uList[0].Actual_Shell_Completion__c);
+        unitLinkedPM.put('Masonry',uList[0].Actual_Masonry__c);
+        unitLinkedPM.put('Plumbing',uList[0].Actual_Plumbing__c);
+        unitLinkedPM.put('Internal Plaster',uList[0].Actual_Internal_Plaster__c);
+        unitLinkedPM.put('Flooring',uList[0].Actual_Flooring__c);
+        unitLinkedPM.put('Doors and Windows',uList[0].Actual_Unit_s_Doors_Windows_Fenestra__c);
+        unitLinkedPM.put('On Virtual Completion',uList[0].Actual_On_Virtual_Completion__c);
+        
+        
+        pmList = [Select id,Milestone_Name__c,Project_Construction_Stages__r.Actual_date_of_completion__c,Total_Amount_in_Milestone__c,TotalMilestoneTax__c,
+                  Is_Unit_Linked__c,TotalMilestoneAmountWIthTax__c,Project_Construction_Stages__r.MS_Definition__r.Name,Milestone_Type_edit__c,Milestone_Due_Date__c
+                  from Payment_Milestones__c
+                  where Quotation__c =: bkList[0].Quotation__c and Total_Amount_in_Milestone__c != 0 and Total_Amount_in_Milestone__c != null];
+        system.debug('pmList >>'+pmList);
+        Decimal a1TotalPM = 0;
+        Decimal a1taxPM = 0;
+        Decimal a1ConsiPM = 0;
+        for(Payment_Milestones__c pm : pmList){
+            system.debug('due date >>'+pm.Milestone_Due_Date__c);
+            if(pm.Milestone_Type_edit__c == 'Date Linked' && pm.Milestone_Due_Date__c <= System.today()){
+                totalTax += pm.TotalMilestoneTax__c;
+                totalConsi += pm.Total_Amount_in_Milestone__c;
+                a1ConsiPM += totalConsi;
+                a1taxPM += totalTax;
+                a1TotalPM += pm.TotalMilestoneAmountWIthTax__c;
+                demandRaisedController drc = new demandRaisedController(pm.Milestone_Name__c, pm.Milestone_Due_Date__c, pm.Total_Amount_in_Milestone__c, pm.TotalMilestoneTax__c, pm.TotalMilestoneAmountWIthTax__c);
+                dmrList.add(drc);
+            }
+            else if(pm.Milestone_Type_edit__c == 'Construction Linked'){
+                if(pm.Is_Unit_Linked__c == True){
+                    if(unitLinkedPM.containskey(pm.Project_Construction_Stages__r.MS_Definition__r.Name) && unitLinkedPM.get(pm.Project_Construction_Stages__r.MS_Definition__r.Name) != Null){
+                        date actualCompDate = unitLinkedPM.get(pm.Project_Construction_Stages__r.MS_Definition__r.Name);
+                        totalTax += pm.TotalMilestoneTax__c;
+                        totalConsi += pm.Total_Amount_in_Milestone__c;
+                        a1ConsiPM += totalConsi;
+                        a1taxPM += totalTax;
+                        a1TotalPM += pm.TotalMilestoneAmountWIthTax__c;
+                        demandRaisedController drc = new demandRaisedController(pm.Project_Construction_Stages__r.MS_Definition__r.Name, actualCompDate, pm.Total_Amount_in_Milestone__c, pm.TotalMilestoneTax__c, pm.TotalMilestoneAmountWIthTax__c);
+                        dmrList.add(drc);
+                    }
+                }
+                else{
+                    if(pm.Project_Construction_Stages__r.Actual_date_of_completion__c != Null){
+                        totalTax += pm.TotalMilestoneTax__c;
+                        totalConsi += pm.Total_Amount_in_Milestone__c;
+                        a1ConsiPM += totalConsi;
+                        a1taxPM += totalTax;
+                        a1TotalPM += pm.TotalMilestoneAmountWIthTax__c;
+                        demandRaisedController drc = new demandRaisedController(pm.Project_Construction_Stages__r.MS_Definition__r.Name, pm.Project_Construction_Stages__r.Actual_date_of_completion__c, pm.Total_Amount_in_Milestone__c, pm.TotalMilestoneTax__c, pm.TotalMilestoneAmountWIthTax__c);
+                        dmrList.add(drc);
+                    }
+                }
+            }
+        }
+        ATotal += a1TotalPM;
+        
+        custList = [Select id from Customization_New__c where Booking__c =: bkList[0].id and Approval_Status__c = 'Approved' and Status__c = 'Active' and IsCanceled__c = False];
+        if(custList.size() > 0){
+            cpmList = [Select Id,Milestone_Name__c,Milestone_type__c,Due_Date__c,Amount__c,SGST__c,CGST__c,Project_Construction_Stages__r.Is_Unit_Linked__c,
+                       Project_Construction_Stages__r.MS_Definition__r.Name,Project_Construction_Stages__r.Actual_date_of_completion__c
+                       from Customization_Payment_Milestones__c where Customization__c =: custList[0].id and Amount__c != 0 and Amount__c != null];
+            system.debug('cpmList ::'+cpmList);
+            Decimal a1TotalCustPM = 0;
+            Decimal a1taxCustPM = 0;
+            Decimal a1ConsiCustPM = 0;
+            for(Customization_Payment_Milestones__c cpm : cpmList){
+                if(cpm.Milestone_type__c == 'Time Linked' && cpm.Due_Date__c <= System.today()){
+                    decimal Tax = cpm.CGST__c+cpm.SGST__c;
+                    decimal totalAmtWithTax = cpm.Amount__c + Tax;
+                    totalTax += Tax;
+                    totalConsi += cpm.Amount__c;
+                    a1ConsiCustPM += totalConsi;
+                    a1taxCustPM += totalTax;
+                    a1TotalCustPM += totalAmtWithTax;
+                    demandRaisedController drc = new demandRaisedController(cpm.Milestone_Name__c, cpm.Due_Date__c, cpm.Amount__c, Tax, totalAmtWithTax);
+                    dmrList.add(drc);
+                }
+                else if(cpm.Milestone_type__c == 'Construction Linked'){
+                    if(cpm.Project_Construction_Stages__r.Is_Unit_Linked__c == True){
+                        if(unitLinkedPM.containskey(cpm.Project_Construction_Stages__r.MS_Definition__r.Name) && unitLinkedPM.get(cpm.Project_Construction_Stages__r.MS_Definition__r.Name) != Null){
+                            date actualCompDate = unitLinkedPM.get(cpm.Project_Construction_Stages__r.MS_Definition__r.Name); 
+                            decimal Tax = cpm.CGST__c+cpm.SGST__c;
+                            decimal totalAmtWithTax = cpm.Amount__c + Tax;
+                            totalTax += Tax;
+                            totalConsi += cpm.Amount__c;
+                            a1ConsiCustPM += totalConsi;
+                            a1taxCustPM += totalTax;
+                            a1TotalCustPM += totalAmtWithTax;
+                            demandRaisedController drc = new demandRaisedController(cpm.Project_Construction_Stages__r.MS_Definition__r.Name, actualCompDate,cpm.Amount__c, Tax, totalAmtWithTax);
+                            dmrList.add(drc);
+                        }
+                    }
+                    else{
+                        if(cpm.Project_Construction_Stages__r.Actual_date_of_completion__c != Null){
+                            decimal Tax = cpm.CGST__c+cpm.SGST__c;
+                            decimal totalAmtWithTax = cpm.Amount__c + Tax;
+                            totalTax += Tax;
+                            totalConsi += cpm.Amount__c;
+                            a1ConsiCustPM += totalConsi;
+                            a1taxCustPM += totalTax;
+                            a1TotalCustPM += totalAmtWithTax;
+                            demandRaisedController drc = new demandRaisedController(cpm.Project_Construction_Stages__r.MS_Definition__r.Name, cpm.Project_Construction_Stages__r.Actual_date_of_completion__c, cpm.Amount__c, Tax, totalAmtWithTax);
+                            dmrList.add(drc);
+                        }
+                    }
+                }
+            }
+            ATotal += a1TotalCustPM;
+        }
+        
+    /*    demandlist = [Select Id, Name ,Milestone_Name_formula__c,Due_Date__c,SAP_Posting_Date__c,Total_Amount_Demanded__c,
+                      Total_Tax_Demanded__c,Total_Amount_with_Tax_Demanded__c,Quotation__r.Unit__r.Project__c,
+                      Quotation__R.Opportunity__r.Name,Quotation__r.Unit__r.Name  from Demand__c where 
+                      
+                      (Booking__c =: BookId and Debit_Type__c = null and Demand_Status__c = 'Raised' and Accounting_Document_Number__c != Null) OR 
+                      
+                      (Customization_Payment_Milestones__r.Customization__r.Booking__c =: BookId and Customization_Demand__c = true and 
+                       Customization_Payment_Milestones__r.Customization__r.Status__c = 'Active' and Customization_Payment_Milestones__r.Customization__r.Approval_Status__c = 'Approved' and
+                       Customization_Payment_Milestones__r.Demand_Raised__c = true and Accounting_Document_Number__c != Null and Demand_Status__c != 'Reversed')
+                      
+                      Order by SAP_Posting_Date__c,Name];
+        
+        // Loop on Normal and Customization Demand
+       Decimal a1Total = 0;
+        Decimal a1tax = 0;
+        Decimal a1Consi = 0;
+        for( Demand__c  dm : demandlist)
+             {
+                 a1Consi += dm.Total_Amount_Demanded__c;
+                 a1tax += dm.Total_Tax_Demanded__c;
+                 totalTax += dm.Total_Tax_Demanded__c;
+                 totalConsi += dm.Total_Amount_Demanded__c;
+                 a1Total += dm.Total_Amount_with_Tax_Demanded__c;
+                 demandRaisedController drc = new demandRaisedController(dm.Milestone_Name_formula__c, dm.SAP_Posting_Date__c, dm.Total_Amount_Demanded__c, dm.Total_Tax_Demanded__c, dm.Total_Amount_with_Tax_Demanded__c );
+                 dmrList.add(drc);
+             }
+            ATotal += a1Total;
+            a1TaxTotalstr = InventoryCostServices.INFormat(a1tax);
+            a1ConsiTotalstr = InventoryCostServices.INFormat(a1Consi);
+            a1Toralstr = InventoryCostServices.INFormat(a1Total);*/ 
+        //--------------------------------------------------------***********----------------------------------------------------------------------
+        //Commented on 12/05/2025 to remove all debit notes from section A
+        //Query on Debit Note Demands except Pre EMI Reimbursement and TDS-------------------------------------------------------------------------
+     /*   dlist = [Select Id, Name , Milestone_Name__c,Debit_Type__c, Debit_Demanded__c, Debit_Tax_Demanded__c,SAP_Posting_Date__c,Total_Debit_Amount_With_Tax__c,Remarks__c
+                  from Demand__c where Debit_Type__c != null and Approval_Status_Debit_Note__c = 'Accepted' and Accounting_Document_Number__c != Null and
+                 Booking__c =: recordId and Customization_Demand__c = False and Debit_Type__c != 'TDS' and Debit_Type__c != 'Pre-EMI Reimbursement' and Debit_Type__c != 'Compensation' 
+                 Order by SAP_Posting_Date__c];
+        
+        Decimal a2Total = 0;
+        Decimal a2tax = 0;
+        Decimal a2Consi = 0;
+        if(!dlist.isEmpty()){
+            for( Demand__c  d : dlist)
+             {
+                 if(d.Remarks__c != 'Demand Towards Split of Receipt'){
+                     a2tax += d.Debit_Tax_Demanded__c;
+                     a2Consi += d.Debit_Demanded__c;
+                     totalTax += d.Debit_Tax_Demanded__c;
+                     totalConsi += d.Debit_Demanded__c;
+                     a2Total += d.Total_Debit_Amount_With_Tax__c;
+                     debitnote dnote = new debitnote(d.Milestone_Name__c, d.SAP_Posting_Date__c, d.Debit_Tax_Demanded__c, d.Debit_Demanded__c,d.Debit_Type__c,d.Total_Debit_Amount_With_Tax__c);
+                     dnlist.add(dnote); 
+                 }
+             }
+            ATotal += a2Total;
+            a2TaxTotalstr = InventoryCostServices.INFormat(a2tax);
+            a2ConsiTotalstr = InventoryCostServices.INFormat(a2Consi);
+            a2Toralstr = InventoryCostServices.INFormat(a2Total);
+            
+        }*/
+            // Total of A1 and A2 Invoices
+            AToralstr = InventoryCostServices.INFormat(ATotal);
+            //Total Consideration from all Demands
+            totalConsiStr = InventoryCostServices.INFormat(totalConsi);
+            //Total Tax from all Demands
+            totalTaxStr = InventoryCostServices.INFormat(totalTax);
+        //--------------------------------------------------------***********----------------------------------------------------------------------
+        
+        //Query on Normal Receipts ----------------------------------------------------------------------------------------------------------------
+        Decimal b1Total = 0;
+        rList = [Select Id, Currency__c, Foreign_Currency_Type__c , On_Account_Money__c,Opportunity__r.Id,On_Account_Money_Autocalculated__c,
+                        Receipt_Number__c,Receipt_Date__c,Mode__c,Amount_Rs__c,Accounting_Document_Number__c,Sub_Type_Credit_Note__c,SAP_Posting_Date__c,
+                        Cheque_DD__c,Tax_Receipt_Account__c,Drawn_in_favour_of__c from Receipt__c 
+                        where Receipt_Status__c = 'Cleared' AND Banking__c = 'Payment Successful' and Credit_Note__c = False and Type__c = false
+                        and Booking__c =: recordId and Accounting_Document_Number__c != null Order by SAP_Posting_Date__c];
+        for(Receipt__c rt : rList)
+        {
+          //  String account =  rt.Drawn_in_favour_of__c.SubStringBefore('|').contains('Service Tax') ? 'Tax' : 'Consideration';
+            String account = rt.Drawn_in_favour_of__c != null && rt.Drawn_in_favour_of__c.SubStringBefore('|') != null && rt.Drawn_in_favour_of__c.SubStringBefore('|').contains('Service Tax')? 'Tax': 'Consideration';
+            b1Total += rt.Amount_Rs__c;
+            receiptController rc = new receiptController(account, rt.SAP_Posting_Date__c, rt.Mode__c, rt.Amount_Rs__c, rt.Accounting_Document_Number__c, rt.Sub_Type_Credit_Note__c, rt.Cheque_DD__c);
+            rtList.add(rc);
+        }
+        BTotal += b1Total;
+        b1Toralstr = InventoryCostServices.INFormat(b1Total);
+        //--------------------------------------------------------***********----------------------------------------------------------------------
+        //Query on Credit Notes except Pre EMI reimbursement and TDS(TDS credit notes allowed only if TDS_Paid_by_TE__c = true on receipt)------------------
+        Decimal b2Total = 0;
+        creditNotesList = [Select Id, Currency__c, Foreign_Currency_Type__c , On_Account_Money__c,On_Account_Money_Autocalculated__c,Is_Reimbursable__c,
+                        Receipt_Number__c,Receipt_Date__c,Mode__c,Amount_Rs__c,Accounting_Document_Number__c,Sub_Type_Credit_Note__c,SAP_Posting_Date__c,
+                        Cheque_DD__c,Tax_Receipt_Account__c,TDS_Paid_by_TE__c from Receipt__c where Accounting_Document_Number__c != Null and
+                        Receipt_Status__c = 'Cleared' AND Banking__c = 'Payment Successful' and Credit_Note__c = true AND Approval_Status_Credit_Note__c ='Accepted'
+                          and Booking__c =: BookId  
+                    //    and Booking__c =: recordId AND Sub_Type_Credit_Note__c != 'Pre EMI Reimbursement' 
+                           Order by SAP_Posting_Date__c];
+        transferDebitNotes =[Select Id, Name , Milestone_Name__c,Debit_Type__c, Debit_Demanded__c, Debit_Tax_Demanded__c,SAP_Posting_Date__c,Total_Debit_Amount_With_Tax__c,
+                             Accounting_Document_Number__c	from Demand__c where Debit_Type__c != null and Approval_Status_Debit_Note__c = 'Accepted' and Accounting_Document_Number__c != Null and
+                             Booking__c =: recordId and Customization_Demand__c = False  and 
+                             (( Debit_Type__c != 'TDS' and Debit_Type__c != 'Pre-EMI Reimbursement' and Debit_Type__c != 'Compensation') 
+                              OR 
+                              (Debit_Type__c = 'Account Transfer' and Milestone_Name__c = 'Debit Note'))
+                             Order by SAP_Posting_Date__c];
+        system.debug('creditNotesList::'+creditNotesList.size());
+        for(Receipt__c rt : creditNotesList)
+        {
+            if(((rt.Sub_Type_Credit_Note__c == 'Pre EMI Reimbursement' || rt.Sub_Type_Credit_Note__c == 'Subvention Compensation' || rt.Sub_Type_Credit_Note__c == 'Compensation') && rt.Is_Reimbursable__c == 'NO') || (rt.Sub_Type_Credit_Note__c != 'Pre EMI Reimbursement' && rt.Sub_Type_Credit_Note__c != 'Subvention Compensation' && rt.Sub_Type_Credit_Note__c != 'Compensation') ){
+                if((rt.TDS_Paid_by_TE__c == 'No' && rt.Sub_Type_Credit_Note__c == 'TDS') || rt.Sub_Type_Credit_Note__c != 'TDS') {
+                    b2Total += rt.Amount_Rs__c;
+                    string modetxt = rt.Mode__c +' - '+rt.Sub_Type_Credit_Note__c;
+                    string tempRamount = InventoryCostServices.INFormat(rt.Amount_Rs__c);
+                    creditNoteController cnc = new creditNoteController(null, rt.SAP_Posting_Date__c, modetxt , tempRamount, rt.Accounting_Document_Number__c, rt.Sub_Type_Credit_Note__c, rt.Cheque_DD__c);
+                    cNoteWrapperList.add(cnc);   
+                }
+            }
+        }
+        if(!transferDebitNotes.isEmpty()){
+            for( Demand__c  dt : transferDebitNotes)
+             {
+                 string tempAmt = '('+InventoryCostServices.INFormat(dt.Total_Debit_Amount_With_Tax__c)+')';
+                 b2Total -= dt.Total_Debit_Amount_With_Tax__c;
+                 creditNoteController cnc = new creditNoteController(null, dt.SAP_Posting_Date__c, dt.Debit_Type__c, tempAmt, dt.Accounting_Document_Number__c	, null, null);
+                 cNoteWrapperList.add(cnc);
+             }
+        }
+        BTotal += b2Total;
+        b2Toralstr = InventoryCostServices.INFormat(b2Total);
+        // Total of B1 and B2 Receipts
+        BToralstr = InventoryCostServices.INFormat(BTotal);
+        // Calculating Demands minus Receipts i.e A-B
+        AminusB = ATotal - BTotal;
+        if(AminusB < 0){
+            string tempVal = InventoryCostServices.INFormat(AminusB * -1);
+            tempVal = '('+tempVal+')';
+            AminusBstr = tempVal;
+        }
+        else{
+            AminusBstr = InventoryCostServices.INFormat(AminusB);
+        }
+        
+      //  AminusBstr = InventoryCostServices.INFormat(AminusB);
+        //--------------------------------------------------------***********----------------------------------------------------------------------
+        integer i = 1;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+    }
+    
+    //Wrapper class for Normal and Customization Demand-------------------------------------------------------------------
+    public class demandRaisedController
+    {
+        public string milestoneName {get;set;}
+        public Date dueDate {get;set;}
+        public string totalMilestoneAV {get;set;}
+        public string totalMilestoneTax {get;set;}
+        public string totalMilestoneAmt {get;set;}
+        public String strDueDate {get;set;}
+        
+        
+        public demandRaisedController(string pmName, Date DueDate, Decimal totalMilestoneAV, Decimal totalMilestoneTax, Decimal MilestoneAmt)
+        {
+            this.milestoneName = pmName;
+            this.dueDate = DueDate;
+            this.totalMilestoneAV = InventoryCostServices.INFormat(totalMilestoneAV);
+            this.totalMilestoneTax = InventoryCostServices.INFormat(totalMilestoneTax);
+            this.totalMilestoneAmt = InventoryCostServices.INFormat(MilestoneAmt);
+            this.strDueDate = CSoAController.dateFormat(DueDate);
+        }
+    }
+    //--------------------------***************-----------------------------------------------------------------------------
+    //Wrapper class for Debit Notes---------------------------------------------------------------------------------------
+    public class debitnote
+    {
+        public string milestoneName {get;set;}
+        public Date debitnotedate {get;set;}
+        Public String debittype{get;set;}
+        public string totaldebitcharge {get;set;}
+        public string totaldebitchargeTax {get;set;}
+        public string totaldebitchargeAmt {get;set;}
+        public String strDate {get;set;}
+        
+        
+        public debitnote(string pmName, Date debitnotedate, Decimal totaldebitchargeTax, Decimal totaldebitchargeAmt,String debittype,Decimal totaldebitcharge)
+        {
+            this.milestoneName = pmName;
+            this.debitnotedate = debitnotedate;
+            this.totaldebitcharge = InventoryCostServices.INFormat(totaldebitcharge);
+            this.totaldebitchargeTax = InventoryCostServices.INFormat(totaldebitchargeTax);
+            this.totaldebitchargeAmt = InventoryCostServices.INFormat(totaldebitchargeAmt);
+            this.strDate = CSoAController.dateFormat(debitnotedate);
+            this.debittype = debittype;
+        }
+    }
+    //--------------------------***************-----------------------------------------------------------------------------
+    
+    //Wrapper class for  Normal Receipts---------------------------------------------------------------------------------------
+    public class receiptController
+    {
+        public Date receiptDate {get;set;}
+        public string mode {get;set;}
+        public string receiptAmount {get;set;}
+        public string strRDate {get;set;}
+        public string sapreceiptno {get;set;}
+        public String subtype {get;set;}
+        public String instrumentno {get;set;}
+        public string Account {get;set;}
+        
+        public receiptController(string rAccount, Date rDate, string rMode, Decimal rAmt, String sapno, String subtypecr, String insno)
+        {
+            this.Account = rAccount;
+            this.receiptDate = rDate;
+            this.mode = rMode;
+            this.receiptAmount = InventoryCostServices.INFormat(rAmt);
+            this.strRDate = CSoAController.dateFormat(rDate);
+            this.sapreceiptno = sapno;
+            this.subtype = subtypecr;
+            this.instrumentno = insno;
+        }
+    }
+    //--------------------------***************-----------------------------------------------------------------------------
+    
+    //Wrapper class for Credit Notes---------------------------------------------------------------------------------------
+    public class creditNoteController
+    {
+        public Date receiptDate {get;set;}
+        public string mode {get;set;}
+        public string receiptAmount {get;set;}
+        public string strRDate {get;set;}
+        public string sapreceiptno {get;set;}
+        public String subtype {get;set;}
+        public String instrumentno {get;set;}
+        public string Account {get;set;}
+        
+        public creditNoteController(string rAccount, Date rDate, string rMode, string rAmt, String sapno, String subtypecr, String insno)
+        {
+            this.Account = rAccount;
+            this.receiptDate = rDate;
+            this.mode = rMode;
+         //   this.receiptAmount = InventoryCostServices.INFormat(rAmt);
+         	this.receiptAmount = rAmt;
+            this.strRDate = CSoAController.dateFormat(rDate);
+            this.sapreceiptno = sapno;
+            this.subtype = subtypecr;
+            this.instrumentno = insno;
+        }
+    }
+    //--------------------------***************-----------------------------------------------------------------------------
+}
