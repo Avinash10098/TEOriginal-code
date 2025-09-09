@@ -1,0 +1,255 @@
+<apex:page controller="milestoneCsoaController" showHeader="false" sidebar="false" standardStylesheets="false" renderAs="{!renderAs}"  docType="html-5.0">
+    <head>
+        <style type="text/css" media="print">
+            @page {
+            
+            @top-center {
+            content: element(header);
+            }
+            @page {
+            
+            @top-center {
+            content: element(header);
+            }
+            @bottom-left {
+            content: element(footer);
+            }
+            size:4in 4in;
+            margin:20mm 20mm 60mm 20mm;
+            
+            }
+            body{
+            margin:0;
+            padding:0;
+            font-family: sans-serif;
+            font-size:18px;
+            line-height:1.5;
+            }
+            
+            @page {
+            size: 8.26in 11.69in;
+            margin:8mm;
+            margin-bottom:190px;
+            }
+            
+            
+            
+            @page{
+            .rotate{
+            /* Safari */
+            -webkList[0]it-transform: rotate(-90deg);
+            
+            /* Firefox */
+            -moz-transform: rotate(-90deg);
+            
+            /* IE */
+            -ms-transform: rotate(-90deg);
+            
+            /* Opera */
+            transform: rotate(-90deg);
+            }
+            }
+            .sfdc_richtext img{
+            width:20px;
+            position:relative;
+            left:20px;
+            }
+            
+        </style>
+    </head>
+    <body style = "font-family: sans-serif;">
+        
+        <apex:outputPanel >
+            <!---------------------------------Header---------------------------------------------------------------->
+              <div class="header" style="position:relative;top:-10px">      
+                <table width="100%">
+                    <tr >
+                        <td align="left" width="100%">
+                            
+                            <table style="margin-top:15px;">
+                                <tr>
+                                    <td>
+                                        <apex:outputPanel rendered="{!IF(uList[0].Permitted_Use__c == 'Residential',True,False)}"><apex:image url="{!$Resource.TEHomesLogo}" width="220" height="50"/></apex:outputPanel>  
+                                        <apex:outputPanel rendered="{!IF(uList[0].Permitted_Use__c == 'Commercial',True,False)}"><apex:image url="{!logolink}" width="260" height="50"/></apex:outputPanel> 
+                                    </td>  
+                                </tr> 
+                                <tr>
+                                    <td style="font-size: 14px;margin-bottom:0px;width:50%;">{!bkList[0].Project__r.Promoter__r.name}<br/>{!bkList[0].Project__r.Promoter__r.Registered_office__c}</td>
+                                </tr>
+                                
+                            </table>
+                        </td>
+                        <td align="right" width="20%">
+                            <table  width="100%">
+                                <tr>
+                                    <!--  <td><apex:image url="{!$Resource.ATRLogo}" width="100" height="100"/></td>-->
+                                    <td align="right" style="text-align:right">  <apex:outputField value="{!bkList[0].Project__r.Project_Logo__c}" /></td>
+                                </tr>
+                            </table> 
+                        </td>  
+                    </tr>
+                </table>  
+            </div>
+            <table width="100%" style="position:relative;top:-30px;"> 
+                <tr class="maintable">
+                    <th colspan="3">
+                        <center>
+                            <h2 style="background-color:#696969; color:white; padding: 5px 10px; margin:0;font-size: 18px;">
+                                CUMULATIVE STATEMENT OF ACCOUNT
+                            </h2>
+                        </center>
+                    </th>
+                </tr>
+                
+                <tr>
+                    <td style="font-size: 12px"><b>Customers:&nbsp;</b>{!allApplicantNames}</td>
+                    
+                </tr>
+                <tr>
+                	<td style="text-align:left;font-size: 12px">Unit No :{!bkList[0].Unit__r.Name}</td>
+                    <td>&nbsp;</td>
+                    <td style="text-align:right;font-size: 12px">Date:{!todaysDate}</td>
+                </tr>
+            </table>
+            
+        <table width = "100%" class="maintable" border="background-color:#969696;border-collapse: collapse;" style="position:relative;top:-30px;">
+            <tr>
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">A</th>
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Payable till date</th>
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Completion Date</th>
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Consideration</th>
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Taxes</th>
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Total</th>
+            </tr>
+            <tr>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!totalConsiStr}</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!totalTaxStr}</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!AToralstr}</b></td>
+            </tr>
+            
+       <!-- <tr>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"><b>A1</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"><b>Invoice</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!a1ConsiTotalstr}</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!a1TaxTotalstr}</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!a1Toralstr}</b></td>
+            </tr> -->
+            
+            <apex:variable value="{!1}" var="count" />
+            <apex:repeat value="{!dmrList}" var="pml">
+                <tr>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!count}<apex:variable value="{!count+1}" var="count" /></td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!pml.milestoneName}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!pml.strDueDate}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;">{!pml.totalMilestoneAV}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;">{!pml.totalMilestoneTax}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;">{!pml.totalMilestoneAmt}</td>
+                </tr>
+            </apex:repeat>
+            
+       <!--     <tr>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"><b>A2</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"><b>Other Debits</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!a2ConsiTotalstr}</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!a2TaxTotalstr}</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!a2Toralstr}</b></td>
+            </tr>  -->
+            
+            <apex:repeat value="{!dnlist}" var="dl">
+                <tr>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!count}<apex:variable value="{!count+1}" var="count" /></td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!dl.milestoneName}-{!dl.debittype}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!dl.strDate}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;">{!dl.totaldebitchargeAmt}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;">{!dl.totaldebitchargeTax}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;">{!dl.totaldebitcharge}</td>
+                </tr>
+            </apex:repeat>
+        </table>
+            <br/>
+            
+        <table width = "100%" class="maintable" border="background-color:#969696;border-collapse: collapse;" style="position:relative;top:-15px;">
+            <tr  >
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">B</th>
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Receipt ID</th>
+                
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Date</th>
+                
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Instrument</th>
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Mode of Payment</th>
+                <th style = "background-color:#969696;border-collapse: collapse;font-size: 11px;color:white;font-weight: bold;text-align: center !important; padding:2px;">Total</th>
+            </tr>
+            
+            <tr>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"></td>
+                
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"></td>
+                
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!BToralstr}</b></td>
+            </tr>
+            
+          <!--  <tr>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"><b>B1</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"><b>Money Received</b></td>
+                
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"></td>
+                
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"></td>
+                
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!b1Toralstr}</b></td>
+            </tr> -->
+            
+            <apex:variable value="{!1}" var="count1" />
+            <apex:repeat value="{!rtList}" var="rt">
+                <tr class="maintable">
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!count1} <apex:variable value="{!count1 +1}" var="count1" /></td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!rt.sapreceiptno}</td>
+                    
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!rt.strRDate}</td>
+                    
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!rt.instrumentno}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!rt.mode}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;">{!rt.receiptAmount}</td>
+                </tr>
+            </apex:repeat>
+            
+          <!--  <tr>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"><b>B2</b></td>
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;"><b>Other Credits</b></td>
+                
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"></td>
+                
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"></td>
+                
+                <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;"><b>{!b2Toralstr}</b></td>
+            </tr> -->
+            
+            <apex:repeat value="{!cNoteWrapperList}" var="cn">
+                <tr class="maintable">
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!count1} <apex:variable value="{!count1 +1}" var="count1" /></td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!cn.sapreceiptno}</td>
+                    
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!cn.strRDate}</td>
+                    
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">&nbsp;</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;">{!cn.mode}</td>
+                    <td style="padding:3px;font-size: 11px;border-collapse: collapse;text-align: right !important;">{!cn.receiptAmount}</td>
+                </tr>
+            </apex:repeat>
+            <tr style="background-color:#969696">
+                <td colspan="5" style="font-size: 12px"><b>Due Now (A-B)</b></td>
+                <td style="text-align: right;font-size: 12px"><b>{!AminusBstr}</b></td>
+            </tr>
+        </table>
+                        
+        </apex:outputPanel>
+    </body>
+</apex:page>
