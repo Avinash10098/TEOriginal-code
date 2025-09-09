@@ -1,0 +1,2671 @@
+@isTest
+private  Class TestBookingClass {
+    static Booking__c booking; 
+    
+    @isTest
+    private static void BookingTest() {
+        
+        /* Create Custom Setting */
+        End_Time_for_Event__c endTime = new End_Time_for_Event__c();
+        endTime.Name = 'End Time Minutes';
+        endTime.End_Minutes__c = 60;
+        insert endTime;
+        
+        Opportunity objcustomer;
+        Opportunity objcustomer1;
+        Booking__c objBooking;
+        Project__c objpr;
+        Unit__c objPUU;
+        Unit__c objPUU1;
+        //    Project_Unit_Type__c objPUT;
+        Car_Park__c objCP1;
+        Car_Park__c objCP2;
+        Car_Park__c objCP3;
+        Car_Park__c objCP4;
+        Car_Park__c objCP5;
+        
+        
+        objpr = new Project__c();
+        objpr = createProject('Xa_prj','111');
+        objpr.Quotation_Validity__c = 10; 
+        update objpr;
+        List<Cluster__c> cList = TestDataFactory.createClusters(2, objpr.Id);
+        
+        //create Towers
+        List<Tower__c> tList = TestDataFactory.createTowers(2, objpr.Id);
+     
+        //create Product
+        TE_Product__c prod = TestDataFactory.createProduct('C1','Apartment');
+        
+        //create Project Product
+        Project_Product__c projProd = TestDataFactory.createProjectProduct('ProjectProduct10', objpr.Id, prod.Id,'Verion10');
+        
+        //create Sub Product      
+        Sub_Product__c  subProduct = TestDataFactory.createsubProduct('subproduct10', objpr.Id, prod.Id);
+        
+        
+        Profile p = [SELECT Id FROM Profile WHERE Name='Post sales'];        
+        User sm = new User(Alias = 'standt',Email='sudhirb77@stetig.in',
+                            EmailEncodingKey='UTF-8', LastName='Testing', LanguageLocaleKey='en_US',
+                            LocaleSidKey='en_US', ProfileId = p.Id,IsActive = true,
+                            TimeZoneSidKey='America/Los_Angeles', UserName='sudhirb77@stetig.in');        
+        insert sm;
+        
+        ProjectCharges__c projchrg1 = new ProjectCharges__c();
+        projchrg1.name = 'Basic';
+        projchrg1.Active__c = true;
+        projchrg1.Project__c = objpr.id;
+        projchrg1.Calculatedas__c = 'Rate list at Unit level';
+        projchrg1.ChargeBucket__c = 'Agreement Value';
+        projchrg1.Taxable__c = 67.0;
+        projchrg1.SGST__c = 9.0;
+        projchrg1.CGST__c = 9.0;
+        projchrg1.IGST__c = 0.0;
+        insert projchrg1; 
+        
+        Payment_Plan__c pl = new  Payment_Plan__c();
+        pl.name = 'Standard Plan';
+        pl.Plan_Code__c = '003';
+        pl.Tower__c = tList[0].id;
+        pl.Project__c = objpr.id; 
+        pl.NoofMilestones__c = 25;
+        pl.Charge1Name__c = 'Basic';
+        pl.Charge_1_Total__c = 100;
+        insert pl;
+        
+        
+        
+        /*objPUT = new Project_Unit_Type__c();
+objPUT.RDS_Code__c = '101';
+objPUT.RDS_Project__c = objpr.id;
+insert objPUT;*/
+        
+        objPUU = new Unit__c();  
+        List<Unit__c> uList = TestDataFactory.createUnits(tList[0].Id, objpr.Id, prod.Id,subProduct.Id  );
+        objPUU = uList[0];
+        objPUU.Unit_Status__c = 'Available';
+        update objPUU;
+        
+        objPUU1 = new Unit__c();  
+        objPUU1 = uList[1];
+        
+        objCP1 = new Car_Park__c ();
+        objCP1.Status__c = 'Available';
+        objCP1.Category__c = 'Additional';
+        objCP1.Type__c = 'Tandem';
+        objCP1.Project__c = objpr.Id;
+        insert objCP1;
+        
+        objCP2 = new Car_Park__c ();
+        objCP2.Status__c = 'Available';
+        objCP2.Category__c = 'Additional';
+        objCP2.Type__c = 'Open';
+        objCP2.Project__c = objpr.Id;
+        insert objCP2;
+        
+        objCP3 = new Car_Park__c ();
+        objCP3.Status__c = 'Available';
+        objCP3.Category__c = 'Additional';
+        objCP3.Type__c = 'Open';
+        objCP3.Project__c = objpr.Id;
+        insert objCP3;
+        
+        objCP4 = new Car_Park__c ();
+        objCP4.Status__c = 'Available';
+        objCP4.Category__c = 'Additional';
+        objCP4.Type__c = 'Stack';
+        objCP4.Project__c = objpr.Id;
+        insert objCP4;
+        
+        objCP5 = new Car_Park__c ();
+        objCP5.Status__c = 'Available';
+        objCP5.Category__c = 'Additional';
+        objCP5.Type__c = 'Stack';
+        objCP5.Project__c = objpr.Id;
+        insert objCP5;
+        
+        Account a = TestDataFactory.createPATemplate('WC Account', 'wc@email.com','9098777',false);
+        
+        objcustomer= new Opportunity();
+        objcustomer.Project__c=objpr.id;
+        objcustomer.name='Test 1';
+        objcustomer.StageName='Qualification';
+        objcustomer.Unit__c=objPUU1.id;  
+        objcustomer.CloseDate=system.today();     
+        objCustomer.AccountId = a.Id;
+        objcustomer.Sales_Manager_lookup__c = UserInfo.getUserId();
+        objcustomer.Walk_in_Source__c = 'Digital';
+        insert objcustomer;
+        
+        /*        objcustomer1= new Opportunity();
+objcustomer1.Project__c=objpr.id;
+objcustomer1.name='Test 1';
+objcustomer1.StageName='Qualification';
+objcustomer1.Unit__c=objPUU1.id;  
+objcustomer1.CloseDate=system.today();
+objcustomer1.Status__c ='Active';
+objcustomer1.AccountId = a.Id;
+
+insert objcustomer1;*/
+        
+        Quotation__c q = new Quotation__c();
+        //q.Name = 'Q010101';
+        q.Quote_Status__c = 'Valid';
+        q.Payment_Plan__c = pl.id;
+        //q.Project__c = objpr.Id;
+        q.Unit__c = objPUU.Id;
+        //q.FloorNo__c = 11;
+        q.Opportunity__c = objcustomer.Id;
+        //q.Appartment_Configuration__c = '1 BHK';
+        //q.Carpet_Area_Sq_Ft__c = 1200;
+        q.Token_Amount__c =110000;
+        q.ST_Token_Amount__c = 1000;
+        q.Allow_booking_without_full_token__c = TRUE;
+        q.Total_Agreement_Value_Bucket__c = 60422880;
+        q.SGST_on_Total_Agreement_Value_Bucket__c = 2537761;
+        q.CGST_on_Total_Agreement_Value_Bucket__c = 100000;
+        q.IGST_on_Total_Agreement_Value_Bucket_del__c = 0;
+        q.Car_Park_Type_1__c = 'Tandem';
+        q.Car_Park_Type_2__c = 'Open';
+        q.Car_Park_Type_3__c = 'Stack';
+        q.Car_Park_Count_1__c = 1;
+        q.Car_Park_Count_2__c = 1;
+        q.Car_Park_Count_3__c = 1;
+        q.Final_Approved_Date__c = system.today().addDays(-5);
+        q.Quotation_Type__c = 'Unit Transfer Quotation';
+        insert q;
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        pm.Quotation__c = q.id;
+        pm.Milestone_Type_edit__c = 'Date Linked';
+        pm.Invoice_Date__c = system.today().addDays(5);
+        pm.Invoice_Due_Date__c = system.today().addDays(5);
+        pm.Installment__c = 'Final Installment';
+        pm.Milestone_Due_Date__c = system.today().addDays(5);
+        insert pm;
+        /*Quotation__c q2 = new Quotation__c();
+q2.Name = 'Q020202';
+q2.Quote_Status__c = 'Approval Pending';
+q2.Prepared_Date__c = System.today();
+q2.Project__c = objpr.Id;
+q2.Project_Unit__c = objPUU1.Id;
+q2.FloorNo__c = 11;
+q2.Opportunity__c = objcustomer1.Id;
+q2.Appartment_Configuration__c = '1 BHK';
+q2.Carpet_Area_Sq_Ft__c = 1200;
+q2.Token_Amount__c =110000;
+q2.ST_Token_Amount__c = 1000;
+q2.Allow_booking_without_full_token__c = TRUE;
+q2.Agreement_Value__c = 60422880;
+q2.Agreement_Value_ST__c = 2537761;
+q2.Tandem_car_park_Additional__c = 0;
+q2.Tandem_Open_Additional__c= 0;
+q2.Single_car_park_Additional__c= 0;
+q2.Single_Open_Additional__c = 0;
+q2.Stack_Additional__c = 0;
+//q2.Service_Tax_On_Token_Amount__c = true;
+insert q2;*/
+        
+        booking = new Booking__c(
+            Booking_Date__c = System.today(),
+            status__c = 'UnProcessed',
+            Unit__c = objPUU.Id,
+            UnitChange__c = false,
+            Project__c = objpr.Id,
+            Opportunity__c = objcustomer.id,
+            Quotation__c = q.id, 
+           // Receipts__c = receipt.Id,
+            Sales_Managers__c = sm.id, 
+            Relationship_Manager__c = sm.id
+        );
+        insert booking; 
+        
+        //// Created by Pranay for Customer SAP//////////////////
+        
+        Applicant_Details__c a1 = new Applicant_Details__c();
+        a1.Salutation__c = 'Mr.';
+        a1.Name = 'First Man1';
+        a1.Booking__c = booking.id;
+        a1.Applicant_Number__c = 'Primary Applicant';
+        a1.Date_of_incorporation__c = System.today();
+        a1.DOB__c = system.today();
+        a1.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a1.Pincode__c = 444344;
+        a1.Country__c = 'India';
+        a1.State__c = 'Maharashtra';
+        a1.Preferred_address_for_all_correspondence__c = 'Permanent';
+        a1.City__c = 'Nagpur';
+        a1.Mailing_Country__c= null;
+        a1.Mailing_Address__c = 'abccc';
+        a1.Mailing_City__c = 'amravati';
+        a1.Mailing_Pincode__c= null;
+        a1.Mobile_Number__c = '9090909031';
+        a1.Email_Address__c = 'newman1@justnow3.com';
+        a1.Nationality__c = 'Indian';
+        a1.Type_Of_Applicant__c  = 'Individual Buyer';
+        a1.Subtype_Of_Applicant__c = 'Indian National';
+        a1.Pancard__c = true;
+        a1.Address_Proof__c = true;
+        a1.Address_Proof_Document__c = 'xyz';
+        a1.Address_Proof_Number__c = 'pqr';
+        a1.One_Passport_Size_Color_Photograph__c = true;
+        a1.Other_Details_Remarks__c = 'abcd';
+        a1.Of_Ownership__c = 100;
+        a1.street__c = 'a';
+        a1.Street_2__c = 'b';
+        a1.Street_3__c = 'c';
+        a1.Street_4__c = 'd';
+        a1.Street_5__c = 'e';
+        insert a1;
+        
+        Receipt__c r1 = new Receipt__c();
+        r1.Cheque_DD_Amount_Rs__c = 200000;
+        r1.Cheque_DD__c = '908888';
+        r1.Cheque_DD_Date__c = system.today();
+        r1.Project__c = objpr.Id;
+        r1.Project_Unit__c = objPUU.Id;
+        r1.Opportunity__c = objcustomer.Id;
+        r1.CheckReceipt__c = true;
+        r1.Token_Amount_Receipt__c = true;
+        r1.Physically_Cheque_Received__c = true;
+        r1.Approval_Status__c = 'Approved';
+        r1.Receipt_Date__c = system.today();
+        r1.DraweeBank__c = 'Axis Bank';
+        r1.Total_Amount__c = 200000;
+        r1.Currency__c = 'Indian Rupee';
+        r1.Booking__c = booking.Id;
+        insert r1;
+        
+        Receipt__c r2 = new Receipt__c();
+        r2.Cheque_DD_Amount_Rs__c = 8400;
+        r2.Cheque_DD__c = '908888';
+        r2.Cheque_DD_Date__c = system.today();
+        r2.Project__c = objpr.Id;
+        r2.Project_Unit__c = objPUU.Id;
+        r2.Opportunity__c = objcustomer.Id;
+        r2.CheckReceipt__c = true;
+        r2.Physically_Cheque_Received__c = true;
+        r2.Approval_Status__c = 'Approved';
+        r2.Receipt_Date__c = system.today();
+        r2.DraweeBank__c = 'CITI';
+        r2.Total_Amount__c = 8400;
+        r1.Currency__c = 'Indian Rupee';
+        r2.Token_Amount_ST__c = true;
+        r2.Booking__c = booking.Id;
+        insert r2;
+        
+        
+        PageReference pRef1 = Page.BookingPageForm;
+        Test.setCurrentPage(pRef1);
+        ApexPages.currentPage().getParameters().put('optyId',objcustomer.id);
+        ApexPages.currentPage().getParameters().put('unitId',objPUU.id);
+        ApexPages.currentPage().getParameters().put('ProjectId',objpr.id);
+        BookingClass bookC1 = new BookingClass();
+        bookC1.i = 0;
+        List < SelectOption > sq1= bookC1.getQuote;
+        bookC1.selectedQuote = q.Id;
+        bookC1.receiptlist.add(r1);
+        bookC1.getTokenAmount();
+        //  bookC1.getReceiptDetails();
+        bookC1.addReciept();
+        bookC1.boookingObj.Application_No__c = '1234';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '2nd Applicant';    
+        bookC1.boookingObj.Future_Correspondence_Contact_Phone__c = '1234898989';
+        bookC1.boookingObj.Future_Correspondence_Contact_Email__c  = 'future@hereIcome.com';
+        
+        // applicant1 to required fields validation simulation
+        bookC1.applicant.Salutation__c = 'Mr.';
+        bookC1.applicant.Name = 'New Man';
+        bookC1.applicant.DOB__c = system.today();
+        bookC1.applicant.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant.Pincode__c = 444444;
+        bookC1.applicant.Country__c = 'India';
+        bookC1.applicant.City__c = 'Nagpur';
+        bookC1.applicant.Mailing_Country__c= 'India';
+        bookC1.applicant.Mobile_Number__c = '9090909000';
+        bookC1.applicant.Email_Address__c = 'newman@justnow.com';
+        bookC1.applicant.Nationality__c = 'Indian';
+        bookC1.applicant.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant.Pancard__c = true;
+        bookC1.applicant.Address_Proof__c = true;
+        bookC1.applicant.Address_Proof_Document__c = 'abc';
+        bookC1.applicant.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.applicant.Of_Ownership__c = 100;
+        bookC1.addressCheck = true; 
+        bookC1.applicant.Father_Husband_s_Name__c = 'Test Father';
+        
+        
+        // applicant2 to required fields validation simulation
+        bookC1.applicant2.Name = 'Second Man';
+        bookC1.applicant2.Applicant_Number__c = 'Second Applicant';
+        bookC1.applicant2.DOB__c = system.today();
+        bookC1.applicant2.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant2.Pincode__c = 444444;
+        bookC1.applicant2.Country__c = 'India';
+        bookC1.applicant2.City__c = 'Nagpur';
+        bookC1.applicant2.Mailing_Country__c= null;
+        bookC1.applicant2.Mailing_Pincode__c= null;
+        bookC1.applicant2.Mobile_Number__c = '9090909008';
+        bookC1.applicant2.Email_Address__c = 'newman@justnow.com';
+        bookC1.applicant2.Nationality__c = 'Indian';
+        bookC1.applicant2.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant2.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant2.Pancard__c = true;
+        bookC1.applicant2.Address_Proof__c = true;
+        bookC1.applicant2.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant2.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant2.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant2 = true;
+        bookC1.save();
+        /*bookC1.applicant3.Name ='Third Man';
+bookC1.save();
+bookC1.addressCheckApplicant3 = true;
+bookC1.save();*/
+        
+        // applicant3 to required fields validation simulation
+        bookC1.applicant3.Name = 'Third Man';
+        bookC1.applicant3.Applicant_Number__c = 'Third Applicant';
+        //bookC1.applicant3.DOB__c = system.today();
+        //bookC1.applicant3.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant3.Pincode__c = 44444489;
+        bookC1.applicant3.Country__c = 'India';
+        //bookC1.applicant3.City__c = 'Nagpur';
+        //bookC1.applicant3.Mailing_Country__c= 'India';
+        //bookC1.applicant3.Mobile_Number__c = '909090900';
+        //bookC1.applicant3.Email_Address__c = 'newman@justnow.com';
+        //bookC1.applicant3.Nationality__c = 'Indian';
+        bookC1.applicant3.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant3.Subtype_Of_Applicant__c = 'For NRI';
+        bookC1.applicant3.Pancard__c = false;
+        bookC1.applicant3.PassportNumber__c = false;
+        bookC1.applicant3.Funds_from_NRE_NRO__c = false;
+        bookC1.applicant3.Address_Proof__c = true;
+        bookC1.applicant3.Copy_of_Workpermit_Employment_contract__c = false;
+        bookC1.applicant3.PancardNo__c = '123456789102';
+        bookC1.applicant3.One_Passport_Size_Color_Photograph__c = false;
+        bookC1.addressCheckApplicant3 = false;
+        bookC1.save();
+        
+        
+        bookC1.applicant4.Name ='Fourth Man';
+        bookC1.applicant4.Applicant_Number__c = 'Fourth Applicant';
+        //bookC1.applicant4.DOB__c = system.today();
+        //bookC1.applicant4.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant4.Pincode__c = 44444478;
+        bookC1.applicant4.Country__c = 'India';
+        //bookC1.applicant4.City__c = 'Nagpur';
+        //bookC1.applicant4.Mailing_Country__c= 'India';
+        //bookC1.applicant4.Mobile_Number__c = '909090900';
+        //bookC1.applicant4.Email_Address__c = 'newman@justnow.com';
+        //bookC1.applicant4.Nationality__c = 'Indian';
+        bookC1.applicant4.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant4.Subtype_Of_Applicant__c = 'Foreign Nationals Of Indian Origin';
+        bookC1.applicant4.Pancard__c = true;
+        bookC1.applicant4.PassportNumber__c = true;
+        bookC1.applicant4.Funds_from_NRE_FCNR__c= false;
+        bookC1.applicant4.Self_attested_copy_of_PIO_or_OCI_Card__c = false;
+        bookC1.applicant4.Address_Proof__c = true;
+        bookC1.applicant4.Copy_of_Workpermit_Employment_contract__c = true;
+        bookC1.applicant4.PancardNo__c = '1234567891';
+        bookC1.applicant4.One_Passport_Size_Color_Photograph__c = false;
+        bookC1.applicant4.Type_Of_Origin__c = '';
+        bookC1.applicant4.Origin_Details__c = '';
+        bookC1.addressCheckApplicant4 = false;
+        bookC1.save();
+        
+        bookC1.applicant5.Name ='Fifth Man';
+        bookC1.applicant5.Applicant_Number__c = 'Fifth Applicant';
+        //bookC1.applicant5.DOB__c = system.today();
+        //bookC1.applicant5.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant5.Pincode__c = 44444454;
+        bookC1.applicant5.Country__c = 'India';
+        //bookC1.applicant5.City__c = 'Nagpur';
+        //bookC1.applicant5.Mailing_Country__c= 'India';
+        //bookC1.applicant5.Mobile_Number__c = '909090900';
+        //bookC1.applicant5.Email_Address__c = 'newman@justnow.com';
+        bookC1.applicant5.Nationality__c = 'Indian';
+        bookC1.applicant5.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant5.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant5.Pancard__c = false;
+        bookC1.applicant5.PassportNumber__c = true;
+        bookC1.applicant5.Funds_from_NRE_FCNR__c= true;
+        bookC1.applicant5.Self_attested_copy_of_PIO_or_OCI_Card__c = true;
+        bookC1.applicant5.Address_Proof__c = false;
+        bookC1.applicant5.Copy_of_Workpermit_Employment_contract__c = true;
+        bookC1.applicant5.PancardNo__c = '';
+        bookC1.applicant5.One_Passport_Size_Color_Photograph__c = false;
+        bookC1.applicant5.Address_Proof_Document__c = '';
+        bookC1.applicant5.Address_Proof_Number__c  = '';
+        bookC1.addressCheckApplicant5 = true;
+        bookC1.save();
+        
+        
+        Test.startTest();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '1st Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'New Man';
+        bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '2nd Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Second Man';
+        bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '3rd Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Second Man';
+        bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '4th Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Third Man';
+        bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '5th Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Fourth Man';
+        bookC1.save();
+        Test.stopTest();
+        BookingClass.hack();
+        //updated applicant name to cover apptrg and CopyApptoOpty Class
+        a1.Name = 'First Mann1';
+        update a1;
+    }
+    
+    @isTest
+    private static void BookingTest2222() {
+        
+        /* Create Custom Setting */
+        End_Time_for_Event__c endTime = new End_Time_for_Event__c();
+        endTime.Name = 'End Time Minutes';
+        endTime.End_Minutes__c = 60;
+        insert endTime;
+        
+        Opportunity objcustomer;
+        Opportunity objcustomer1;
+        Booking__c objBooking;
+        Project__c objpr;
+        Unit__c objPUU;
+        Unit__c objPUU1;
+        //      Project_Unit_Type__c objPUT;
+        Car_Park__c objCP1;
+        Car_Park__c objCP2;
+        Car_Park__c objCP3;
+        Car_Park__c objCP4;
+        Car_Park__c objCP5;
+        
+        
+        objpr = new Project__c();
+        objpr = createProject('Xa_prj2','1111');
+        objpr.Quotation_Validity__c = 10;
+        update objpr;
+        
+        List<Cluster__c> cList = TestDataFactory.createClusters(2, objpr.Id);
+        
+        //create Towers
+        List<Tower__c> tList = TestDataFactory.createTowers(2, objpr.Id);
+        //create Product
+        TE_Product__c prod = TestDataFactory.createProduct('C1','Apartment');
+        
+        //create Project Product
+        Project_Product__c projProd = TestDataFactory.createProjectProduct('ProjectProduct10', objpr.Id, prod.Id,'Verion10');
+        
+        //create Sub Product      
+        Sub_Product__c  subProduct = TestDataFactory.createsubProduct('subproduct10', objpr.Id, prod.Id);
+        
+        
+        ProjectCharges__c projchrg1 = new ProjectCharges__c();
+        projchrg1.name = 'Basic';
+        projchrg1.Active__c = true;
+        projchrg1.Project__c = objpr.id;
+        projchrg1.Calculatedas__c = 'Rate list at Unit level';
+        projchrg1.ChargeBucket__c = 'Agreement Value';
+        projchrg1.Taxable__c = 67.0;
+        projchrg1.SGST__c = 9.0;
+        projchrg1.CGST__c = 9.0;
+        projchrg1.IGST__c = 0.0;
+        insert projchrg1; 
+        
+        Payment_Plan__c pl = new  Payment_Plan__c();
+        pl.name = 'Standard Plan';
+        pl.Plan_Code__c = '003';
+        pl.Tower__c = tList[0].id;
+        pl.Project__c = objpr.id; 
+        pl.NoofMilestones__c = 25;
+        pl.Charge1Name__c = 'Basic';
+        pl.Charge_1_Total__c = 100;
+        insert pl;
+        
+        
+        objPUU = new Unit__c();  
+        List<Unit__c> uList = TestDataFactory.createUnits(tList[0].Id, objpr.Id,prod.Id,subProduct.Id );
+        objPUU = uList[0];
+        
+        
+        objPUU1 = new Unit__c();  
+        objPUU1 = uList[1];
+        
+        
+        objCP1 = new Car_Park__c ();
+        objCP1.Status__c = 'Available';
+        objCP1.Category__c = 'Additional';
+        objCP1.Type__c = 'Tandem';
+        objCP1.Project__c = objpr.Id;
+        insert objCP1;
+        
+        objCP2 = new Car_Park__c ();
+        objCP2.Status__c = 'Available';
+        objCP2.Category__c = 'Additional';
+        objCP2.Type__c = 'Open';
+        objCP2.Project__c = objpr.Id;
+        insert objCP2;
+        
+        
+        objCP4 = new Car_Park__c ();
+        objCP4.Status__c = 'Available';
+        objCP4.Category__c = 'Additional';
+        objCP4.Type__c = 'Stack';
+        objCP4.Project__c = objpr.Id;
+        insert objCP4;
+        
+        
+        Account a = TestDataFactory.createPATemplate('WC Account', 'wc@email.com','9098777',false);
+        
+        objcustomer= new Opportunity();
+        objcustomer.Project__c=objpr.id;
+        objcustomer.name='Test 1';
+        objcustomer.StageName='Qualification';
+        objcustomer.Unit__c=objPUU1.id;  
+        objcustomer.CloseDate=system.today();
+        objCustomer.AccountId = a.Id;
+        objcustomer.Sales_Manager_lookup__c = UserInfo.getUserId();
+        objcustomer.Walk_in_Source__c = 'Digital';
+        insert objcustomer;
+        /*  
+objcustomer1= new Opportunity();
+objcustomer1.Project__c=objpr.id;
+objcustomer1.name='Test 1';
+objcustomer1.StageName='Qualification';
+objcustomer1.Unit__c=objPUU1.id;  
+objcustomer1.CloseDate=system.today();
+objcustomer1.Status__c ='Active';
+objcustomer1.AccountId = a.Id;
+
+insert objcustomer1;
+
+Opportunity objcustomer11 = new Opportunity();
+objcustomer11.Project__c=objpr.id;
+objcustomer11.name='Test 11';
+objcustomer11.StageName='Qualification';
+objcustomer11.Unit__c=objPUU1.id;  
+objcustomer11.CloseDate=system.today();
+objcustomer11.Status__c ='Active';
+objcustomer11.AccountId = a.Id;
+
+insert objcustomer11;
+*/
+        
+        Quotation__c q = new Quotation__c();
+        //q.Name = 'Q010101';
+        q.Quote_Status__c = 'Valid';
+        q.Payment_Plan__c = pl.id;
+        //q.Project__c = objpr.Id;
+        q.Unit__c = objPUU.Id;
+        //q.FloorNo__c = 11;
+        q.Opportunity__c = objcustomer.Id;
+        //q.Appartment_Configuration__c = '1 BHK';
+        //q.Carpet_Area_Sq_Ft__c = 1200;
+        q.Token_Amount__c =110000;
+        q.ST_Token_Amount__c = 1000;
+        q.Allow_booking_without_full_token__c = TRUE;
+        q.Total_Agreement_Value_Bucket__c = 60422880;
+        q.SGST_on_Total_Agreement_Value_Bucket__c = 2537761;
+        q.CGST_on_Total_Agreement_Value_Bucket__c = 100000;
+        q.IGST_on_Total_Agreement_Value_Bucket_del__c = 0;
+        q.Car_Park_Type_1__c = '';
+        q.Car_Park_Type_2__c = '';
+        q.Car_Park_Type_3__c = '';
+        q.Car_Park_Type_4__c = '';
+        q.Car_Park_Type_5__c = '';
+        q.Car_Park_Type_6__c = '';
+        q.Car_Park_Type_7__c = '';
+        q.Car_Park_Count_1__c = 0;
+        q.Car_Park_Count_2__c = 0;
+        q.Car_Park_Count_3__c = 0;
+        q.Car_Park_Count_4__c = 0;
+        q.Car_Park_Count_5__c = 0;
+        q.Car_Park_Count_6__c = 0;
+        q.Car_Park_Count_7__c = 0; 
+        q.Final_Approved_Date__c = system.today().addDays(-5);
+        insert q;
+        Payment_Milestones__c pm2 = new Payment_Milestones__c();
+        pm2.Quotation__c = q.id;
+        pm2.Milestone_Type_edit__c = 'Date Linked';
+        pm2.Invoice_Date__c = system.today().addDays(5);
+        pm2.Invoice_Due_Date__c = system.today().addDays(5);
+        pm2.Installment__c = 'Final Installment';
+        pm2.Milestone_Due_Date__c = system.today().addDays(5);
+        insert pm2;
+        /* Booking__c bks = new Booking__C();
+bks.Opportunity__c = objcustomer11.Id;
+bks.Quotation__c = q.Id;
+bks.Booking_Date__c = System.Today();
+insert bks;
+*/
+        
+        
+        Project_Construction_Stages__c pgs = new Project_Construction_Stages__c();
+        pgs.Planned_date_of_completion__c = System.today().addDays(30);
+        pgs.Project__c = objpr.id;
+        pgs.Tower__c = tList[0].id;
+        pgs.Name = 'On Plinth';
+        insert pgs;
+        
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        pm.Milestone_Type_edit__c = 'Date Linked';
+        pm.Milestone_Name__c = 'Application Money1';
+        pm.Number_Of_Days__c = 0;
+        pm.Milestone_Due_Date__c = System.Today().addDays(10);
+        pm.Quotation__c = q.Id;
+        pm.is_demand_raised__c = false;
+        insert pm;
+        
+        Payment_Milestones__c pm1 = new Payment_Milestones__c();
+        pm1.Milestone_Type_edit__c = 'Construction Linked';
+        pm1.Milestone_Name__c = 'On Plinth';
+        pm1.Project_Construction_Stages__c = pgs.Id;
+        pm1.Number_Of_Days__c = 0;
+        pm1.Milestone_Due_Date__c = System.Today().addDays(10);
+        pm1.Quotation__c = q.Id;
+        pm1.is_demand_raised__c = false;
+        insert pm1;
+        
+        Payment_Milestones__c pm11 = new Payment_Milestones__c();
+        pm11.Milestone_Type_edit__c = 'On Registration';
+        pm11.Milestone_Name__c = 'On Registration';
+        pm11.Number_Of_Days__c = 0;
+        pm11.Milestone_Due_Date__c = System.Today().addDays(10);
+        pm11.Quotation__c = q.Id;
+        pm11.is_demand_raised__c = false;
+        insert pm11;
+        
+        PageReference pRef1 = Page.BookingPageForm;
+        Test.setCurrentPage(pRef1);
+        ApexPages.currentPage().getParameters().put('optyId',objcustomer.id);
+        ApexPages.currentPage().getParameters().put('unitId',objPUU.id);
+        ApexPages.currentPage().getParameters().put('projectId',objpr.id);
+        BookingClass bookC1 = new BookingClass();
+        bookC1.i = 0;
+        List < SelectOption > sq1= bookC1.getQuote;
+        bookC1.selectedQuote = q.Id;
+        //bookC1.receiptlist.add(r1);
+        bookC1.getTokenAmount();
+        //bookC1.getReceiptDetails();
+        //bookC1.addReciept();
+        bookC1.boookingObj.Application_No__c = '1234';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '2nd Applicant';    
+        bookC1.boookingObj.Future_Correspondence_Contact_Phone__c = '1234898989';
+        bookC1.boookingObj.Future_Correspondence_Contact_Email__c  = 'future@hereIcome.com';
+        bookC1.boookingObj.Mode_of_Funding__c = 'Self';
+        // bookC1.dateOfOfferPossesion = system.today().addDays(2);
+        bookC1.receiptlist[0].Mode__c = 'Cheque';
+        bookC1.receiptlist[0].Cheque_DD__c = '908888';
+        bookC1.receiptlist[0].Cheque_DD_Date__c = system.today();
+        bookC1.receiptlist[0].Total_Amount__c = 1000000;
+        bookC1.receiptlist[0].Currency__c = 'Indian Rupee';
+        bookC1.receiptlist[0].DraweeBank__c = 'Akola Urban Co-operative Bank';
+        //bookC1.receiptlist[0].Mode__c = 'Cheque';
+        
+        // applicant1 to required fields validation simulation
+        bookC1.applicant.Salutation__c = 'Mr.';
+        bookC1.applicant.Name = 'New Man1';
+        bookC1.applicant.DOB__c = system.today();
+        bookC1.applicant.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant.Pincode__c = 444444;
+        bookC1.applicant.Country__c = 'India';
+        bookC1.applicant.City__c = 'Nagpur';
+        bookC1.applicant.Mailing_Country__c= 'India';
+        bookC1.applicant.Mobile_Number__c = '9090909016';
+        bookC1.applicant.Email_Address__c = 'newman@justnow1.com';
+        bookC1.applicant.Nationality__c = 'Indian';
+        bookC1.applicant.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant.Father_Husband_s_Name__c = 'Test Father';
+        bookC1.applicant.Pancard__c = true;
+        bookC1.applicant.Address_Proof__c = true;
+        bookC1.applicant.Address_Proof_Document__c = 'abc';
+        bookC1.applicant.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheck = true; 
+        bookC1.firstApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant.Preferred_address_for_all_correspondence__c = 'Permanent';
+        bookC1.applicant.Zone__c = 'South Mumbai (So Bo)';
+        bookC1.applicant.Of_Ownership__c = 100;
+        bookC1.getaddressstatus();
+        
+        // applicant2 to required fields validation simulation
+        bookC1.applicant2.Name = 'Second Man1';
+        bookC1.applicant2.Applicant_Number__c = 'Second Applicant';
+        bookC1.applicant2.DOB__c = system.today();
+        bookC1.applicant2.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant2.Pincode__c = 444444;
+        bookC1.applicant2.Country__c = 'India';
+        bookC1.applicant2.City__c = 'Nagpur';
+        bookC1.applicant2.Mailing_Country__c= null;
+        bookC1.applicant2.Mailing_Pincode__c= null;
+        bookC1.applicant2.Mobile_Number__c = '9090909025';
+        bookC1.applicant2.Email_Address__c = 'newman@justnow2.com';
+        bookC1.applicant2.Nationality__c = 'Indian';
+        bookC1.applicant2.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant2.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant2.Pancard__c = true;
+        bookC1.applicant2.Address_Proof__c = true;
+        bookC1.applicant2.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant2.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant2.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant2 = true;
+        bookC1.getaddressstatus();
+        bookC1.save();
+        /*bookC1.applicant3.Name ='Third Man';
+bookC1.save();
+bookC1.addressCheckApplicant3 = true;
+bookC1.save();*/
+        
+        // applicant3 to required fields validation simulation
+        bookC1.applicant3.Name = 'Third Man2';
+        bookC1.applicant3.Applicant_Number__c = 'Third Applicant';
+        //bookC1.applicant3.DOB__c = system.today();
+        //bookC1.applicant3.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant3.Pincode__c = 44444489;
+        bookC1.applicant3.Country__c = 'India';
+        //bookC1.applicant3.City__c = 'Nagpur';
+        //bookC1.applicant3.Mailing_Country__c= 'India';
+        //bookC1.applicant3.Mobile_Number__c = '909090900';
+        //bookC1.applicant3.Email_Address__c = 'newman@justnow.com';
+        //bookC1.applicant3.Nationality__c = 'Indian';
+        bookC1.applicant3.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant3.Subtype_Of_Applicant__c = 'For NRI';
+        bookC1.applicant3.Pancard__c = false;
+        bookC1.applicant3.PassportNumber__c = false;
+        bookC1.applicant3.Funds_from_NRE_NRO__c = false;
+        bookC1.applicant3.Address_Proof__c = true;
+        bookC1.applicant3.Copy_of_Workpermit_Employment_contract__c = false;
+        bookC1.applicant3.PancardNo__c = '123456789102';
+        bookC1.applicant3.One_Passport_Size_Color_Photograph__c = false;
+        bookC1.addressCheckApplicant3 = false;
+        //bookC1.getaddressstatus();
+        // bookC1.save();
+        
+        
+        bookC1.applicant4.Name ='Fourth Man2';
+        bookC1.applicant4.Applicant_Number__c = 'Fourth Applicant';
+        //bookC1.applicant4.DOB__c = system.today();
+        //bookC1.applicant4.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant4.Pincode__c = 44444478;
+        bookC1.applicant4.Country__c = 'India';
+        //bookC1.applicant4.City__c = 'Nagpur';
+        //bookC1.applicant4.Mailing_Country__c= 'India';
+        //bookC1.applicant4.Mobile_Number__c = '909090900';
+        //bookC1.applicant4.Email_Address__c = 'newman@justnow.com';
+        //bookC1.applicant4.Nationality__c = 'Indian';
+        bookC1.applicant4.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant4.Subtype_Of_Applicant__c = 'Foreign Nationals Of Indian Origin';
+        bookC1.applicant4.Pancard__c = true;
+        bookC1.applicant4.PassportNumber__c = true;
+        bookC1.applicant4.Funds_from_NRE_FCNR__c= false;
+        bookC1.applicant4.Self_attested_copy_of_PIO_or_OCI_Card__c = false;
+        bookC1.applicant4.Address_Proof__c = true;
+        bookC1.applicant4.Copy_of_Workpermit_Employment_contract__c = true;
+        bookC1.applicant4.PancardNo__c = '1234567891';
+        bookC1.applicant4.One_Passport_Size_Color_Photograph__c = false;
+        bookC1.applicant4.Type_Of_Origin__c = '';
+        bookC1.applicant4.Origin_Details__c = '';
+        bookC1.addressCheckApplicant4 = false;
+        // bookC1.save();
+        
+        bookC1.applicant5.Name ='Fifth Man2';
+        bookC1.applicant5.Applicant_Number__c = 'Fifth Applicant';
+        //bookC1.applicant5.DOB__c = system.today();
+        //bookC1.applicant5.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant5.Pincode__c = 44444454;
+        bookC1.applicant5.Country__c = 'India';
+        //bookC1.applicant5.City__c = 'Nagpur';
+        //bookC1.applicant5.Mailing_Country__c= 'India';
+        //bookC1.applicant5.Mobile_Number__c = '909090900';
+        //bookC1.applicant5.Email_Address__c = 'newman@justnow.com';
+        bookC1.applicant5.Nationality__c = 'Indian';
+        bookC1.applicant5.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant5.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant5.Pancard__c = false;
+        bookC1.applicant5.PassportNumber__c = true;
+        bookC1.applicant5.Funds_from_NRE_FCNR__c= true;
+        bookC1.applicant5.Self_attested_copy_of_PIO_or_OCI_Card__c = true;
+        bookC1.applicant5.Address_Proof__c = false;
+        bookC1.applicant5.Copy_of_Workpermit_Employment_contract__c = true;
+        bookC1.applicant5.PancardNo__c = '';
+        bookC1.applicant5.One_Passport_Size_Color_Photograph__c = false;
+        bookC1.applicant5.Address_Proof_Document__c = '';
+        bookC1.applicant5.Address_Proof_Number__c  = '';
+        bookC1.addressCheckApplicant5 = true;
+        // bookC1.save();
+        
+        
+        Test.startTest();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '1st Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'New Man';
+        //bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '2nd Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Second Man';
+        // bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '3rd Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Second Man';
+        // bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '4th Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Third Man';
+        // bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '5th Applicant';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Fourth Man';
+        //bookC1.save();
+        Test.stopTest();
+        
+    }
+    
+    @isTest
+    private static void BookingTest3333() {
+        
+        /* Create Custom Setting */
+        End_Time_for_Event__c endTime = new End_Time_for_Event__c();
+        endTime.Name = 'End Time Minutes';
+        endTime.End_Minutes__c = 60;
+        insert endTime;
+        
+        Opportunity objcustomer;
+        Opportunity objcustomer1;
+        Booking__c objBooking;
+        //Project__c objpr;
+        Unit__c objPUU;
+        Unit__c objPUU1;
+        //      Project_Unit_Type__c objPUT;
+        Car_Park__c objCP1;
+        Car_Park__c objCP2;
+        Car_Park__c objCP3;
+        Car_Park__c objCP4;
+        Car_Park__c objCP5;
+        
+        Project__c objpr = new Project__c(Name = 'Xa_prj2', Project_Code__c = '2222', Quotation_Validity__c = 10);
+        insert objpr;
+        
+        List<Cluster__c> cList = TestDataFactory.createClusters(2, objpr.Id);
+        
+        //create Towers
+        List<Tower__c> tList = TestDataFactory.createTowers(2, objpr.Id);
+        
+        //create Product
+        TE_Product__c prod = TestDataFactory.createProduct('C1','Apartment');
+        
+        //create Project Product
+        Project_Product__c projProd = TestDataFactory.createProjectProduct('ProjectProduct10', objpr.Id, prod.Id,'Verion10');
+        
+        //create Sub Product      
+        Sub_Product__c  subProduct = TestDataFactory.createsubProduct('subproduct10', objpr.Id, prod.Id);
+        
+        Profile p = [SELECT Id FROM Profile WHERE Name='Post sales'];        
+        User sm = new User(Alias = 'standt',Email='sudhirb77@stetig.in',
+                            EmailEncodingKey='UTF-8', LastName='Testing', LanguageLocaleKey='en_US',
+                            LocaleSidKey='en_US', ProfileId = p.Id,IsActive = true,
+                            TimeZoneSidKey='America/Los_Angeles', UserName='sudhirb77@stetig.in');        
+        insert sm;
+        
+        ProjectCharges__c projchrg1 = new ProjectCharges__c();
+        projchrg1.name = 'Basic';
+        projchrg1.Active__c = true;
+        projchrg1.Project__c = objpr.id;
+        projchrg1.Calculatedas__c = 'Rate list at Unit level';
+        projchrg1.ChargeBucket__c = 'Agreement Value';
+        projchrg1.Taxable__c = 67.0;
+        projchrg1.SGST__c = 9.0;
+        projchrg1.CGST__c = 9.0;
+        projchrg1.IGST__c = 0.0;
+        insert projchrg1; 
+        
+        Payment_Plan__c pl = new  Payment_Plan__c();
+        pl.name = 'Standard Plan';
+        pl.Plan_Code__c = '003';
+        pl.Tower__c = tList[0].id;
+        pl.Project__c = objpr.id; 
+        pl.NoofMilestones__c = 25;
+        pl.Charge1Name__c = 'Basic';
+        pl.Charge_1_Total__c = 100;
+        insert pl;
+        
+        
+        objPUU = new Unit__c();  
+        List<Unit__c> uList = TestDataFactory.createUnits(tList[0].Id, objpr.Id, prod.Id, subProduct.Id  );
+        objPUU = uList[0];
+        objPUU.Unit_Status__c = 'Available';
+        update  objPUU ;
+        
+        
+        objPUU1 = new Unit__c();  
+        objPUU1 = uList[1];
+        
+        
+        objCP1 = new Car_Park__c ();
+        objCP1.Status__c = 'Available';
+        objCP1.Category__c = 'Additional';
+        objCP1.Type__c = 'Tandem';
+        objCP1.Project__c = objpr.Id;
+        insert objCP1;
+        
+        objCP2 = new Car_Park__c ();
+        objCP2.Status__c = 'Available';
+        objCP2.Category__c = 'Additional';
+        objCP2.Type__c = 'Open';
+        objCP2.Project__c = objpr.Id;
+        insert objCP2;
+        
+        
+        objCP4 = new Car_Park__c ();
+        objCP4.Status__c = 'Available';
+        objCP4.Category__c = 'Additional';
+        objCP4.Type__c = 'Stack';
+        objCP4.Project__c = objpr.Id;
+        insert objCP4;
+        
+        
+        Account a = TestDataFactory.createPATemplate('WC Account', 'wc@email.com','9098777',false);
+        
+        objcustomer= new Opportunity();
+        objcustomer.Project__c=objpr.id;
+        objcustomer.name='Test 1';
+        objcustomer.StageName='Qualification';
+        objcustomer.Unit__c= objPUU.id;  
+        objcustomer.CloseDate=system.today();
+        objCustomer.AccountId = a.Id;
+        objcustomer.Sales_Manager_lookup__c = UserInfo.getUserId();
+        objcustomer.Walk_in_Source__c = 'Digital';
+        insert objcustomer;
+        /* 
+objcustomer1= new Opportunity();
+objcustomer1.Project__c=objpr.id;
+objcustomer1.name='Test 1';
+objcustomer1.StageName='Qualification';
+objcustomer1.Unit__c=objPUU1.id;  
+objcustomer1.CloseDate=system.today();
+objcustomer1.Status__c ='Active';
+objcustomer1.AccountId = a.Id;
+
+insert objcustomer1;*/
+        
+        Quotation__c q = new Quotation__c();
+        //q.Name = 'Q010101';
+        q.Quote_Status__c = 'Valid';
+        q.Payment_Plan__c = pl.id;
+      //  q.Project__c = objpr.Id;
+        q.Unit__c = objPUU.Id;
+        //q.FloorNo__c = 11;
+        q.Opportunity__c = objcustomer.Id;
+        q.Token_Amount__c =110000;
+        q.ST_Token_Amount__c = 1000;
+        q.Allow_booking_without_full_token__c = TRUE;
+        q.Total_Agreement_Value_Bucket__c = 60422880;
+        q.SGST_on_Total_Agreement_Value_Bucket__c = 2537761;
+        q.CGST_on_Total_Agreement_Value_Bucket__c = 100000;
+        q.IGST_on_Total_Agreement_Value_Bucket_del__c = 0;
+        q.Car_Park_Type_1__c = '';
+        q.Car_Park_Type_2__c = '';
+        q.Car_Park_Type_3__c = '';
+        q.Car_Park_Type_4__c = '';
+        q.Car_Park_Type_5__c = '';
+        q.Car_Park_Type_6__c = '';
+        q.Car_Park_Type_7__c = '';
+        q.Car_Park_Count_1__c = 0;
+        q.Car_Park_Count_2__c = 0;
+        q.Car_Park_Count_3__c = 0;
+        q.Car_Park_Count_4__c = 0;
+        q.Car_Park_Count_5__c = 0;
+        q.Car_Park_Count_6__c = 0;
+        q.Car_Park_Count_7__c = 0; 
+        q.Final_Approved_Date__c = system.today().addDays(-2);
+        q.Quotation_Type__c = 'Normal Quotation';
+        insert q;
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        pm.Quotation__c = q.id;
+        pm.Milestone_Type_edit__c = 'Date Linked';
+        pm.Invoice_Date__c = system.today().addDays(5);
+        pm.Invoice_Due_Date__c = system.today().addDays(5);
+        pm.Installment__c = 'Final Installment';
+        pm.Milestone_Due_Date__c = system.today().addDays(5);
+        insert pm;
+        booking = new Booking__c(
+            Booking_Date__c = System.today(),
+            status__c = 'UnProcessed',
+            Unit__c = objPUU.Id,
+            UnitChange__c = false,
+            Project__c = objpr.Id,
+            Opportunity__c = objcustomer.id,
+            Quotation__c = q.id, 
+           // Receipts__c = receipt.Id,
+            Sales_Managers__c = sm.id, 
+            Relationship_Manager__c = sm.id
+        );
+        insert booking;
+        
+         Receipt__c r1 = new Receipt__c();
+        r1.Cheque_DD_Amount_Rs__c = 200000;
+        r1.Cheque_DD__c = '908888';
+        r1.Cheque_DD_Date__c = system.today();
+        r1.Project__c = objpr.Id;
+        r1.Project_Unit__c = objPUU.Id;
+        r1.Opportunity__c = objcustomer.Id;
+        r1.CheckReceipt__c = true;
+        r1.Token_Amount_Receipt__c = true;
+        r1.Physically_Cheque_Received__c = true;
+        r1.Approval_Status__c = 'Approved';
+        r1.Receipt_Date__c = system.today();
+        r1.DraweeBank__c = 'Axis Bank';
+        r1.Total_Amount__c = 200000;
+        r1.Currency__c = 'Indian Rupee';
+        r1.Booking__c = booking.Id;
+        insert r1;
+        
+        
+        
+        PageReference pRef1 = Page.BookingPageForm;
+        Test.setCurrentPage(pRef1);
+        ApexPages.currentPage().getParameters().put('optyId',objcustomer.id);
+        ApexPages.currentPage().getParameters().put('unitId',objPUU.id);
+        ApexPages.currentPage().getParameters().put('projectId',objpr.id);
+        BookingClass bookC1 = new BookingClass();
+        bookC1.i = 0;
+        List < SelectOption > sq1= bookC1.getQuote;
+        bookC1.selectedQuote = q.Id;
+        bookC1.getquotation();
+        bookC1.receiptlist.add(r1);
+        bookC1.getTokenAmount();
+       // bookC1.getReceiptDetails();
+        bookC1.addReciept();
+        bookC1.boookingObj.Opportunity__c = objcustomer.id;
+        bookC1.boookingObj.Application_No__c = '';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = 'Other';    
+        bookC1.boookingObj.Future_Correspondence_Contact_Phone__c = '';
+        bookC1.boookingObj.Future_Correspondence_Contact_Email__c  = '';
+        bookC1.boookingObj.Mode_of_Funding__c = 'Self';
+        //  bookC1.dateOfOfferPossesion = system.today().addDays(2);
+        bookC1.receiptlist[0].DraweeBank__c ='Other';
+        bookC1.save();
+        bookC1.receiptlist[0].Mode__c = 'Cheque';
+        bookC1.receiptlist[0].Cheque_DD__c = '908858';
+        bookC1.receiptlist[0].Cheque_DD_Date__c = system.today();
+        bookC1.receiptlist[0].Total_Amount__c = 1000000;
+        bookC1.receiptlist[0].Currency__c = 'Indian Rupee';
+        bookC1.receiptlist[0].DraweeBank__c = 'Akola Urban Co-operative Bank';
+        //bookC1.receiptlist[0].Mode__c = 'Cheque';
+        bookC1.addressCheck = False;
+        bookC1.save();
+        bookC1.applicant.Mailing_Country__c = 'India';
+        bookC1.applicant.Mailing_Pincode__c = 444;
+        bookC1.save();
+        bookC1.boookingObj.Application_No__c = '';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '2nd Applicant';    
+        bookC1.save();
+        bookC1.boookingObj.Application_No__c = '';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '3rd Applicant';
+        bookC1.save();
+        bookC1.boookingObj.Application_No__c = '';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '4th Applicant';
+        bookC1.save();
+        bookC1.boookingObj.Application_No__c = '';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '5th Applicant';
+        bookC1.save();
+        
+        bookC1.applicant.Subtype_Of_Applicant__c = 'Foreign Nationals Of Indian Origin';
+        bookC1.save();
+        bookC1.applicant.Subtype_Of_Applicant__c = 'For NRI';
+        bookC1.save();
+        bookC1.applicant.Subtype_Of_Applicant__c = 'For Company';
+        bookC1.save();
+        bookC1.applicant.Subtype_Of_Applicant__c = 'Partnership Firm';
+        bookC1.save();
+        
+        
+        
+        // applicant1 to required fields validation simulation
+        bookC1.applicant.Salutation__c = 'Mr.';
+        bookC1.applicant.Name = 'New Man1';
+        bookC1.applicant.DOB__c = system.today();
+        bookC1.applicant.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant.Pincode__c = 444444;
+        bookC1.applicant.Country__c = 'India';
+        bookC1.applicant.City__c = 'Nagpur';
+        bookC1.applicant.Mailing_Country__c= 'India';
+        bookC1.applicant.Mobile_Number__c = '9090909015';
+        bookC1.applicant.Email_Address__c = 'newman@justnow1.com';
+        bookC1.applicant.Nationality__c = 'Indian';
+        bookC1.applicant.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant.Father_Husband_s_Name__c = 'Test Father';
+        bookC1.applicant.Pancard__c = true;
+        bookC1.applicant.Address_Proof__c = true;
+        bookC1.applicant.Address_Proof_Document__c = 'abc';
+        bookC1.applicant.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheck = true; 
+        bookC1.firstApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant.Preferred_address_for_all_correspondence__c = 'Permanent';
+        bookC1.applicant.Zone__c = 'South Mumbai (So Bo)';
+        bookC1.applicant.Of_Ownership__c = 20 ;
+        bookC1.getaddressstatus(); 
+        
+        // applicant2 to required fields validation simulation
+        bookC1.applicant2.Name = 'Second Man1';
+        bookC1.applicant2.Applicant_Number__c = 'Second Applicant';
+        bookC1.applicant2.DOB__c = system.today();
+        bookC1.applicant2.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant2.Pincode__c = 444444;
+        bookC1.applicant2.Country__c = 'India';
+        bookC1.applicant2.City__c = 'Nagpur';
+        bookC1.applicant2.Mailing_Country__c= null;
+        bookC1.applicant2.Mailing_Pincode__c= null;
+        bookC1.applicant2.Mobile_Number__c = '9090909023';
+        bookC1.applicant2.Email_Address__c = 'newman@justnow2.com';
+        bookC1.applicant2.Nationality__c = 'Indian';
+        bookC1.applicant2.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant2.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant2.Pancard__c = true;
+        bookC1.applicant2.Address_Proof__c = true;
+        bookC1.applicant2.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant2.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant2.One_Passport_Size_Color_Photograph__c = true;
+       // bookC1.applicant2.secondApplicantDOB = system.today().addDays(-2);
+        bookC1.addressCheckApplicant2 = true;
+        bookC1.applicant2.Of_Ownership__c = 20 ;
+        bookC1.getaddressstatus();
+        
+        //bookC1.applicant3.Name = 'Third Man1';
+        bookC1.applicant4.Name = 'Fourth Man1';
+        bookC1.applicant5.Name = 'Fifth Man1';
+        bookC1.addressCheckApplicant3 = true;
+        bookC1.getaddressstatus();
+        bookC1.addressCheckApplicant4 = true;
+        bookC1.getaddressstatus();
+        bookC1.addressCheckApplicant5 = true;
+        bookC1.getaddressstatus();
+        bookC1.save();
+        
+        bookC1.applicant3.Name = 'Third Man1';
+        bookC1.applicant3.Applicant_Number__c = 'Third Applicant';
+        bookC1.applicant3.DOB__c = system.today();
+        bookC1.applicant3.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant3.Pincode__c = 444444;
+        bookC1.applicant3.Country__c = 'India';
+        bookC1.applicant3.City__c = 'Nagpur';
+        bookC1.applicant3.Mailing_Country__c= null;
+        bookC1.applicant3.Mailing_Pincode__c= null;
+        bookC1.applicant3.Mobile_Number__c = '9090909034';
+        bookC1.applicant3.Email_Address__c = 'newman@justnow3.com';
+        bookC1.applicant3.Nationality__c = 'Indian';
+        bookC1.applicant3.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant3.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant3.Pancard__c = true;
+        bookC1.applicant3.Address_Proof__c = true;
+        bookC1.applicant3.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant3.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant3.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant3 = true;
+        bookC1.applicant3.Of_Ownership__c = 60 ;
+        bookC1.getaddressstatus();
+          bookC1.save();
+        
+        // Test.stopTest();
+        
+    }   
+    
+    @isTest
+    private static void BookingTest4444() {
+        
+        /* Create Custom Setting */
+        End_Time_for_Event__c endTime = new End_Time_for_Event__c();
+        endTime.Name = 'End Time Minutes';
+        endTime.End_Minutes__c = 60;
+        insert endTime;
+        
+        Opportunity objcustomer;
+        Opportunity objcustomer1;
+        Booking__c objBooking;
+        //Project__c objpr;
+        Unit__c objPUU;
+        Unit__c objPUU1;
+        //       Project_Unit_Type__c objPUT;
+        Car_Park__c objCP1;
+        Car_Park__c objCP2;
+        Car_Park__c objCP3;
+        Car_Park__c objCP4;
+        Car_Park__c objCP5;
+        
+        Project__c objpr = new Project__c(Name = 'Xa_prj2', Project_Code__c = '2222', Quotation_Validity__c =10);
+        insert objpr;
+        
+        
+        //create Towers
+        List<Tower__c> tList = TestDataFactory.createTowers(2, objpr.Id);
+        //create Product
+        TE_Product__c prod = TestDataFactory.createProduct('C1','Apartment');
+        
+        //create Project Product
+        Project_Product__c projProd = TestDataFactory.createProjectProduct('ProjectProduct10', objpr.Id, prod.Id,'Verion10');
+        
+        //create Sub Product      
+        Sub_Product__c  subProduct = TestDataFactory.createsubProduct('subproduct10', objpr.Id, prod.Id);
+        
+        ProjectCharges__c projchrg1 = new ProjectCharges__c();
+        projchrg1.name = 'Basic';
+        projchrg1.Active__c = true;
+        projchrg1.Project__c = objpr.id;
+        projchrg1.Calculatedas__c = 'Rate list at Unit level';
+        projchrg1.ChargeBucket__c = 'Agreement Value';
+        projchrg1.Taxable__c = 67.0;
+        projchrg1.SGST__c = 9.0;
+        projchrg1.CGST__c = 9.0;
+        projchrg1.IGST__c = 0.0;
+        insert projchrg1; 
+        
+        Payment_Plan__c pl = new  Payment_Plan__c();
+        pl.name = 'Standard Plan';
+        pl.Plan_Code__c = '003';
+        pl.Tower__c = tList[0].id;
+        pl.Project__c = objpr.id; 
+        pl.NoofMilestones__c = 25;
+        pl.Charge1Name__c = 'Basic';
+        pl.Charge_1_Total__c = 100;
+        insert pl;
+        
+        
+        objPUU = new Unit__c();  
+        List<Unit__c> uList = TestDataFactory.createUnits(tList[0].Id, objpr.Id, prod.Id, subProduct.id );
+        objPUU = uList[0];
+        
+        
+        objPUU1 = new Unit__c();  
+        objPUU1 = uList[1];
+        
+        
+        objCP1 = new Car_Park__c ();
+        objCP1.Status__c = 'Available';
+        objCP1.Category__c = 'Additional';
+        objCP1.Type__c = 'Tandem';
+        objCP1.Project__c = objpr.Id;
+        insert objCP1;
+        
+        objCP2 = new Car_Park__c ();
+        objCP2.Status__c = 'Available';
+        objCP2.Category__c = 'Additional';
+        objCP2.Type__c = 'Open';
+        objCP2.Project__c = objpr.Id;
+        insert objCP2;
+        
+        
+        objCP4 = new Car_Park__c ();
+        objCP4.Status__c = 'Available';
+        objCP4.Category__c = 'Additional';
+        objCP4.Type__c = 'Stack';
+        objCP4.Project__c = objpr.Id;
+        insert objCP4;
+        
+        
+        Account a = TestDataFactory.createPATemplate('WC Account', 'wc@email.com','9098777',false);
+        
+        objcustomer= new Opportunity();
+        objcustomer.Project__c=objpr.id;
+        objcustomer.name='Test 1';
+        objcustomer.StageName='Qualification';
+        objcustomer.Unit__c=objPUU1.id;  
+        objcustomer.CloseDate=system.today();
+        objCustomer.AccountId = a.Id;
+        objcustomer.Sales_Manager_lookup__c = UserInfo.getUserId();
+        objcustomer.Walk_in_Source__c = 'Digital';
+        insert objcustomer;
+        /*    
+objcustomer1= new Opportunity();
+objcustomer1.Project__c=objpr.id;
+objcustomer1.name='Test 1';
+objcustomer1.StageName='Qualification';
+objcustomer1.Unit__c=objPUU1.id;  
+objcustomer1.CloseDate=system.today();
+objcustomer1.Status__c ='Active';
+objcustomer1.AccountId = a.Id;
+
+insert objcustomer1;*/
+        
+        Quotation__c q = new Quotation__c();
+        //q.Name = 'Q010101';
+        q.Quote_Status__c = 'Valid';
+        q.Payment_Plan__c = pl.id;
+        //q.Project__c = objpr.Id;
+        q.Unit__c = objPUU.Id;
+        //q.FloorNo__c = 11;
+        q.Opportunity__c = objcustomer.Id;
+        //q.Appartment_Configuration__c = '1 BHK';
+        //q.Carpet_Area_Sq_Ft__c = 1200;
+        q.Token_Amount__c =110000;
+        q.ST_Token_Amount__c = 1000;
+        q.Allow_booking_without_full_token__c = TRUE;
+        q.Total_Agreement_Value_Bucket__c = 60422880;
+        q.SGST_on_Total_Agreement_Value_Bucket__c = 2537761;
+        q.CGST_on_Total_Agreement_Value_Bucket__c = 100000;
+        q.IGST_on_Total_Agreement_Value_Bucket_del__c = 0;
+         q.Car_Park_Type_1__c = '';
+        q.Car_Park_Type_2__c = '';
+        q.Car_Park_Type_3__c = '';
+        q.Car_Park_Type_4__c = '';
+        q.Car_Park_Type_5__c = '';
+        q.Car_Park_Type_6__c = '';
+        q.Car_Park_Type_7__c = '';
+        q.Car_Park_Count_1__c = 0;
+        q.Car_Park_Count_2__c = 0;
+        q.Car_Park_Count_3__c = 0;
+        q.Car_Park_Count_4__c = 0;
+        q.Car_Park_Count_5__c = 0;
+        q.Car_Park_Count_6__c = 0;
+        q.Car_Park_Count_7__c = 0; 
+        q.Final_Approved_Date__c = system.today().addDays(-5);
+        insert q;              
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        pm.Quotation__c = q.id;
+        pm.Milestone_Type_edit__c = 'Date Linked';
+        pm.Invoice_Date__c = system.today().addDays(5);
+        pm.Invoice_Due_Date__c = system.today().addDays(5);
+        pm.Installment__c = 'Final Installment';
+        pm.Milestone_Due_Date__c = system.today().addDays(5);
+        insert pm;
+        PageReference pRef1 = Page.BookingPageForm;
+        Test.setCurrentPage(pRef1);
+        ApexPages.currentPage().getParameters().put('optyId',objcustomer.id);
+        ApexPages.currentPage().getParameters().put('unitId',objPUU.id);
+        ApexPages.currentPage().getParameters().put('projectId',objpr.id);
+        BookingClass bookC1 = new BookingClass();
+        bookC1.i = 0;
+        List < SelectOption > sq1= bookC1.getQuote;
+        bookC1.selectedQuote = q.Id;
+        //bookC1.receiptlist.add(r1);
+        bookC1.getTokenAmount();
+        //  bookC1.getReceiptDetails();
+        //bookC1.addReciept();
+        bookC1.boookingObj.Application_No__c = '11111';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '3rd Applicant';    
+        bookC1.boookingObj.Future_Correspondence_Contact_Phone__c = '1234567890';
+        bookC1.boookingObj.Future_Correspondence_Contact_Email__c  = 'test@test.in';
+        bookC1.boookingObj.Mode_of_Funding__c = 'Self';
+        // bookC1.dateOfOfferPossesion = system.today().addDays(2);
+        //bookC1.receiptlist[0].DraweeBank__c ='Other';
+        //bookC1.save();
+        bookC1.receiptlist[0].Mode__c = 'Cheque';
+        bookC1.receiptlist[0].Cheque_DD__c = '908888';
+        bookC1.receiptlist[0].Cheque_DD_Date__c = system.today();
+        bookC1.receiptlist[0].Total_Amount__c = 1000000;
+        bookC1.receiptlist[0].Currency__c = 'Indian Rupee';
+        bookC1.receiptlist[0].DraweeBank__c = 'Akola Urban Co-operative Bank';
+        //bookC1.receiptlist[0].Mode__c = 'Cheque';
+        
+        
+        // applicant1 to required fields validation simulation
+        bookC1.applicant.Salutation__c = 'Mr.';
+        bookC1.applicant.Name = 'New Man1';
+        bookC1.applicant.DOB__c = system.today();
+        bookC1.applicant.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant.Pincode__c = 444444;
+        bookC1.applicant.Country__c = 'India';
+        bookC1.applicant.City__c = 'Nagpur';
+        bookC1.applicant.Mailing_Country__c= 'India';
+        bookC1.applicant.Mobile_Number__c = '9090909015';
+        bookC1.applicant.Email_Address__c = 'newman@justnow1.com';
+        bookC1.applicant.Nationality__c = 'Indian';
+        bookC1.applicant.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant.Father_Husband_s_Name__c = 'Test Father';
+        bookC1.applicant.Pancard__c = true;
+        bookC1.applicant.Address_Proof__c = true;
+        bookC1.applicant.Address_Proof_Document__c = 'abc';
+        bookC1.applicant.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheck = true; 
+        bookC1.firstApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant.Preferred_address_for_all_correspondence__c = 'Permanent';
+        bookC1.applicant.Zone__c = 'South Mumbai (So Bo)';
+        bookC1.getaddressstatus(); 
+        
+        
+        bookC1.applicant3.Name = 'Third Man1';
+        bookC1.applicant3.Applicant_Number__c = 'Third Applicant';
+        bookC1.applicant3.DOB__c = system.today();
+        bookC1.applicant3.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant3.Pincode__c = 444444;
+        bookC1.applicant3.Country__c = 'India';
+        bookC1.applicant3.City__c = 'Nagpur';
+        bookC1.applicant3.Mailing_Country__c= null;
+        bookC1.applicant3.Mailing_Pincode__c= null;
+        bookC1.applicant3.Mobile_Number__c = '9090909033';
+        bookC1.applicant3.Email_Address__c = 'newman@justnow3.com';
+        bookC1.applicant3.Nationality__c = 'Indian';
+        bookC1.applicant3.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant3.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant3.Pancard__c = true;
+        bookC1.applicant3.Address_Proof__c = true;
+        bookC1.applicant3.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant3.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant3.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant3 = true;
+        bookC1.thirdApplicantDOB = system.today().addDays(-2);
+        bookC1.getaddressstatus();
+        bookC1.save();
+       /* 
+        Booking__c bk = [select id from Booking__c Limit 1];
+        ApexPages.currentPage().getParameters().put('id',bk.id);
+        BookingCancellationController bcc = new BookingCancellationController();
+        bcc.submit();
+        */
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '4th Applicant';
+        bookC1.applicant4.Name = 'Third Man4';
+        bookC1.applicant4.Applicant_Number__c = 'Fourth Applicant';
+        bookC1.applicant4.DOB__c = system.today();
+        bookC1.applicant4.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant4.Pincode__c = 444444;
+        bookC1.applicant4.Country__c = 'India';
+        bookC1.applicant4.City__c = 'Nagpur';
+        bookC1.applicant4.Mailing_Country__c= null;
+        bookC1.applicant4.Mailing_Pincode__c= null;
+        bookC1.applicant4.Mobile_Number__c = '9090909039';
+        bookC1.applicant4.Email_Address__c = 'newman@justnow4.com';
+        bookC1.applicant4.Nationality__c = 'Indian';
+        bookC1.applicant4.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant4.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant4.Pancard__c = true;
+        bookC1.applicant4.Address_Proof__c = true;
+        bookC1.applicant4.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant4.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant4.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant4 = true;
+        bookC1.fourthApplicantDOB = system.today().addDays(-2);
+        bookC1.getaddressstatus();
+        //bookC1.save();
+        
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '5th Applicant';
+        bookC1.applicant4.Name = 'Third Man5';
+        //bookC1.save();
+        
+        // Test.stopTest();
+        
+    }
+    
+    @isTest
+    private static void BookingTest5555() {
+        
+        /* Create Custom Setting */
+        End_Time_for_Event__c endTime = new End_Time_for_Event__c();
+        endTime.Name = 'End Time Minutes';
+        endTime.End_Minutes__c = 60;
+        insert endTime;
+        
+        Opportunity objcustomerOld;
+        Opportunity objcustomerNew;
+        Booking__c objBooking;
+        //Project__c objpr;
+        Unit__c objPUU;
+        Unit__c objPUU1;
+        //       Project_Unit_Type__c objPUT;
+        Car_Park__c objCP1;
+        Car_Park__c objCP2;
+        Car_Park__c objCP3;
+        Car_Park__c objCP4;
+        Car_Park__c objCP5;
+        
+        Project__c objpr = new Project__c(Name = 'Xa_prj2', Project_Code__c = '2222', Quotation_Validity__c =10);
+        insert objpr;
+        Project__c objpr1 = new Project__c(Name = 'Xa_prj22', Project_Code__c = '1111', Quotation_Validity__c =11);
+        insert objpr1;
+        
+        //create Towers
+        List<Tower__c> tList = TestDataFactory.createTowers(2, objpr.Id);
+        //create Product
+        TE_Product__c prod = TestDataFactory.createProduct('C1','Apartment');
+        
+        //create Project Product
+        Project_Product__c projProd = TestDataFactory.createProjectProduct('ProjectProduct10', objpr.Id, prod.Id,'Verion10');
+        
+        //create Sub Product      
+        Sub_Product__c  subProduct = TestDataFactory.createsubProduct('subproduct10', objpr.Id, prod.Id);
+        
+        ProjectCharges__c projchrg1 = new ProjectCharges__c();
+        projchrg1.name = 'Basic';
+        projchrg1.Active__c = true;
+        projchrg1.Project__c = objpr.id;
+        projchrg1.Calculatedas__c = 'Rate list at Unit level';
+        projchrg1.ChargeBucket__c = 'Agreement Value';
+        projchrg1.Taxable__c = 67.0;
+        projchrg1.SGST__c = 9.0;
+        projchrg1.CGST__c = 9.0;
+        projchrg1.IGST__c = 0.0;
+        insert projchrg1; 
+        
+        Payment_Plan__c pl = new  Payment_Plan__c();
+        pl.name = 'Standard Plan';
+        pl.Plan_Code__c = '003';
+        pl.Tower__c = tList[0].id;
+        pl.Project__c = objpr.id; 
+        pl.NoofMilestones__c = 25;
+        pl.Charge1Name__c = 'Basic';
+        pl.Charge_1_Total__c = 100;
+        insert pl;
+        
+        
+        objPUU = new Unit__c();  
+        List<Unit__c> uList = TestDataFactory.createUnits(tList[0].Id, objpr.Id, prod.Id, subProduct.id );
+        objPUU = uList[0];
+        
+        
+        objPUU1 = new Unit__c();  
+        objPUU1 = uList[1];
+        
+        
+        objCP1 = new Car_Park__c ();
+        objCP1.Status__c = 'Available';
+        objCP1.Category__c = 'Additional';
+        objCP1.Type__c = 'Tandem';
+        objCP1.Project__c = objpr.Id;
+        insert objCP1;
+        
+        objCP2 = new Car_Park__c ();
+        objCP2.Status__c = 'Available';
+        objCP2.Category__c = 'Additional';
+        objCP2.Type__c = 'Open';
+        objCP2.Project__c = objpr.Id;
+        insert objCP2;
+        
+        
+        objCP4 = new Car_Park__c ();
+        objCP4.Status__c = 'Available';
+        objCP4.Category__c = 'Additional';
+        objCP4.Type__c = 'Stack';
+        objCP4.Project__c = objpr.Id;
+        insert objCP4;
+        
+        
+        Account a = TestDataFactory.createPATemplate('WC Account', 'wc@email.com','9098777',false);
+        
+       
+        
+        objcustomerOld= new Opportunity();
+        objcustomerOld.Project__c=objpr.id;
+        objcustomerOld.name='Test 1';
+        objcustomerOld.StageName='Qualification';
+        objcustomerOld.Unit__c=objPUU.id;  
+        objcustomerOld.CloseDate=system.today();
+        objcustomerOld.AccountId = a.Id;
+        objcustomerOld.Sales_Manager_lookup__c = UserInfo.getUserId();
+        objcustomerOld.Walk_in_Source__c = 'Digital';
+        insert objcustomerOld;
+        
+         Booking__c b = new Booking__c();
+        b.Project__c = objpr.id;
+        b.Tower__c = tList[0].id;
+        b.Unit__c = objPUU.id;
+        b.Opportunity__c = objcustomerOld.id;
+        insert b;
+        
+        Applicant_Details__c app1 = new Applicant_Details__c();
+        app1.Booking__c = b.id;
+        app1.Opportunity__c = objcustomerOld.id;
+        insert app1;
+        
+        Applicant_Details__c app2 = new Applicant_Details__c();
+        app2.Booking__c = b.id;
+        app2.Opportunity__c = objcustomerOld.id;
+        insert app2;
+        
+        Applicant_Details__c app3 = new Applicant_Details__c();
+        app3.Booking__c = b.id;
+        app3.Opportunity__c = objcustomerOld.id;
+        insert app3;
+        
+        Applicant_Details__c app4 = new Applicant_Details__c();
+        app4.Booking__c = b.id;
+        app4.Opportunity__c = objcustomerOld.id;
+        insert app4;
+        
+        Applicant_Details__c app5 = new Applicant_Details__c();
+        app5.Booking__c = b.id;
+        app5.Opportunity__c = objcustomerOld.id;
+        insert app5;
+        
+        update objcustomerOld;
+        update b;
+        /*    
+objcustomer1= new Opportunity();
+objcustomer1.Project__c=objpr.id;
+objcustomer1.name='Test 1';
+objcustomer1.StageName='Qualification';
+objcustomer1.Unit__c=objPUU1.id;  
+objcustomer1.CloseDate=system.today();
+objcustomer1.Status__c ='Active';
+objcustomer1.AccountId = a.Id;
+
+insert objcustomer1;*/
+        
+        Quotation__c q = new Quotation__c();
+        //q.Name = 'Q010101';
+        q.Quote_Status__c = 'Valid';
+        q.Payment_Plan__c = pl.id;
+        //q.Project__c = objpr.Id;
+        q.Unit__c = objPUU.Id;
+        //q.FloorNo__c = 11;
+        q.Opportunity__c = objcustomerOld.Id;
+        //q.Appartment_Configuration__c = '1 BHK';
+        //q.Carpet_Area_Sq_Ft__c = 1200;
+        q.Token_Amount__c =110000;
+        q.ST_Token_Amount__c = 1000;
+        q.Allow_booking_without_full_token__c = TRUE;
+        q.Total_Agreement_Value_Bucket__c = 60422880;
+        q.SGST_on_Total_Agreement_Value_Bucket__c = 2537761;
+        q.CGST_on_Total_Agreement_Value_Bucket__c = 100000;
+        q.IGST_on_Total_Agreement_Value_Bucket_del__c = 0;
+         q.Car_Park_Type_1__c = '';
+        q.Car_Park_Type_2__c = '';
+        q.Car_Park_Type_3__c = '';
+        q.Car_Park_Type_4__c = '';
+        q.Car_Park_Type_5__c = '';
+        q.Car_Park_Type_6__c = '';
+        q.Car_Park_Type_7__c = '';
+        q.Car_Park_Count_1__c = 0;
+        q.Car_Park_Count_2__c = 0;
+        q.Car_Park_Count_3__c = 0;
+        q.Car_Park_Count_4__c = 0;
+        q.Car_Park_Count_5__c = 0;
+        q.Car_Park_Count_6__c = 0;
+        q.Car_Park_Count_7__c = 0; 
+        q.Final_Approved_Date__c = system.today().addDays(-5);
+        insert q;   
+        
+        
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        pm.Quotation__c = q.id;
+        pm.Milestone_Type_edit__c = 'Date Linked';
+        pm.Invoice_Date__c = system.today().addDays(5);
+        pm.Invoice_Due_Date__c = system.today().addDays(5);
+        pm.Installment__c = 'Final Installment';
+        pm.Milestone_Due_Date__c = system.today().addDays(5);
+        insert pm;
+        
+       /* 
+        Applicant_Details__c app1 = new Applicant_Details__c();
+        app1.Salutation__c = 'Mr';
+        app1.Name = 'Test App1';
+        app1.DOB__c  = Date.today();
+        app1.Father_Husband_s_Name__c = 'Test Father App1';
+        //app1.CIN_No_1__c = '1234';
+        app1.Date_of_Board_Resolution__c = Date.today();
+        app1.Nationality__c = 'Indian';
+     //   app1.Pincode__c = '411111';
+        app1.Permanent_Address__c = 'Pune';
+        app1.Preferred_address_for_all_correspondence__c = ' ';
+     //   app1.Of_Ownership__c = ' ';
+        app1.Landline_Number__c = '12345667';
+        app1.Organization_Name__c = 'Test Org';
+        app1.Designation__c = 'Test Desig';
+        app1.Organization_Address__c = 'Test Address';
+     //   app1.Organisation_Pincode__c = '411112';
+        app1.Organisation_Country__c = 'Test';
+        app1.Organization_Phone_numbers__c = '12345667';
+        app1.Other_Details_Remarks__c = 'Test Remarks';
+        app1.Type_Of_Applicant__c = 'Individual Buyer';
+        app1.Subtype_Of_Applicant__c = ' ';
+        app1.Mobile_Number__c = '1234567899';
+        app1.Secondary_Mobile_Number__c = '1234567898';
+        app1.Email_Address__c = 'test@stetig.in';   
+        app1.Permanent_Address__c = 'Test Address';
+        app1.Country__c = 'India';  
+        app1.State__c = 'Maharashtra';
+        app1.City__c = 'Thane';
+        app1.GSTIN__c = '';
+        app1.Occupation__c = 'Test';
+        app1.Designation__c = '';
+        app1.Organization_Name__c = '';
+        app1.Organization_Address__c = '';
+        app1.Pancard__c = True;
+        app1.PancardNo__c = 'eweww5243q';
+        app1.Address_Proof__c = True;
+        app1.Address_Proof_Document__c = '';
+        app1.Address_Proof_Number__c = '';
+    //    app1.Funds_from_NRE_FCNR__c = '';
+     //   app1.Self_attested_copy_of_PIO_or_OCI_Card__c = '';
+    //    app1.PassportNumber__c = '';
+        app1.Type_Of_Origin__c = '';
+        app1.PassportNoDetails__c = '';
+   //     app1.Funds_from_NRE_NRO__c = '';
+   //     app1.Copy_of_Workpermit_Employment_contract__c = '';
+   //     app1.Copy_of_Memorandu_of_Association__c = '';
+   //     app1.Certified_copy_of_Article_of_Association__c = '';
+   //     app1.Certified_copy_of_Board_Resolution__c = '';
+    //    app1.Certified_copy_of_ROC_Incorporation__c = '';
+    //    app1.Self_attested_List_of_Shareholders__c = '';
+   //     app1.Self_attested_List_of_Directors__c = '';
+    //    app1.PanCard_of_Authority_Signatory__c = '';
+   //     app1.Pan_Card_Number_of_Authority_Signatory__c = '';
+   //     app1.Certified_copy_of_Partnership_Deed__c = '';
+  //      app1.Certified_extract_of_Registration__c = '';
+   //     app1.Copy_of_Authorization_Letter_POA__c = '';
+   //     app1.Bypass_Validation_Applicant__c = true;
+   //     app1.Mailing_Address_same_as_PermanentAddress__c = '';
+        app1.Opportunity__c = objcustomerOld.id;  
+        app1.Booking__c = b.id;
+        app1.Unit__c = objPUU.id;
+     //   insert app1;
+        */
+     /*   
+        PageReference pRef1 = Page.BookingPageForm;
+        Test.setCurrentPage(pRef1);
+        ApexPages.currentPage().getParameters().put('optyId',objcustomerOld.id);
+        ApexPages.currentPage().getParameters().put('unitId',objPUU.id);
+        ApexPages.currentPage().getParameters().put('projectId',objpr.id);
+        BookingClass bookC1 = new BookingClass();
+        bookC1.i = 0;
+        List < SelectOption > sq1= bookC1.getQuote;
+        bookC1.selectedQuote = q.Id;
+        //bookC1.receiptlist.add(r1);
+        bookC1.getTokenAmount();
+        //  bookC1.getReceiptDetails();
+        //bookC1.addReciept();
+        bookC1.boookingObj.Application_No__c = '11111';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '3rd Applicant';    
+        bookC1.boookingObj.Future_Correspondence_Contact_Phone__c = '1234567890';
+        bookC1.boookingObj.Future_Correspondence_Contact_Email__c  = 'test@test.in';
+        bookC1.boookingObj.Mode_of_Funding__c = 'Self';
+        // bookC1.dateOfOfferPossesion = system.today().addDays(2);
+        //bookC1.receiptlist[0].DraweeBank__c ='Other';
+        //bookC1.save();
+        bookC1.receiptlist[0].Mode__c = 'Cheque';
+        bookC1.receiptlist[0].Cheque_DD__c = '908888';
+        bookC1.receiptlist[0].Cheque_DD_Date__c = system.today();
+        bookC1.receiptlist[0].Total_Amount__c = 1000000;
+        bookC1.receiptlist[0].Currency__c = 'Indian Rupee';
+        bookC1.receiptlist[0].DraweeBank__c = 'Akola Urban Co-operative Bank';
+        //bookC1.receiptlist[0].Mode__c = 'Cheque';
+        
+        
+        // applicant1 to required fields validation simulation
+        bookC1.applicant.Salutation__c = 'Mr.';
+        bookC1.applicant.Name = 'New Man1';
+        bookC1.applicant.DOB__c = system.today();
+        bookC1.applicant.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant.Pincode__c = 444444;
+        bookC1.applicant.Country__c = 'India';
+        bookC1.applicant.City__c = 'Nagpur';
+        bookC1.applicant.Mailing_Country__c= 'India';
+        bookC1.applicant.Mobile_Number__c = '9090909015';
+        bookC1.applicant.Email_Address__c = 'newman@justnow1.com';
+        bookC1.applicant.Nationality__c = 'Indian';
+        bookC1.applicant.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant.Father_Husband_s_Name__c = 'Test Father';
+        bookC1.applicant.Pancard__c = true;
+        bookC1.applicant.Address_Proof__c = true;
+        bookC1.applicant.Address_Proof_Document__c = 'abc';
+        bookC1.applicant.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheck = true; 
+       bookC1.firstApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant.Preferred_address_for_all_correspondence__c = 'Permanent';
+        bookC1.applicant.Zone__c = 'South Mumbai (So Bo)';
+        bookC1.getaddressstatus(); 
+        
+        
+        bookC1.applicant3.Name = 'Third Man1';
+        bookC1.applicant3.Applicant_Number__c = 'Third Applicant';
+        bookC1.applicant3.DOB__c = system.today();
+        bookC1.applicant3.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant3.Pincode__c = 444444;
+        bookC1.applicant3.Country__c = 'India';
+        bookC1.applicant3.City__c = 'Nagpur';
+        bookC1.applicant3.Mailing_Country__c= null;
+        bookC1.applicant3.Mailing_Pincode__c= null;
+        bookC1.applicant3.Mobile_Number__c = '9090909033';
+        bookC1.applicant3.Email_Address__c = 'newman@justnow3.com';
+        bookC1.applicant3.Nationality__c = 'Indian';
+        bookC1.applicant3.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant3.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant3.Pancard__c = true;
+       bookC1.applicant3.Address_Proof__c = true;
+        bookC1.applicant3.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant3.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant3.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant3 = true;
+        bookC1.thirdApplicantDOB = system.today().addDays(-2);
+        bookC1.getaddressstatus();
+        bookC1.save();
+       
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '4th Applicant';
+        bookC1.applicant4.Name = 'Third Man4';
+        bookC1.applicant4.Applicant_Number__c = 'Fourth Applicant';
+        bookC1.applicant4.DOB__c = system.today();
+        bookC1.applicant4.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant4.Pincode__c = 444444;
+        bookC1.applicant4.Country__c = 'India';
+        bookC1.applicant4.City__c = 'Nagpur';
+        bookC1.applicant4.Mailing_Country__c= null;
+        bookC1.applicant4.Mailing_Pincode__c= null;
+        bookC1.applicant4.Mobile_Number__c = '9090909039';
+        bookC1.applicant4.Email_Address__c = 'newman@justnow4.com';
+        bookC1.applicant4.Nationality__c = 'Indian';
+        bookC1.applicant4.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant4.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant4.Pancard__c = true;
+        bookC1.applicant4.Address_Proof__c = true;
+        bookC1.applicant4.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant4.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant4.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant4 = true;
+        bookC1.fourthApplicantDOB = system.today().addDays(-2);
+        bookC1.getaddressstatus();
+        //bookC1.save();
+        
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '5th Applicant';
+        bookC1.applicant4.Name = 'Third Man5';
+        //bookC1.save();
+        
+        // Test.stopTest();
+	*/ 
+        
+        objcustomerNew= new Opportunity();
+        objcustomerNew.Project__c=objpr1.id;
+        objcustomerNew.name='Test 2';
+        objcustomerNew.StageName='Qualification';
+        objcustomerNew.Unit__c=objPUU1.id;  
+        objcustomerNew.CloseDate=system.today();
+        objcustomerNew.AccountId = a.Id;
+        objcustomerNew.Sales_Manager_lookup__c = UserInfo.getUserId();
+        objcustomerNew.Walk_in_Source__c = 'Digital';
+        objcustomerNew.Primary_Name__c = 'Mr Test App1';
+        objcustomerNew.Old_Booking__c = b.id;
+        insert objcustomerNew;
+        
+        Quotation__c qNew = new Quotation__c();
+        //q.Name = 'Q010101';
+        qNew.Quote_Status__c = 'Valid';
+        qNew.Payment_Plan__c = pl.id;
+        //q.Project__c = objpr.Id;
+        qNew.Unit__c = objPUU1.Id;
+        //q.FloorNo__c = 11;
+        qNew.Opportunity__c = objcustomerNew.Id;
+        //q.Appartment_Configuration__c = '1 BHK';
+        //q.Carpet_Area_Sq_Ft__c = 1200;
+        qNew.Token_Amount__c =110000;
+        qNew.ST_Token_Amount__c = 1000;
+        qNew.Allow_booking_without_full_token__c = TRUE;
+        qNew.Total_Agreement_Value_Bucket__c = 60422880;
+        qNew.SGST_on_Total_Agreement_Value_Bucket__c = 2537761;
+        qNew.CGST_on_Total_Agreement_Value_Bucket__c = 100000;
+        qNew.IGST_on_Total_Agreement_Value_Bucket_del__c = 0;
+         qNew.Car_Park_Type_1__c = '';
+        qNew.Car_Park_Type_2__c = '';
+        qNew.Car_Park_Type_3__c = '';
+        qNew.Car_Park_Type_4__c = '';
+        qNew.Car_Park_Type_5__c = '';
+        qNew.Car_Park_Type_6__c = '';
+        qNew.Car_Park_Type_7__c = '';
+        qNew.Car_Park_Count_1__c = 0;
+        qNew.Car_Park_Count_2__c = 0;
+        qNew.Car_Park_Count_3__c = 0;
+        qNew.Car_Park_Count_4__c = 0;
+        qNew.Car_Park_Count_5__c = 0;
+        qNew.Car_Park_Count_6__c = 0;
+        qNew.Car_Park_Count_7__c = 0; 
+        qNew.Final_Approved_Date__c = system.today().addDays(-5);
+        insert qNew;
+        
+        PageReference pRef2 = Page.BookingPageForm;
+        Test.setCurrentPage(pRef2);
+        ApexPages.currentPage().getParameters().put('optyId',objcustomerNew.id);
+        ApexPages.currentPage().getParameters().put('unitId',objPUU1.id);
+        ApexPages.currentPage().getParameters().put('projectId',objpr.id);
+        BookingClass bookC2 = new BookingClass();
+        bookC2.i = 0;
+        List < SelectOption > sq2= bookC2.getQuote;
+        bookC2.selectedQuote = qNew.Id;
+        
+    }
+    
+    @isTest
+    private static void BookingTest6666() {
+        
+        /* Create Custom Setting */
+        End_Time_for_Event__c endTime = new End_Time_for_Event__c();
+        endTime.Name = 'End Time Minutes';
+        endTime.End_Minutes__c = 60;
+        insert endTime;
+        
+        Opportunity objcustomer;
+        Opportunity objcustomer1;
+        Booking__c objBooking;
+        Project__c objpr;
+        Unit__c objPUU;
+        Unit__c objPUU1;
+        //      Project_Unit_Type__c objPUT;
+        Car_Park__c objCP1;
+        Car_Park__c objCP2;
+        Car_Park__c objCP3;
+        Car_Park__c objCP4;
+        Car_Park__c objCP5;
+        
+        
+        objpr = new Project__c();
+        objpr = createProject('Xa_prj2','1111');
+        objpr.Quotation_Validity__c = 10;
+        update objpr;
+        
+        List<Cluster__c> cList = TestDataFactory.createClusters(2, objpr.Id);
+        
+        //create Towers
+        List<Tower__c> tList = TestDataFactory.createTowers(2, objpr.Id);
+        //create Product
+        TE_Product__c prod = TestDataFactory.createProduct('C1','Apartment');
+        
+        //create Project Product
+        Project_Product__c projProd = TestDataFactory.createProjectProduct('ProjectProduct10', objpr.Id, prod.Id,'Verion10');
+        
+        //create Sub Product      
+        Sub_Product__c  subProduct = TestDataFactory.createsubProduct('subproduct10', objpr.Id, prod.Id);
+        
+        
+        ProjectCharges__c projchrg1 = new ProjectCharges__c();
+        projchrg1.name = 'Basic';
+        projchrg1.Active__c = true;
+        projchrg1.Project__c = objpr.id;
+        projchrg1.Calculatedas__c = 'Rate list at Unit level';
+        projchrg1.ChargeBucket__c = 'Agreement Value';
+        projchrg1.Taxable__c = 67.0;
+        projchrg1.SGST__c = 9.0;
+        projchrg1.CGST__c = 9.0;
+        projchrg1.IGST__c = 0.0;
+        insert projchrg1; 
+        
+        Payment_Plan__c pl = new  Payment_Plan__c();
+        pl.name = 'Standard Plan';
+        pl.Plan_Code__c = '003';
+        pl.Tower__c = tList[0].id;
+        pl.Project__c = objpr.id; 
+        pl.NoofMilestones__c = 25;
+        pl.Charge1Name__c = 'Basic';
+        pl.Charge_1_Total__c = 100;
+        insert pl;
+        
+        
+        objPUU = new Unit__c();  
+        List<Unit__c> uList = TestDataFactory.createUnits(tList[0].Id, objpr.Id,prod.Id,subProduct.Id );
+        objPUU = uList[0];
+        
+        
+        objPUU1 = new Unit__c();  
+        objPUU1 = uList[1];
+        
+        
+        objCP1 = new Car_Park__c ();
+        objCP1.Status__c = 'Available';
+        objCP1.Category__c = 'Additional';
+        objCP1.Type__c = 'Tandem';
+        objCP1.Project__c = objpr.Id;
+        insert objCP1;
+        
+        objCP2 = new Car_Park__c ();
+        objCP2.Status__c = 'Available';
+        objCP2.Category__c = 'Additional';
+        objCP2.Type__c = 'Open';
+        objCP2.Project__c = objpr.Id;
+        insert objCP2;
+        
+        
+        objCP4 = new Car_Park__c ();
+        objCP4.Status__c = 'Available';
+        objCP4.Category__c = 'Additional';
+        objCP4.Type__c = 'Stack';
+        objCP4.Project__c = objpr.Id;
+        insert objCP4;
+        
+        
+        Account a = TestDataFactory.createPATemplate('WC Account', 'wc@email.com','9098777',false);
+        
+        objcustomer= new Opportunity();
+        objcustomer.Project__c=objpr.id;
+        objcustomer.name='Test 1';
+        objcustomer.StageName='Qualification';
+        objcustomer.Unit__c=objPUU1.id;  
+        objcustomer.CloseDate=system.today();
+        objCustomer.AccountId = a.Id;
+        objcustomer.Sales_Manager_lookup__c = UserInfo.getUserId();
+        objcustomer.Walk_in_Source__c = '';
+        insert objcustomer;
+        /*  
+objcustomer1= new Opportunity();
+objcustomer1.Project__c=objpr.id;
+objcustomer1.name='Test 1';
+objcustomer1.StageName='Qualification';
+objcustomer1.Unit__c=objPUU1.id;  
+objcustomer1.CloseDate=system.today();
+objcustomer1.Status__c ='Active';
+objcustomer1.AccountId = a.Id;
+
+insert objcustomer1;
+
+Opportunity objcustomer11 = new Opportunity();
+objcustomer11.Project__c=objpr.id;
+objcustomer11.name='Test 11';
+objcustomer11.StageName='Qualification';
+objcustomer11.Unit__c=objPUU1.id;  
+objcustomer11.CloseDate=system.today();
+objcustomer11.Status__c ='Active';
+objcustomer11.AccountId = a.Id;
+
+insert objcustomer11;
+*/
+        
+        Quotation__c q = new Quotation__c();
+        //q.Name = 'Q010101';
+        q.Quote_Status__c = 'Valid';
+        q.Payment_Plan__c = pl.id;
+        //q.Project__c = objpr.Id;
+        q.Unit__c = objPUU.Id;
+        //q.FloorNo__c = 11;
+        q.Opportunity__c = objcustomer.Id;
+        //q.Appartment_Configuration__c = '1 BHK';
+        //q.Carpet_Area_Sq_Ft__c = 1200;
+        q.Token_Amount__c =110000;
+        q.ST_Token_Amount__c = 1000;
+        q.Allow_booking_without_full_token__c = TRUE;
+        q.Total_Agreement_Value_Bucket__c = 60422880;
+        q.SGST_on_Total_Agreement_Value_Bucket__c = 2537761;
+        q.CGST_on_Total_Agreement_Value_Bucket__c = 100000;
+        q.IGST_on_Total_Agreement_Value_Bucket_del__c = 0;
+        q.Car_Park_Type_1__c = '';
+        q.Car_Park_Type_2__c = '';
+        q.Car_Park_Type_3__c = '';
+        q.Car_Park_Type_4__c = '';
+        q.Car_Park_Type_5__c = '';
+        q.Car_Park_Type_6__c = '';
+        q.Car_Park_Type_7__c = '';
+        q.Car_Park_Count_1__c = 0;
+        q.Car_Park_Count_2__c = 0;
+        q.Car_Park_Count_3__c = 0;
+        q.Car_Park_Count_4__c = 0;
+        q.Car_Park_Count_5__c = 0;
+        q.Car_Park_Count_6__c = 0;
+        q.Car_Park_Count_7__c = 0; 
+        q.Final_Approved_Date__c = system.today().addDays(-5);
+        insert q;
+        Payment_Milestones__c pm2 = new Payment_Milestones__c();
+        pm2.Quotation__c = q.id;
+        pm2.Milestone_Type_edit__c = 'Date Linked';
+        pm2.Invoice_Date__c = system.today().addDays(5);
+        pm2.Invoice_Due_Date__c = system.today().addDays(5);
+        pm2.Installment__c = 'Final Installment';
+        pm2.Milestone_Due_Date__c = system.today().addDays(5);
+        insert pm2;
+        /* Booking__c bks = new Booking__C();
+bks.Opportunity__c = objcustomer11.Id;
+bks.Quotation__c = q.Id;
+bks.Booking_Date__c = System.Today();
+insert bks;
+*/
+        
+        
+        Project_Construction_Stages__c pgs = new Project_Construction_Stages__c();
+        pgs.Planned_date_of_completion__c = System.today().addDays(30);
+        pgs.Project__c = objpr.id;
+        pgs.Tower__c = tList[0].id;
+        pgs.Name = 'On Plinth';
+        insert pgs;
+        
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        pm.Milestone_Type_edit__c = 'Date Linked';
+        pm.Milestone_Name__c = 'Application Money1';
+        pm.Number_Of_Days__c = 0;
+        pm.Milestone_Due_Date__c = System.Today().addDays(10);
+        pm.Quotation__c = q.Id;
+        pm.is_demand_raised__c = false;
+        insert pm;
+        
+        Payment_Milestones__c pm1 = new Payment_Milestones__c();
+        pm1.Milestone_Type_edit__c = 'Construction Linked';
+        pm1.Milestone_Name__c = 'On Plinth';
+        pm1.Project_Construction_Stages__c = pgs.Id;
+        pm1.Number_Of_Days__c = 0;
+        pm1.Milestone_Due_Date__c = System.Today().addDays(10);
+        pm1.Quotation__c = q.Id;
+        pm1.is_demand_raised__c = false;
+        insert pm1;
+        
+        Payment_Milestones__c pm11 = new Payment_Milestones__c();
+        pm11.Milestone_Type_edit__c = 'On Registration';
+        pm11.Milestone_Name__c = 'On Registration';
+        pm11.Number_Of_Days__c = 0;
+        pm11.Milestone_Due_Date__c = System.Today().addDays(10);
+        pm11.Quotation__c = q.Id;
+        pm11.is_demand_raised__c = false;
+        insert pm11;
+        
+        PageReference pRef1 = Page.BookingPageForm;
+        Test.setCurrentPage(pRef1);
+        ApexPages.currentPage().getParameters().put('optyId',objcustomer.id);
+        ApexPages.currentPage().getParameters().put('unitId',objPUU.id);
+        ApexPages.currentPage().getParameters().put('projectId',objpr.id);
+        BookingClass bookC1 = new BookingClass();
+        bookC1.i = 0;
+        List < SelectOption > sq1= bookC1.getQuote;
+        bookC1.selectedQuote = q.Id;
+        //bookC1.receiptlist.add(r1);
+        bookC1.getTokenAmount();
+        //bookC1.getReceiptDetails();
+        //bookC1.addReciept();
+        bookC1.boookingObj.Application_No__c = '1234';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '';    
+        bookC1.boookingObj.Future_Correspondence_Contact_Phone__c = '1234898989';
+        bookC1.boookingObj.Future_Correspondence_Contact_Email__c  = 'future@hereIcome.com';
+        bookC1.boookingObj.Mode_of_Funding__c = 'Self';
+        // bookC1.dateOfOfferPossesion = system.today().addDays(2);
+        bookC1.receiptlist[0].Mode__c = 'Cheque';
+        bookC1.receiptlist[0].Cheque_DD__c = '908888';
+        bookC1.receiptlist[0].Cheque_DD_Date__c = system.today();
+        bookC1.receiptlist[0].Total_Amount__c = 1000000;
+        bookC1.receiptlist[0].Currency__c = 'Indian Rupee';
+        bookC1.receiptlist[0].DraweeBank__c = 'Akola Urban Co-operative Bank';
+        //bookC1.receiptlist[0].Mode__c = 'Cheque';
+        
+        // applicant1 to required fields validation simulation
+        bookC1.applicant.Salutation__c = '';
+        bookC1.applicant.Name = '';
+        bookC1.applicant.DOB__c = system.today()+100;
+        bookC1.applicant.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant.Pincode__c = 0;
+        bookC1.applicant.Country__c = 'India';
+        bookC1.applicant.City__c = '';
+        bookC1.applicant.Mailing_Country__c= 'India';
+        bookC1.applicant.Mobile_Number__c = '';
+        bookC1.applicant.Email_Address__c = '';
+        bookC1.applicant.Nationality__c = 'Indian';
+        bookC1.applicant.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant.Father_Husband_s_Name__c = '';
+        bookC1.applicant.Pancard__c = true;
+        bookC1.applicant.Address_Proof__c = true;
+        bookC1.applicant.Address_Proof_Document__c = 'Aadhar Card';
+        bookC1.applicant.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheck = true; 
+        bookC1.firstApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant.Preferred_address_for_all_correspondence__c = 'Permanent';
+        bookC1.applicant.Zone__c = 'South Mumbai (So Bo)';
+        bookC1.applicant.Of_Ownership__c = 100;
+        bookC1.applicant.PancardNo__c = '';
+        bookC1.applicant.Secondary_Mobile_Number__c = '1111111111';
+        bookC1.getaddressstatus();
+        
+        // applicant2 to required fields validation simulation
+        bookC1.applicant2.Name = 'Second Man1';
+        bookC1.applicant2.Applicant_Number__c = 'Second Applicant';
+        bookC1.applicant2.DOB__c = system.today();
+        bookC1.applicant2.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant2.Pincode__c = 444444;
+        bookC1.applicant2.Country__c = 'India';
+        bookC1.applicant2.City__c = 'Nagpur';
+        bookC1.applicant2.Mailing_Country__c= null;
+        bookC1.applicant2.Mailing_Pincode__c= null;
+        bookC1.applicant2.Mobile_Number__c = '9090909025';
+        bookC1.applicant2.Email_Address__c = 'newman@justnow2.com';
+        bookC1.applicant2.Nationality__c = 'Indian';
+        bookC1.applicant2.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant2.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant2.Pancard__c = true;
+        bookC1.applicant2.Address_Proof__c = true;
+        bookC1.applicant2.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant2.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant2.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant2 = true;
+        bookC1.getaddressstatus();
+        bookC1.save();
+        /*bookC1.applicant3.Name ='Third Man';
+bookC1.save();
+bookC1.addressCheckApplicant3 = true;
+bookC1.save();*/
+        
+        // applicant3 to required fields validation simulation
+        bookC1.applicant3.Name = 'Third Man2';
+        bookC1.applicant3.Applicant_Number__c = 'Third Applicant';
+        //bookC1.applicant3.DOB__c = system.today();
+        //bookC1.applicant3.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant3.Pincode__c = 44444489;
+        bookC1.applicant3.Country__c = 'India';
+        //bookC1.applicant3.City__c = 'Nagpur';
+        //bookC1.applicant3.Mailing_Country__c= 'India';
+        //bookC1.applicant3.Mobile_Number__c = '909090900';
+        //bookC1.applicant3.Email_Address__c = 'newman@justnow.com';
+        //bookC1.applicant3.Nationality__c = 'Indian';
+        bookC1.applicant3.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant3.Subtype_Of_Applicant__c = 'For NRI';
+        bookC1.applicant3.Pancard__c = false;
+        bookC1.applicant3.PassportNumber__c = false;
+        bookC1.applicant3.Funds_from_NRE_NRO__c = false;
+        bookC1.applicant3.Address_Proof__c = true;
+        bookC1.applicant3.Copy_of_Workpermit_Employment_contract__c = false;
+        bookC1.applicant3.PancardNo__c = '123456789102';
+        bookC1.applicant3.One_Passport_Size_Color_Photograph__c = false;
+        bookC1.addressCheckApplicant3 = false;
+        //bookC1.getaddressstatus();
+        // bookC1.save();
+        
+        
+        bookC1.applicant4.Name ='Fourth Man2';
+        bookC1.applicant4.Applicant_Number__c = 'Fourth Applicant';
+        //bookC1.applicant4.DOB__c = system.today();
+        //bookC1.applicant4.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant4.Pincode__c = 44444478;
+        bookC1.applicant4.Country__c = 'India';
+        //bookC1.applicant4.City__c = 'Nagpur';
+        //bookC1.applicant4.Mailing_Country__c= 'India';
+        //bookC1.applicant4.Mobile_Number__c = '909090900';
+        //bookC1.applicant4.Email_Address__c = 'newman@justnow.com';
+        //bookC1.applicant4.Nationality__c = 'Indian';
+        bookC1.applicant4.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant4.Subtype_Of_Applicant__c = 'Foreign Nationals Of Indian Origin';
+        bookC1.applicant4.Pancard__c = true;
+        bookC1.applicant4.PassportNumber__c = true;
+        bookC1.applicant4.Funds_from_NRE_FCNR__c= false;
+        bookC1.applicant4.Self_attested_copy_of_PIO_or_OCI_Card__c = false;
+        bookC1.applicant4.Address_Proof__c = true;
+        bookC1.applicant4.Copy_of_Workpermit_Employment_contract__c = true;
+        bookC1.applicant4.PancardNo__c = '1234567891';
+        bookC1.applicant4.One_Passport_Size_Color_Photograph__c = false;
+        bookC1.applicant4.Type_Of_Origin__c = '';
+        bookC1.applicant4.Origin_Details__c = '';
+        bookC1.addressCheckApplicant4 = false;
+        // bookC1.save();
+        
+        bookC1.applicant5.Name ='Fifth Man2';
+        bookC1.applicant5.Applicant_Number__c = 'Fifth Applicant';
+        //bookC1.applicant5.DOB__c = system.today();
+        //bookC1.applicant5.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant5.Pincode__c = 44444454;
+        bookC1.applicant5.Country__c = 'India';
+        //bookC1.applicant5.City__c = 'Nagpur';
+        //bookC1.applicant5.Mailing_Country__c= 'India';
+        //bookC1.applicant5.Mobile_Number__c = '909090900';
+        //bookC1.applicant5.Email_Address__c = 'newman@justnow.com';
+        bookC1.applicant5.Nationality__c = 'Indian';
+        bookC1.applicant5.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant5.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant5.Pancard__c = false;
+        bookC1.applicant5.PassportNumber__c = true;
+        bookC1.applicant5.Funds_from_NRE_FCNR__c= true;
+        bookC1.applicant5.Self_attested_copy_of_PIO_or_OCI_Card__c = true;
+        bookC1.applicant5.Address_Proof__c = false;
+        bookC1.applicant5.Copy_of_Workpermit_Employment_contract__c = true;
+        bookC1.applicant5.PancardNo__c = '';
+        bookC1.applicant5.One_Passport_Size_Color_Photograph__c = false;
+        bookC1.applicant5.Address_Proof_Document__c = '';
+        bookC1.applicant5.Address_Proof_Number__c  = '';
+        bookC1.addressCheckApplicant5 = true;
+        // bookC1.save();
+        
+        
+        Test.startTest();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = '';
+        //bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Second Man';
+        // bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Second Man';
+        // bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Third Man';
+        // bookC1.save();
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '';
+        bookC1.boookingObj.Future_Correspondence_Contact_Name__c = 'Fourth Man';
+        //bookC1.save();
+        
+        objcustomer.Walk_in_Source__c = 'test';
+        update objcustomer;
+        bookC1.getaddressstatus();
+        bookC1.save();
+        Test.stopTest();
+        
+    }
+    
+    @isTest
+    private static void BookingTestByVIKAS() {
+        
+        /* Create Custom Setting */
+        End_Time_for_Event__c endTime = new End_Time_for_Event__c();
+        endTime.Name = 'End Time Minutes';
+        endTime.End_Minutes__c = 60;
+        insert endTime;
+        
+        Opportunity objcustomer;
+        Booking__c objBooking;
+        //Project__c objpr;
+        Unit__c objPUU;
+        //       Project_Unit_Type__c objPUT;
+        Car_Park__c objCP1;
+        Car_Park__c objCP2;
+        Car_Park__c objCP3;
+        Car_Park__c objCP4;
+        Car_Park__c objCP5;
+        
+        Project__c objpr = new Project__c(Name = 'Xa_prj2', Project_Code__c = '2222', Quotation_Validity__c =10);
+        insert objpr;
+        Cluster__c ph = new Cluster__c();
+        ph.Name = 'test phase';
+        ph.Project__c  = objpr.Id;
+        ph.MAHA_RERA_No__c = '12345';
+        ph.CompanyName_Escrow__c = 'ABCD';
+        ph.CompanyName_Tax__c = 'XYZ';
+        insert ph;
+        
+        //create Towers
+        List<Tower__c> tList = TestDataFactory.createTowers(2, objpr.Id);
+        Tower__c tw = new Tower__c();
+        tw.id = tList[0].id;
+        tw.Cluster__C = ph.id;
+        update tw;
+        //create Product
+        TE_Product__c prod = TestDataFactory.createProduct('C1','Apartment');
+        
+        //create Project Product
+        Project_Product__c projProd = TestDataFactory.createProjectProduct('ProjectProduct10', objpr.Id, prod.Id,'Verion10');
+        
+        //create Sub Product      
+        Sub_Product__c  subProduct = TestDataFactory.createsubProduct('subproduct10', objpr.Id, prod.Id);
+        
+        ProjectCharges__c projchrg1 = new ProjectCharges__c();
+        projchrg1.name = 'Basic';
+        projchrg1.Active__c = true;
+        projchrg1.Project__c = objpr.id;
+        projchrg1.Calculatedas__c = 'Rate list at Unit level';
+        projchrg1.ChargeBucket__c = 'Agreement Value';
+        projchrg1.Taxable__c = 67.0;
+        projchrg1.SGST__c = 9.0;
+        projchrg1.CGST__c = 9.0;
+        projchrg1.IGST__c = 0.0;
+        insert projchrg1; 
+        
+        Payment_Plan__c pl = new  Payment_Plan__c();
+        pl.name = 'Standard Plan';
+        pl.Plan_Code__c = '003';
+        pl.Tower__c = tList[0].id;
+        pl.Project__c = objpr.id; 
+        pl.NoofMilestones__c = 25;
+        pl.Charge1Name__c = 'Basic';
+        pl.Charge_1_Total__c = 100;
+        insert pl;
+        
+        
+        objPUU = new Unit__c();  
+        List<Unit__c> uList = TestDataFactory.createUnits(tList[0].Id, objpr.Id, prod.Id, subProduct.id );
+        objPUU = uList[0];
+        
+        
+        objCP1 = new Car_Park__c ();
+        objCP1.Status__c = 'Available';
+        objCP1.Category__c = 'Additional';
+        objCP1.Type__c = 'Tandem';
+        objCP1.Project__c = objpr.Id;
+        objCP1.Tower__C = tList[0].id;
+        insert objCP1;
+        
+        objCP2 = new Car_Park__c ();
+        objCP2.Status__c = 'Available';
+        objCP2.Category__c = 'Additional';
+        objCP2.Type__c = 'Open';
+        objCP2.Project__c = objpr.Id;
+        objCP2.Tower__C = tList[0].id;
+        insert objCP2;
+        
+        
+        objCP4 = new Car_Park__c ();
+        objCP4.Status__c = 'Available';
+        objCP4.Category__c = 'Additional';
+        objCP4.Type__c = 'Stack';
+        objCP4.Project__c = objpr.Id;
+        objCP4.Tower__C = tList[0].id;
+        insert objCP4;
+        
+        
+        Account a = TestDataFactory.createPATemplate('WC Account', 'wc@email.com','9098777',false);
+        
+        objcustomer= new Opportunity();
+        objcustomer.Project__c=objpr.id;
+        objcustomer.name='Test 1';
+        objcustomer.StageName='Qualification';
+        objcustomer.Unit__c=objPUU.id;  
+        objcustomer.CloseDate=system.today();
+        objCustomer.AccountId = a.Id;
+        objcustomer.Sales_Manager_lookup__c = UserInfo.getUserId();
+        objcustomer.Walk_in_Source__c = 'Digital';
+        insert objcustomer;
+   
+        
+        Quotation__c q = new Quotation__c();
+        //q.Name = 'Q010101';
+        q.Quote_Status__c = 'Valid';
+        q.Payment_Plan__c = pl.id;
+        //q.Project__c = objpr.Id;
+        q.Unit__c = objPUU.Id;
+        //q.FloorNo__c = 11;
+        q.Opportunity__c = objcustomer.Id;
+        //q.Appartment_Configuration__c = '1 BHK';
+        //q.Carpet_Area_Sq_Ft__c = 1200;
+        q.Token_Amount__c =110000;
+        q.ST_Token_Amount__c = 1000;
+        q.Allow_booking_without_full_token__c = TRUE;
+        q.Total_Agreement_Value_Bucket__c = 60422880;
+        q.SGST_on_Total_Agreement_Value_Bucket__c = 2537761;
+        q.CGST_on_Total_Agreement_Value_Bucket__c = 100000;
+        q.IGST_on_Total_Agreement_Value_Bucket_del__c = 0;
+        q.Car_Park_Type_1__c = '';
+        q.Car_Park_Type_2__c = '';
+        q.Car_Park_Type_3__c = '';
+        q.Car_Park_Type_4__c = '';
+        q.Car_Park_Type_5__c = '';
+        q.Car_Park_Type_6__c = '';
+        q.Car_Park_Type_7__c = '';
+        q.Car_Park_Count_1__c = 0;
+        q.Car_Park_Count_2__c = 0;
+        q.Car_Park_Count_3__c = 0;
+        q.Car_Park_Count_4__c = 0;
+        q.Car_Park_Count_5__c = 0;
+        q.Car_Park_Count_6__c = 0;
+        q.Car_Park_Count_7__c = 0;  
+        q.Final_Approved_Date__c = system.today().addDays(5);
+        insert q;              
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        pm.Quotation__c = q.id;
+        pm.Milestone_Type_edit__c = 'Date Linked';
+        pm.Invoice_Date__c = system.today().addDays(5);
+        pm.Invoice_Due_Date__c = system.today().addDays(5);
+        pm.Installment__c = 'Final Installment';
+        pm.Milestone_Due_Date__c = system.today().addDays(5);
+        insert pm;
+        PageReference pRef1 = Page.BookingPageForm;
+        Test.setCurrentPage(pRef1);
+        ApexPages.currentPage().getParameters().put('optyId',objcustomer.id);
+        ApexPages.currentPage().getParameters().put('unitId',objPUU.id);
+        ApexPages.currentPage().getParameters().put('projectId',objpr.id);
+        BookingClass bookC1 = new BookingClass();
+       // bookC1.i = 0;
+        List < SelectOption > sq1= bookC1.getQuote;
+        bookC1.selectedQuote = q.Id;
+        //bookC1.receiptlist.add(r1);
+        bookC1.getTokenAmount();
+        //  bookC1.getReceiptDetails();
+        //bookC1.addReciept();
+        bookC1.boookingObj.Application_No__c = '11111';   
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '3rd Applicant';    
+        bookC1.boookingObj.Future_Correspondence_Contact_Phone__c = '1234567890';
+        bookC1.boookingObj.Future_Correspondence_Contact_Email__c  = 'test@test.in';
+        bookC1.boookingObj.Mode_of_Funding__c = 'Self';
+        // bookC1.dateOfOfferPossesion = system.today().addDays(2);
+        //bookC1.receiptlist[0].DraweeBank__c ='Other';
+        //bookC1.save();
+        bookC1.receiptlist[0].Mode__c = 'Cheque';
+        bookC1.receiptlist[0].Cheque_DD__c = '908888';
+        bookC1.receiptlist[0].Cheque_DD_Date__c = system.today();
+        bookC1.receiptlist[0].Total_Amount__c = 1000000;
+        bookC1.receiptlist[0].Currency__c = 'Indian Rupee';
+        bookC1.receiptlist[0].DraweeBank__c = 'Akola Urban Co-operative Bank';
+        //bookC1.receiptlist[0].Mode__c = 'Cheque';
+        
+        
+        // applicant1 to required fields validation simulation
+        bookC1.applicant.Salutation__c = 'Mr.';
+        bookC1.applicant.Name = 'New Man1';
+        bookC1.applicant.DOB__c = system.today();
+        bookC1.applicant.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant.Pincode__c = 444444;
+        bookC1.applicant.Country__c = 'India';
+        bookC1.applicant.City__c = 'Nagpur';
+        bookC1.applicant.Mailing_Country__c= 'India';
+        bookC1.applicant.Mobile_Number__c = '9090909014';
+        bookC1.applicant.Email_Address__c = 'newman@justnow1.com';
+        bookC1.applicant.Nationality__c = 'Indian';
+        bookC1.applicant.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant.Father_Husband_s_Name__c = 'Test Father';
+        bookC1.applicant.Pancard__c = true;
+        bookC1.applicant.Address_Proof__c = true;
+        bookC1.applicant.Address_Proof_Document__c = 'abc';
+        bookC1.applicant.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheck = true; 
+        bookC1.firstApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant.Preferred_address_for_all_correspondence__c = 'Permanent';
+        bookC1.applicant.Zone__c = 'South Mumbai (So Bo)';
+        bookC1.applicant.State__c = 'Maharashtra';
+        bookC1.applicant.Of_Ownership__c = 100;
+        bookC1.applicant.Country_Code__c = '+91';
+        bookC1.getaddressstatus(); 
+        
+        bookC1.applicant2.Name = 'Second Man1';
+        bookC1.applicant2.Applicant_Number__c = 'Second Applicant';
+        bookC1.applicant2.DOB__c = system.today();
+        bookC1.applicant2.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant2.Pincode__c = 444444;
+        bookC1.applicant2.Country__c = 'India';
+        bookC1.applicant2.City__c = 'Nagpur';
+        bookC1.applicant2.Mailing_Country__c= null;
+        bookC1.applicant2.Mailing_Pincode__c= null;
+        bookC1.applicant2.Mobile_Number__c = '9090909039';
+        bookC1.applicant2.Email_Address__c = 'newman2@justnow3.com';
+        bookC1.applicant2.Nationality__c = 'Indian';
+        bookC1.applicant2.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant2.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant2.Father_Husband_s_Name__c = 'Test Father';
+        bookC1.applicant2.PancardNo__c = 'DSDSS5456C';
+        bookC1.applicant2.Pancard__c = true;
+        bookC1.applicant2.Address_Proof__c = true;
+        bookC1.applicant2.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant2.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant2.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant2 = true;
+        bookC1.secondApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant2.Country_Code__c = '+91';
+        bookC1.getaddressstatus();
+        
+        bookC1.applicant3.Name = 'Third Man1';
+        bookC1.applicant3.Applicant_Number__c = 'Third Applicant';
+        bookC1.applicant3.DOB__c = system.today();
+        bookC1.applicant3.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant3.Pincode__c = 444444;
+        bookC1.applicant3.Country__c = 'India';
+        bookC1.applicant3.City__c = 'Nagpur';
+        bookC1.applicant3.Mailing_Country__c= null;
+        bookC1.applicant3.Mailing_Pincode__c= null;
+        bookC1.applicant3.Mobile_Number__c = '9090909030';
+        bookC1.applicant3.Email_Address__c = 'newman@justnow3.com';
+        bookC1.applicant3.Nationality__c = 'Indian';
+        bookC1.applicant3.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant3.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant3.Father_Husband_s_Name__c = 'Test Father';
+        bookC1.applicant3.PancardNo__c = 'DSDSS5456B';
+        bookC1.applicant3.Pancard__c = true;
+        bookC1.applicant3.Address_Proof__c = true;
+        bookC1.applicant3.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant3.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant3.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant3 = true;
+        bookC1.thirdApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant3.Country_Code__c = '+91';
+        bookC1.getaddressstatus();
+        //bookC1.save();
+       /* 
+        Booking__c bk = [select id from Booking__c Limit 1];
+        ApexPages.currentPage().getParameters().put('id',bk.id);
+        BookingCancellationController bcc = new BookingCancellationController();
+        bcc.submit();
+        */
+        bookC1.boookingObj.Future_Correspondence_Contact__c = '4th Applicant';
+        bookC1.applicant4.Name = 'Third Man4';
+        bookC1.applicant4.Applicant_Number__c = 'Fourth Applicant';
+        bookC1.applicant4.DOB__c = system.today();
+        bookC1.applicant4.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant4.Pincode__c = 444444;
+        bookC1.applicant4.Country__c = 'India';
+        bookC1.applicant4.City__c = 'Nagpur';
+        bookC1.applicant4.Mailing_Country__c= null;
+        bookC1.applicant4.Mailing_Pincode__c= null;
+        bookC1.applicant4.Mobile_Number__c = '9090909037';
+        bookC1.applicant4.Email_Address__c = 'newman@justnow4.com';
+        bookC1.applicant4.Nationality__c = 'Indian';
+        bookC1.applicant4.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant4.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant4.Father_Husband_s_Name__c = 'Test Father';
+        bookC1.applicant4.PancardNo__c = 'DSDSS5456Q';
+        bookC1.applicant4.Pancard__c = true;
+        bookC1.applicant4.Address_Proof__c = true;
+        bookC1.applicant4.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant4.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant4.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant4 = true;
+        bookC1.fourthApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant4.Country_Code__c = '+91';
+        bookC1.getaddressstatus();
+    //    bookC1.save();
+        
+    //    bookC1.boookingObj.Future_Correspondence_Contact__c = '5th Applicant';
+        bookC1.applicant5.Name = 'Third Man5';
+        bookC1.applicant5.Applicant_Number__c = 'Fifth Applicant';
+        bookC1.applicant5.DOB__c = system.today();
+        bookC1.applicant5.Permanent_Address__c = 'Pike Street, New World, 45000';
+        bookC1.applicant5.Pincode__c = 444444;
+        bookC1.applicant5.Country__c = 'India';
+        bookC1.applicant5.City__c = 'Nagpur';
+        bookC1.applicant5.Mailing_Country__c= null;
+        bookC1.applicant5.Mailing_Pincode__c= null;
+        bookC1.applicant5.Mobile_Number__c = '9090909099';
+        bookC1.applicant5.Email_Address__c = 'newman@justnow4.com';
+        bookC1.applicant5.Nationality__c = 'Indian';
+        bookC1.applicant5.Type_Of_Applicant__c  = 'Individual Buyer';
+        bookC1.applicant5.Subtype_Of_Applicant__c = 'Indian National';
+        bookC1.applicant5.Father_Husband_s_Name__c = 'Test Father';
+        bookC1.applicant5.PancardNo__c = 'DSDSS5456A';
+        bookC1.applicant5.Pancard__c = true;
+        bookC1.applicant5.Address_Proof__c = true;
+        bookC1.applicant5.Address_Proof_Document__c = 'xyz';
+        bookC1.applicant5.Address_Proof_Number__c = 'pqr';
+        bookC1.applicant5.One_Passport_Size_Color_Photograph__c = true;
+        bookC1.addressCheckApplicant5 = true;
+        bookC1.fifthApplicantDOB = system.today().addDays(-2);
+        bookC1.applicant5.Country_Code__c = '+91';
+        bookC1.getaddressstatus();
+        bookC1.save();
+       // bookC1.Cancel();
+        // Test.stopTest();
+        
+    }
+    
+    public static Project__c createProject(String ProjName, String ProjectCode)
+    {
+        Project__c objProject = new Project__c(Name = ProjName, Project_Code__c = projectCode);
+        insert objProject;
+        return objProject;
+    }
+    
+}
