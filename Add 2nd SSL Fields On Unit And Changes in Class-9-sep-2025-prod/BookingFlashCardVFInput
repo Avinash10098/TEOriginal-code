@@ -1,0 +1,470 @@
+<apex:page controller="BookingFlashCardController" docType="html-5.0" applyHtmlTag="false" showHeader="false">
+    <head>
+        <style type="text/css">
+            table tr td{
+            border:1px solid black;
+            }
+            table{
+            border-collapse: collapse;
+            width:100%;
+            }
+        </style>
+    </head>
+    <body>
+        <apex:form >
+            <apex:outputPanel >
+                <table>
+                    <tr>
+                        <td style="width:40%;font-size:20px"><center><b>{!prj.Name}</b></center></td>
+                        <td style="width:10%"></td>
+                        <td style="width:8%"></td>
+                        <td style="width:8%"></td>
+                        <td style="width:14%"></td>
+                        <td style="width:20%"></td>
+                    </tr>
+                    <tr>
+                        <td><center><b>Customer Name</b></center></td>
+                        <td><center><b>Unit</b></center></td>
+                        <td><center><b>Spec</b></center></td>
+                        <td><center><b>Scheme</b></center></td>
+                        <td><center><b>Consideration in Cr.(INR)</b></center></td>
+                        <td><center><b>Interior Design in Cr.(INR)</b></center></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">{!bk.Primary_Applicant_Name__c}</td>
+                        <td style="text-align:center">{!Unt.Name}</td>
+                        <td style="text-align:center;background-color:{!quote.Selected_Specification__c};color:white">{!quote.Selected_Specification__c}</td>
+                        <td style="text-align:center">{!quote.Scheme__r.Name}</td>
+                        <td style="text-align:right">{!bookAgreeValue}</td>
+                        <td style="text-align:right">{!idCost}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="1"></td>
+                        <td colspan="3" style="text-align:right">Total Collectable Amount</td>
+                        <td colspan="2" style="text-align:right">{!totalCollectableAmt}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="1"></td>
+                        <td colspan="3" style="text-align:right">Total Received</td>
+                        <td colspan="2" style="text-align:right">{!totalReceived}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="1"></td>
+                        <td colspan="3" style="text-align:right">Due Now</td>
+                        <td colspan="2" style="text-align:right">{!dueNow}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="1"></td>
+                        <td colspan="3" style="text-align:right">Balance Receivables</td>
+                        <td colspan="2" style="text-align:right">{!balance}</td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <td style="text-align:left;width:40%">Agreement Signing Date</td>
+                        <td style="text-align:center;width:18%;border-right:none" colspan="2">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!bk.Agreement_Signing__c}"/>
+                            </apex:outputText>
+                        </td>
+                       
+                        
+                        <td style="text-align:center;width:22%" >Agreed HO Date</td>
+                        <td style="text-align:center;width:20%"><apex:input type="date" value="{!userInputDate}" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left">HO as per AFS</td>
+                        <td style="text-align:center" colspan="2">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!bk.Virtual_Completion_Date__c}"/>
+                            </apex:outputText>
+                        </td>
+                        
+                        <td style="text-align:center" rowspan="3">Current HO Date</td>
+                      <!--  <td style="text-align:center;" rowspan="3">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!Unt.Planned_On_Virtual_Completion__c}"/>
+                            </apex:outputText>
+                        </td> -->
+                       <td style="text-align:center;width:20%" rowspan="3"><apex:input type="date" value="{!userInputDate2}" /></td> 
+                    </tr>
+                    <tr>
+                        <td style="text-align:left">IDSA sign-off by Customer</td>
+                        <td style="text-align:center" colspan="2">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!authCustSignOff}"/>
+                            </apex:outputText>
+                        </td>    
+                    </tr>
+                    <tr>
+                        <td style="text-align:left">HO as per IDSA</td>
+                        <td style="text-align:center" colspan="2">
+                        <apex:outputText value=" {0,date,dd-MMM-yy}">
+                            <apex:param value="{!bk.Revised_Virtual_Completion_Date__c}"/>
+                        </apex:outputText>
+                        </td>
+                        
+                    </tr>
+                    <tr>
+                        <td style="text-align:left">Revised w.r.t covid extension</td>
+                        <td style="text-align:center" colspan="2">
+                        <apex:outputText value=" {0,date,dd-MMM-yy}">
+                            <apex:param value="{!revisedCovidDate}"/>
+                        </apex:outputText>
+                        </td>
+                        
+                        <td style="text-align:center">Delay In Months</td>
+                        <td style="text-align:right"></td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <td style="width:40%"><center><b>Current Progress</b></center></td>
+                        <td style="width:18%"><center><b>Status</b></center></td>
+                        <td style="width:22%"><center><b>Completed/Projected Date</b></center></td>
+                        <td style="width:20%"><center><b>Remarks</b></center></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:10px"><b>Shell</b></td>
+                        <td style="text-align:left;"></td>
+                        <td style="text-align:left;"></td>
+                        <td style="text-align:left;"></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Foundation</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!foundationDate != null}" style="color: {! IF(foundationStatus == 'Complete', 'green', 'blue') }">{!foundationStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!foundationDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!foundationRemarks}"></apex:inputText></td>
+                    </tr>
+                    
+                        <tr style="display:{!if(showssl1 == true,'table-row','none')}">
+                            <td style="text-align:left;padding-left:20px">SSL1</td>
+                            <td style="text-align:center;"><apex:outputPanel rendered="{!ssl1Date != null}" style="color: {! IF(ssl1Status == 'Complete', 'green', 'blue') }">{!ssl1Status}</apex:outputPanel></td>
+                            <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!ssl1Date}"/>
+                            </apex:outputText>
+                        </td>
+                            <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!ssl1Remarks}"></apex:inputText></td>
+                        </tr>
+                        <tr style="display:{!if(showssl5 == true,'table-row','none')}">
+                            <td style="text-align:left;padding-left:20px">SSL5</td>
+                            <td style="text-align:center;"><apex:outputPanel rendered="{!ssl5Date != null}" style="color: {! IF(ssl5Status == 'Complete', 'green', 'blue') }">{!ssl5Status}</apex:outputPanel></td>
+                            <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!ssl5Date}"/>
+                            </apex:outputText>
+                        </td>
+                            <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!ssl5Remarks}"></apex:inputText></td>
+                        </tr>
+                        <tr style="display:{!if(showssl10 == true,'table-row','none')}">
+                            <td style="text-align:left;padding-left:20px">SSL10</td>
+                            <td style="text-align:center;"><apex:outputPanel rendered="{!ssl10Date != null}" style="color: {! IF(ssl10Status == 'Complete', 'green', 'blue') }">{!ssl10Status}</apex:outputPanel></td>
+                            <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!ssl10Date}"/>
+                            </apex:outputText>
+                        </td>
+                            <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!ssl10Remarks}"></apex:inputText></td>
+                        </tr>
+                        <tr style="display:{!if(showssl15 == true,'table-row','none')}">
+                            <td style="text-align:left;padding-left:20px">SSL15</td>
+                            <td style="text-align:center;"><apex:outputPanel rendered="{!ssl15Date != null}" style="color: {! IF(ssl15Status == 'Complete', 'green', 'blue') }">{!ssl15Status}</apex:outputPanel></td>
+                            <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!ssl15Date}"/>
+                            </apex:outputText>
+                        </td>
+                            <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!ssl15Remarks}"></apex:inputText></td>
+                        </tr>
+                        <tr style="display:{!if(showssl20 == true,'table-row','none')}">
+                            <td style="text-align:left;padding-left:20px">SSL20</td>
+                            <td style="text-align:center;"><apex:outputPanel rendered="{!ssl20Date != null}" style="color: {! IF(ssl20Status == 'Complete', 'green', 'blue') }">{!ssl20Status}</apex:outputPanel></td>
+                            <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!ssl20Date}"/>
+                            </apex:outputText>
+                        </td>
+                            <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!ssl20Remarks}"></apex:inputText></td>
+                        </tr>
+                        <tr style="display:{!if(showssl25 == true,'table-row','none')}">
+                            <td style="text-align:left;padding-left:20px">SSL25</td>
+                            <td style="text-align:center;"><apex:outputPanel rendered="{!ssl25Date != null}" style="color: {! IF(ssl25Status == 'Complete', 'green', 'blue') }">{!ssl25Status}</apex:outputPanel></td>
+                            <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!ssl25Date}"/>
+                            </apex:outputText>
+                        </td>
+                            <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!ssl25Remarks}"></apex:inputText></td>
+                        </tr>
+                        <tr style="display:{!if(showssl30 == true,'table-row','none')}">
+                            <td style="text-align:left;padding-left:20px">SSL30</td>
+                            <td style="text-align:center;"><apex:outputPanel rendered="{!ssl30Date != null}" style="color: {! IF(ssl30Status == 'Complete', 'green', 'blue') }">{!ssl30Status}</apex:outputPanel></td>
+                            <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!ssl30Date}"/>
+                            </apex:outputText>
+                        </td>
+                            <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!ssl30Remarks}"></apex:inputText></td>
+                        </tr>
+                        <tr style="display:{!if(showssl35 == true,'table-row','none')}">
+                            <td style="text-align:left;padding-left:20px">SSL35</td>
+                            <td style="text-align:center;"><apex:outputPanel rendered="{!ssl35Date != null}" style="color: {! IF(ssl35Status == 'Complete', 'green', 'blue') }">{!ssl35Status}</apex:outputPanel></td>
+                            <td style="text-align:center;">
+                                <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                    <apex:param value="{!ssl35Date}"/>
+                                </apex:outputText>
+                            </td>
+                            <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!ssl35Remarks}"></apex:inputText></td>
+                        </tr>
+                        <tr style="display:{!if(showssl40 == true,'table-row','none')}">
+                            <td style="text-align:left;padding-left:20px">SSL40</td>
+                            <td style="text-align:center;"><apex:outputPanel rendered="{!ssl40Date != null}" style="color: {! IF(ssl40Status == 'Complete', 'green', 'blue') }">{!ssl40Status}</apex:outputPanel></td>
+                            <td style="text-align:center;">
+                                <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                    <apex:param value="{!ssl40Date}"/>
+                                </apex:outputText>
+                            </td>
+                            <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!ssl40Remarks}"></apex:inputText></td>
+                        </tr>
+                    
+                    <tr>
+                        <td style="text-align:left;padding-left:20px"><apex:outputPanel rendered="{!Unt.Is_Villa__c == true}">Shell Completion[Curved Roof]</apex:outputPanel><apex:outputPanel rendered="{!Unt.Is_Villa__c != true}">Last Structural Slab</apex:outputPanel></td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!shellCompletionDate != null}" style="color: {! IF(shellCompletionStatus == 'Complete', 'green', 'blue') }">{!shellCompletionStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!shellCompletionDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!shellCompletionRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:10px"><b>Stage - 1</b></td>
+                        <td style="text-align:left;"></td>
+                        <td style="text-align:left;"></td>
+                        <td style="text-align:left;"></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Masonry</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!masonryDate != null}" style="color: {! IF(masonryStatus == 'Complete', 'green', 'blue') }">{!masonryStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!masonryDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!masonryRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:10px"><b>Stage - 2</b></td>
+                        <td style="text-align:left;"></td>
+                        <td style="text-align:left;"></td>
+                        <td style="text-align:left;"></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Plaster</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!plasterDate != null}" style="color: {! IF(plasterStatus == 'Complete', 'green', 'blue') }">{!plasterStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!plasterDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!plasterRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Roof Waterproofing</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!rWaterProofDate != null}" style="color: {! IF(rWaterProofStatus == 'Complete', 'green', 'blue') }">{!rWaterProofStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!rWaterProofDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!rWaterProofRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Dry Flooring</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!actualFloorDate != null}" style="color: {! IF(actualFloorStatus == 'Complete', 'green', 'blue') }">{!actualFloorStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!actualFloorDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!actualFloorRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Bathroom Waterproofing</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!bathWaterProofDate != null}" style="color: {! IF(bathWaterProofStatus == 'Complete', 'green', 'blue') }">{!bathWaterProofStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!bathWaterProofDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!bathWaterProofRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Plumbing</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!actualPlumbingDate != null}" style="color: {! IF(actualPlumbingStatus == 'Complete', 'green', 'blue') }">{!actualPlumbingStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!actualPlumbingDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!actualPlumbingRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Dado</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!dadoDate != null}" style="color: {! IF(dadoStatus == 'Complete', 'green', 'blue') }">{!dadoStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!dadoDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!dadoRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">HVAC | VRV</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!hvacDate != null}" style="color: {! IF(hvacStatus == 'Complete', 'green', 'blue') }">{!hvacStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!hvacDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!hvacRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Metal Works</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!metalDate != null}" style="color: {! IF(metalStatus == 'Complete', 'green', 'blue') }">{!metalStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!metalDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!metalRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">False Ceiling</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!fceilingDate != null}" style="color: {! IF(fceilingStatus == 'Complete', 'green', 'blue') }">{!fceilingStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!fceilingDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!fceilingRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Painting</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!paintingDate != null}" style="color: {! IF(paintingStatus == 'Complete', 'green', 'blue') }">{!paintingStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!paintingDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!paintingRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:10px"><b>Stage - 3+4</b></td>
+                        <td style="text-align:left;"></td>
+                        <td style="text-align:left;"></td>
+                        <td style="text-align:left;"></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Fenestration</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!fenestraDate != null}" style="color: {! IF(fenestraStatus == 'Complete', 'green', 'blue') }">{!fenestraStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!fenestraDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!fenestraRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Electrical Wires + Switches</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!wiresSwitchesDate != null}" style="color: {! IF(wiresSwitchesStatus == 'Complete', 'green', 'blue') }">{!wiresSwitchesStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!wiresSwitchesDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!wiresSwitchesRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">PnS</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!PnSDate != null}" style="color: {! IF(PnSStatus == 'Complete', 'green', 'blue') }">{!PnSStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!PnSDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!PnSRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Furniture</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!furnitureDate != null}" style="color: {! IF(furnitureStatus == 'Complete', 'green', 'blue') }">{!furnitureStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!furnitureDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!furnitureRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:20px">Landscape</td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!landscapeDate != null}" style="color: {! IF(landscapeStatus == 'Complete', 'green', 'blue') }">{!landscapeStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!landscapeDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!landscapeRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr style="display:{!if(FISDate != null,'table-row','none')}">
+                        <td style="text-align:left;padding-left:10px"><b>FIS</b></td>
+                        <td style="text-align:center;"><apex:outputPanel rendered="{!FISDate != null}" style="color: {! IF(FISStatus == 'Complete', 'green', 'blue') }">{!FISStatus}</apex:outputPanel></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!FISDate}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!FISRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;padding-left:10px"><b>Handover</b></td>
+                        <td style="text-align:left;"></td>
+                        <td style="text-align:center;">
+                            <apex:outputText value=" {0,date,dd-MMM-yy}">
+                                <apex:param value="{!Unt.Handover_Date__c}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!HandoverRemarks}"></apex:inputText></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;padding-left:10px"><b>Remarks</b></td>
+                        <td style="text-align:center;" colspan="3"><apex:inputText style="width:90%;" value="{!finalRemarks}"></apex:inputText></td>
+                    </tr>
+                </table>
+            </apex:outputPanel>
+            
+            <div style="text-align: center;margin:15px">
+                
+                    <apex:commandlink target="_blank" action="{!saveUserInput}">
+                        <apex:commandButton value="Generate PDF"  style="background-color: #4CAF50; /* Green */
+                                                                         border: none;
+                                                                         color: black;
+                                                                         padding: 10px 20px;
+                                                                         text-align: center;
+                                                                         text-decoration: none;
+                                                                         display: inline-block;
+                                                                         font-size: 16px;
+                                                                         margin: 4px 2px;
+                                                                         border-radius: 12px;
+                                                                         box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+                                                                         cursor: pointer;"  />
+                    </apex:commandLink>
+                
+            </div>
+        </apex:form>
+    </body>
+</apex:page>
