@@ -1,0 +1,548 @@
+public class BookingFlashCardController {
+	public Id recordId {get;set;}
+    public Booking__c bk {get;set;}
+    public Project__c prj {get;set;}
+    public Unit__c Unt {get;set;}
+    public Quotation__c quote {get;set;}
+    public List<Customization_New__c> idList {get;set;}
+    public String finalRemarks{get;set;}
+    public date foundationDate {get;set;}
+    public String foundationRemarks{get;set;}
+    public String foundationStatus{get;set;}
+    public date masonryDate {get;set;}
+    public String masonryRemarks {get;set;}
+    public String masonryStatus {get;set;}
+    public date plasterDate {get;set;}
+    public String plasterRemarks {get;set;}
+    public String plasterStatus {get;set;}
+    public date rWaterProofDate {get;set;}
+    public String rWaterProofRemarks {get;set;}
+    public String rWaterProofStatus{get;set;}
+    public date actualFloorDate {get;set;}
+    public String actualFloorRemarks {get;set;}
+    public String actualFloorStatus {get;set;}
+    public date bathWaterProofDate {get;set;}
+    public String bathWaterProofRemarks {get;set;}
+    public String bathWaterProofStatus {get;set;}
+    public date actualPlumbingDate {get;set;}
+    public String actualPlumbingRemarks {get;set;}
+    public String actualPlumbingStatus {get;set;}
+    public date dadoDate {get;set;}
+    public String dadoRemarks {get;set;}
+    public String dadoStatus {get;set;}
+    public date hvacDate {get;set;}
+    public String hvacRemarks {get;set;}
+    public String hvacStatus {get;set;}
+    public date metalDate {get;set;}
+    public String metalRemarks {get;set;}
+    public String metalStatus {get;set;}
+    public date fceilingDate {get;set;}
+    public String fceilingRemarks {get;set;}
+    public String fceilingStatus {get;set;}
+    public date paintingDate {get;set;}
+    public String paintingRemarks {get;set;}
+    public String paintingStatus {get;set;}
+    public date fenestraDate {get;set;}
+    public String fenestraRemarks {get;set;}
+    public String fenestraStatus {get;set;}
+    public date wiresSwitchesDate {get;set;}
+    public String wiresSwitchesRemarks {get;set;}
+    public String wiresSwitchesStatus {get;set;}
+    public date PnSDate {get;set;}
+    public String PnSRemarks {get;set;}
+    public String PnSStatus {get;set;}
+    public date furnitureDate {get;set;}
+    public String furnitureRemarks {get;set;}
+    public String furnitureStatus {get;set;}
+    public date landscapeDate {get;set;}
+    public String landscapeRemarks {get;set;}
+    public String landscapeStatus {get;set;}
+    public date FISDate {get;set;}
+    public String FISRemarks {get;set;}
+    public String FISStatus {get;set;}
+    public String HandoverRemarks {get;set;}
+    public Date userInputDate {get;set;}
+    public Date userInputDate2 {get;set;}
+    public integer monthsDifference {get;set;}
+    
+    public String ssl1Remarks{get;set;}
+    public String ssl5Remarks{get;set;}
+    public String ssl10Remarks{get;set;}
+    public String ssl15Remarks{get;set;}
+    public String ssl20Remarks{get;set;}
+    public String ssl25Remarks{get;set;}
+    public String ssl30Remarks{get;set;}
+    public String ssl35Remarks{get;set;}
+    public String ssl40Remarks{get;set;}
+    public String shellCompletionRemarks{get;set;}
+    public date ssl1Date {get;set;}
+    public date ssl5Date {get;set;}
+    public date ssl10Date {get;set;}
+    public date ssl15Date {get;set;}
+    public date ssl20Date {get;set;}
+    public date ssl25Date {get;set;}
+    public date ssl30Date {get;set;}
+    public date ssl35Date {get;set;}
+    public date ssl40Date {get;set;}
+    public date shellCompletionDate {get;set;}
+    public String ssl1Status{get;set;}
+    public String ssl5Status{get;set;}
+    public String ssl10Status{get;set;}
+    public String ssl15Status{get;set;}
+    public String ssl20Status{get;set;}
+    public String ssl25Status{get;set;}
+    public String ssl30Status{get;set;}
+    public String ssl35Status{get;set;}
+    public String ssl40Status{get;set;}
+    public String shellCompletionStatus {get;set;}
+    
+    public boolean showssl1 {get;set;}
+    public boolean showssl5 {get;set;}
+    public boolean showssl10 {get;set;}
+    public boolean showssl15 {get;set;}
+    public boolean showssl20 {get;set;}
+    public boolean showssl25 {get;set;}
+    public boolean showssl30 {get;set;}
+    public boolean showssl35 {get;set;}
+    public boolean showssl40 {get;set;}
+    
+    public String bookAgreeValue{get;set;}
+    public String idCost{get;set;}
+    public String totalCollectableAmt{get;set;}
+    public String totalReceived{get;set;}
+    public String dueNow{get;set;}
+    public String balance{get;set;}
+    public Date revisedCovidDate {get;set;}
+    public Date authCustSignOff {get;set;}
+    public String profileName {get;set;}
+    
+    public boolean isError {get;set;}
+    public List<string> errorList {get;set;}
+    
+    public Map<String, Project_Construction_Stages__c> pmMap {get;set;}
+    
+    public BookingFlashCardController(){
+    //  recordId = 'a0Cp0000008TylpEAC';
+        recordId = apexpages.currentpage().getparameters().get('id');
+        isError = false;
+        errorList = new List<String>();
+        Map<String, String> params = ApexPages.currentPage().getParameters();
+        for (String key : params.keySet()) {
+            String value = params.get(key);
+            if (value != null) {
+                value = value.replaceAll('\\+', ' '); // Replacing '+' with space
+                params.put(key, value); // Update the value in the map
+            }
+        }
+
+      	finalRemarks = params.get('finalRemarks');
+        foundationRemarks = params.get('foundationRemarks');
+        ssl1Remarks = params.get('ssl1Remarks');
+        ssl5Remarks = params.get('ssl5Remarks');
+        ssl10Remarks = params.get('ssl10Remarks');
+        ssl15Remarks = params.get('ssl15Remarks');
+        ssl20Remarks = params.get('ssl20Remarks');
+        ssl25Remarks = params.get('ssl25Remarks');
+        ssl30Remarks = params.get('ssl30Remarks');
+        shellCompletionRemarks = params.get('shellCompletionRemarks');
+        masonryRemarks = params.get('masonryRemarks');
+        plasterRemarks = params.get('plasterRemarks');
+        rWaterProofRemarks = params.get('rWaterProofRemarks');
+        actualFloorRemarks = params.get('actualFloorRemarks');
+        bathWaterProofRemarks = params.get('bathWaterProofRemarks');
+        actualPlumbingRemarks = params.get('actualPlumbingRemarks');
+        dadoRemarks = params.get('dadoRemarks');
+        hvacRemarks = params.get('hvacRemarks');
+        metalRemarks = params.get('metalRemarks');
+        fceilingRemarks = params.get('fceilingRemarks');
+        paintingRemarks = params.get('paintingRemarks');
+        fenestraRemarks = params.get('fenestraRemarks');
+        wiresSwitchesRemarks = params.get('wiresSwitchesRemarks');
+        PnSRemarks = params.get('PnSRemarks');
+        furnitureRemarks = params.get('furnitureRemarks');
+        landscapeRemarks = params.get('landscapeRemarks');
+        FISRemarks = params.get('FISRemarks');
+        HandoverRemarks = params.get('HandoverRemarks');
+        
+        if((apexpages.currentpage().getparameters().get('userInputDate') != null)){
+            userInputDate = Date.valueOf(apexpages.currentpage().getparameters().get('userInputDate'));
+        }
+        if((apexpages.currentpage().getparameters().get('userInputDate2') != null)){
+            userInputDate2 = Date.valueOf(apexpages.currentpage().getparameters().get('userInputDate2'));
+        }
+        showssl1 = false;
+        showssl5 = false;
+        showssl10 = false;
+        showssl15 = false;
+        showssl20 = false;
+        showssl25 = false;
+        showssl30 = false;
+        showssl35 = false;
+        showssl40 = false;
+      	system.debug('finalRemarks::'+finalRemarks);
+        generateFlastCard(recordId);
+    }
+    public void generateFlastCard(Id BookingId){
+        
+        bk = [SELECT  Id,No_of_Earmarked_Parking__c,Unit__c,Unit__r.Tower__r.Cluster__c, No_of_Additional_Parking__c,Date_of_Agreement_AFS__c,
+              Quotation__c,Authorised_Signatory__c, Project__c,Primary_Applicant_Name__c,PrimaryMobileNumber__c,Agreement_Value__c,Total_Customization_Cost__c,
+              Primary_Applicant_Email__c,Change_Order_Applicant__c,Apllicant_change_Approve_status__c,Total_Collectable_Amount__c,Total_Received_exl_Credit_notes__c,
+              Due_Now__c,Balance__c,Agreement_Signing__c,Virtual_Completion_Date__c,Revised_Virtual_Completion_Date__c,Booking_Date__c
+              FROM Booking__c WHERE id =:BookingId];
+        quote = [select id,Selected_Specification__c,Scheme__r.Name from Quotation__c where id =: bk.Quotation__c];
+      //  Customization_New__c idList = new Customization_New__c();
+        idList = [select id,Actual_Customer_Sign_Off__c from Customization_New__c where IsCanceled__c = false and Status__c = 'Active'
+                  and Approval_Status__c = 'Approved' and Booking__c =: bk.Id limit 1];
+        
+        prj = [SELECT Id,Name, Address__c,Color_Code__c,Promoter__c,Land_Owner__c,Is_Landowner_Required_In_AFS__c,State__c FROM Project__c WHERE id=:bk.Project__c];
+        Unt = [Select Id,Name,Tower__c,Product_Type__c,Type_Master__c, Permitted_Use__c,Parent_Unit_Plan__c,Unit_Ownership__c,Is_Villa__c,Planned_Foundation__c,
+               Actual_Foundation__c,Actual_Masonry__c,Actual_Internal_Plaster__c,Actual_Roof_Waterproofing__c,Actual_Flooring__c,Actual_Bathroom_Waterproofing__c,
+               Actual_Plumbing__c,Actual_DADO__c,Actual_HVAC_VAC__c,Actual_Metal_Works__c,Actual_False_Ceiling__c,Actual_Painting__c,Planned_Flooring__c,
+               Planned_1st_SSL__c,Actual_1st_SSL__c,Planned_Masonry__c,Planned_Internal_Plaster__c,Planned_Roof_Waterproofing__c,Planned_Bathroom_Waterproofing__c,
+               Planned_Plumbing__c,Planned_DADO__c,Planned_HVAC_VAC__c,Planned_Metal_Works__c,Planned_False_Ceiling__c,Planned_Unit_s_Doors_Windows_Fenestr__c,
+               Actual_Unit_s_Doors_Windows_Fenestra__c,Planned_Electrical_Wires_Switches__c,Actual_Electrical_Wires_Switches__c,Planned_Plumbing_Sanitary__c,
+               Actual_Plumbing_Sanitary__c,Planned_Furniture__c,Actual_Furniture__c,Planned_Landscape__c,Actual_Landscape__c,Planned_FIS__c,Actual_FIS__c,
+               Handover_Date__c,Planned_On_Virtual_Completion__c,Actual_Shell_Completion__c,Planned_Shell_Completion__c,Planned_Painting__c
+               from Unit__c where id=:bk.Unit__c];
+        
+        if(userInputDate == null){
+            isError = true;
+            String error1 = 'Agreed HO Date is Mandatory';
+            errorList.add(error1);
+        }
+        if(userInputDate2 == null){
+            isError = true;
+            String error2 = 'Current HO Date is Mandatory';
+            errorList.add(error2);
+        }
+        if(finalRemarks == ''){
+            isError = true;
+            String error3 = 'Remarks are mandatory';
+            errorList.add(error3);
+        }
+        
+        pmMap = new Map<String, Project_Construction_Stages__c>();
+        Map<decimal, Project_Construction_Stages__c> pmSeqMap = new Map<decimal, Project_Construction_Stages__c>();
+        List<Project_Construction_Stages__c> pcList = [SELECT MS_Definition__r.Name,Sequence_No__c, Planned_date_of_completion__c,
+                                              		   Actual_date_of_completion__c FROM Project_Construction_Stages__c WHERE Tower__c = :Unt.Tower__c];
+        
+        for(Project_Construction_Stages__c pc : pcList) {
+            pmMap.put(pc.MS_Definition__r.Name, pc);
+            pmSeqMap.put(pc.Sequence_No__c,pc);
+        }
+        
+        system.debug('date::'+foundationDate);
+        if(Unt.Is_Villa__c == true){
+            foundationDate = Unt.Actual_Foundation__c;
+            foundationStatus = 'Complete';
+            if(foundationDate == Null){
+                foundationStatus = 'Yet to start';
+                foundationDate = Unt.Planned_Foundation__c;
+            }
+            ssl1Date = Unt.Actual_1st_SSL__c;
+            showssl1 = true;
+            ssl1Status = 'Complete';
+            if(ssl1Date == null){
+                ssl1Status = 'Yet to start';
+                ssl1Date = Unt.Planned_1st_SSL__c;
+            }
+            shellCompletionDate = Unt.Actual_Shell_Completion__c;
+            shellCompletionStatus = 'Complete';
+            if(shellCompletionDate == null){
+                shellCompletionStatus = 'Yet to start';
+                shellCompletionDate = Unt.Planned_Shell_Completion__c;
+            }
+        }
+        else{
+            if(pmMap.containskey('Foundation')){
+                foundationDate = pmMap.get('Foundation').Actual_date_of_completion__c;
+                foundationStatus = 'Complete';
+                if(foundationDate == Null){
+                    foundationDate = pmMap.get('Foundation').Planned_date_of_completion__c;  
+                    foundationStatus = 'Yet to start';
+                }
+            }
+            if(pmMap.containskey('1st Structural Slab')){
+                showssl1 = true;
+                ssl1Date = pmMap.get('1st Structural Slab').Actual_date_of_completion__c;
+                ssl1Status = 'Complete';
+                if(ssl1Date == null){
+                    ssl1Status = 'Yet to start';
+                    ssl1Date = pmMap.get('1st Structural Slab').Planned_date_of_completion__c;
+                }
+            }
+            if(pmMap.containskey('5th Structural Slab')){
+                showssl5 = true;
+                ssl5Date = pmMap.get('5th Structural Slab').Actual_date_of_completion__c;
+                ssl5Status = 'Complete';
+                if(ssl5Date == null){
+                    ssl5Status = 'Yet to start';
+                    ssl5Date = pmMap.get('5th Structural Slab').Planned_date_of_completion__c;
+                }
+            }
+            if(pmMap.containskey('10th Structural Slab')){
+                showssl10 = true;
+                ssl10Date = pmMap.get('10th Structural Slab').Actual_date_of_completion__c;
+                ssl10Status = 'Complete';
+                if(ssl10Date == null){
+                    ssl10Status = 'Yet to start';
+                    ssl10Date = pmMap.get('10th Structural Slab').Planned_date_of_completion__c;
+                }
+            }
+            if(pmMap.containskey('15th Structural Slab')){
+                showssl15 = true;
+                ssl15Date = pmMap.get('15th Structural Slab').Actual_date_of_completion__c;
+                ssl15Status = 'Complete';
+                if(ssl15Date == null){
+                    ssl15Status = 'Yet to start';
+                    ssl15Date = pmMap.get('15th Structural Slab').Planned_date_of_completion__c;
+                }
+            }
+            if(pmMap.containskey('20th Structural Slab')){
+                showssl20 = true;
+                ssl20Date = pmMap.get('20th Structural Slab').Actual_date_of_completion__c;
+                ssl20Status = 'Complete';
+                if(ssl20Date == null){
+                    ssl20Status = 'Yet to start';
+                    ssl20Date = pmMap.get('20th Structural Slab').Planned_date_of_completion__c;
+                }
+            }
+            if(pmMap.containskey('25th Structural Slab')){
+                showssl25 = true;
+                ssl25Date = pmMap.get('25th Structural Slab').Actual_date_of_completion__c;
+                ssl25Status = 'Complete';
+                if(ssl25Date == null){
+                    ssl25Status = 'Yet to start';
+                    ssl25Date = pmMap.get('25th Structural Slab').Planned_date_of_completion__c;
+                }
+            }
+            if(pmMap.containskey('30th Structural Slab')){
+                showssl30 = true;
+                ssl30Date = pmMap.get('30th Structural Slab').Actual_date_of_completion__c;
+                ssl30Status = 'Complete';
+                if(ssl30Date == null){
+                    ssl30Status = 'Yet to start';
+                    ssl30Date = pmMap.get('30th Structural Slab').Planned_date_of_completion__c;
+                }
+            }
+            if(pmMap.containskey('35th Structural Slab')){
+                showssl35 = true;
+                ssl35Date = pmMap.get('35th Structural Slab').Actual_date_of_completion__c;
+                ssl35Status = 'Complete';
+                if(ssl35Date == null){
+                    ssl35Status = 'Yet to start';
+                    ssl35Date = pmMap.get('35th Structural Slab').Planned_date_of_completion__c;
+                }
+            }
+            if(pmMap.containskey('40th Structural Slab')){
+                showssl40 = true;
+                ssl40Date = pmMap.get('40th Structural Slab').Actual_date_of_completion__c;
+                ssl40Status = 'Complete';
+                if(ssl40Date == null){
+                    ssl40Status = 'Yet to start';
+                    ssl40Date = pmMap.get('40th Structural Slab').Planned_date_of_completion__c;
+                }
+            }
+            if(pmMap.containskey('Internal Plaster')){
+                decimal seqNo = 0;
+                seqNo = pmMap.get('Internal Plaster').Sequence_No__c;
+                seqNo = seqNo - 1;
+                shellCompletionDate = pmSeqMap.get(seqNo).Actual_date_of_completion__c;
+                shellCompletionStatus = 'Complete';
+                if(shellCompletionDate == null){
+                    shellCompletionStatus = 'Yet to start';
+                    shellCompletionDate = pmSeqMap.get(seqNo).Planned_date_of_completion__c;
+                }
+            }
+
+        }
+        masonryDate = Unt.Actual_Masonry__c;
+        masonryStatus = 'Complete';
+        if(masonryDate == Null){
+            masonryStatus = 'Yet to start';
+            masonryDate = Unt.Planned_Masonry__c;  
+        }
+        plasterDate = Unt.Actual_Internal_Plaster__c;
+        plasterStatus = 'Complete';
+        if(plasterDate == Null){
+            plasterStatus = 'Yet to start';
+            plasterDate = Unt.Planned_Internal_Plaster__c;  
+        }
+        rWaterProofDate = Unt.Actual_Roof_Waterproofing__c;
+        rWaterProofStatus = 'Complete';
+        if(rWaterProofDate == Null){
+            rWaterProofStatus = 'Yet to start';
+            rWaterProofDate = Unt.Planned_Roof_Waterproofing__c;  
+        }
+        actualFloorDate = Unt.Actual_Flooring__c;
+        actualFloorStatus = 'Complete';
+        if(actualFloorDate == Null){
+            actualFloorStatus = 'Yet to start';
+            actualFloorDate = Unt.Planned_Flooring__c;  
+        }
+        bathWaterProofDate = Unt.Actual_Bathroom_Waterproofing__c;
+        bathWaterProofStatus = 'Complete';
+        if(bathWaterProofDate == Null){
+            bathWaterProofStatus = 'Yet to start';
+            bathWaterProofDate = Unt.Planned_Bathroom_Waterproofing__c;  
+        }
+        actualPlumbingDate = Unt.Actual_Plumbing__c;
+        actualPlumbingStatus = 'Complete';
+        if(actualPlumbingDate == Null){
+            actualPlumbingStatus = 'Yet to start';
+            actualPlumbingDate = Unt.Planned_Plumbing__c;  
+        }
+        dadoDate = Unt.Actual_DADO__c;
+        dadoStatus = 'Complete';
+        if(dadoDate == Null){
+            dadoStatus = 'Yet to start';
+            dadoDate = Unt.Planned_DADO__c;  
+        }
+        hvacDate = Unt.Actual_HVAC_VAC__c;
+        hvacStatus = 'Complete';
+        if(hvacDate == Null){
+            hvacStatus = 'Yet to start';
+            hvacDate = Unt.Planned_HVAC_VAC__c;  
+        }
+        metalDate = Unt.Actual_Metal_Works__c;
+        metalStatus = 'Complete';
+        if(metalDate == Null){
+            metalStatus = 'Yet to start';
+            metalDate = Unt.Planned_Metal_Works__c;  
+        }
+        fceilingDate = Unt.Actual_False_Ceiling__c;
+        fceilingStatus = 'Complete';
+        if(fceilingDate == Null){
+            fceilingStatus = 'Yet to start';
+            fceilingDate = Unt.Planned_False_Ceiling__c;  
+        }
+        paintingDate = Unt.Actual_Painting__c;
+        paintingStatus = 'Complete';
+        if(paintingDate == Null){
+            paintingStatus = 'Yet to start';
+            paintingDate = Unt.Planned_Painting__c;  
+        }
+        fenestraDate = Unt.Actual_Unit_s_Doors_Windows_Fenestra__c;
+        fenestraStatus = 'Complete';
+        if(fenestraDate == Null){
+            fenestraStatus = 'Yet to start';
+            fenestraDate = Unt.Planned_Unit_s_Doors_Windows_Fenestr__c;  
+        }
+        wiresSwitchesDate = Unt.Actual_Electrical_Wires_Switches__c;
+        wiresSwitchesStatus = 'Complete';
+        if(wiresSwitchesDate == Null){
+            wiresSwitchesStatus = 'Yet to start';
+            wiresSwitchesDate = Unt.Planned_Electrical_Wires_Switches__c;  
+        }
+        PnSDate = Unt.Actual_Plumbing_Sanitary__c;
+        PnSStatus = 'Complete';
+        if(PnSDate == Null){
+            PnSStatus = 'Yet to start';
+            PnSDate = Unt.Planned_Plumbing_Sanitary__c;  
+        }
+        furnitureDate  = Unt.Actual_Furniture__c;
+        furnitureStatus  = 'Complete';
+        if(furnitureDate  == Null){
+            furnitureStatus  = 'Yet to start';
+            furnitureDate  = Unt.Planned_Furniture__c;  
+        }
+        landscapeDate = Unt.Actual_Landscape__c;
+        landscapeStatus = 'Complete';
+        if(landscapeDate == Null){
+            landscapeStatus = 'Yet to start';
+            landscapeDate = Unt.Planned_Landscape__c;  
+        }
+        FISDate   = Unt.Actual_FIS__c;
+        FISStatus = 'Complete';
+        if(FISDate   == Null){
+            FISStatus = 'Yet to start';
+            FISDate   = Unt.Planned_FIS__c;  
+        }
+        if(userInputDate != null && userInputDate2 != null){
+            Date startDate = userInputDate2; // Start date
+            Date endDate = userInputDate; // End date
+            
+            Integer startYear = startDate.year();
+            Integer endYear = endDate.year();
+            
+            Integer startMonth = startDate.month();
+            Integer endMonth = endDate.month();
+            
+            // Calculate the difference in months
+            monthsDifference = (endYear - startYear) * 12 + (endMonth - startMonth);
+        }
+
+        
+        bookAgreeValue = InventoryCostServices.informat((bk.Agreement_Value__c ?? 0));        
+        idCost = InventoryCostServices.informat((bk.Total_Customization_Cost__c ?? 0));
+        totalCollectableAmt = InventoryCostServices.informat((bk.Total_Collectable_Amount__c ?? 0));
+        totalReceived = InventoryCostServices.informat((bk.Total_Received_exl_Credit_notes__c ?? 0));
+        dueNow = InventoryCostServices.informat((bk.Due_Now__c ?? 0));
+        balance = InventoryCostServices.informat((bk.Balance__c ?? 0));
+        
+        if(bk.Booking_Date__c.month() <= 3 && bk.Booking_Date__c.year() <= 2021 && idList.size() > 0 ){
+            revisedCovidDate = bk.Revised_Virtual_Completion_Date__c.addMonths(12);
+        }
+        else{
+            revisedCovidDate = bk.Virtual_Completion_Date__c;
+        }
+        if(idList.size() > 0){
+            authCustSignOff = idList[0].Actual_Customer_Sign_Off__c;
+        }
+    }
+    
+    public PageReference saveUserInput() {
+        Id profileId=userinfo.getProfileId();
+        System.debug('profileId::'+profileId);
+        profileName=[Select Id,Name from Profile where Id=:profileId].Name;
+        system.debug('ProfileName::'+profileName);
+        
+        
+        PageReference pref = new PageReference('/apex/BookingFlashCardVFOutput');
+        pref.getParameters().put('id',bk.id);
+        
+        if(profileName == 'System Administrator' || profileName =='Design Manager' || profileName =='Site PMO'){
+            system.debug('Inside If');
+            //     ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'IDSA not Approved'));
+            pref.getParameters().put('finalRemarks',finalRemarks);
+            pref.getParameters().put('foundationRemarks',foundationRemarks);
+            pref.getParameters().put('ssl1Remarks',ssl1Remarks);
+            pref.getParameters().put('ssl5Remarks',ssl5Remarks);
+            pref.getParameters().put('ssl10Remarks',ssl10Remarks);
+            pref.getParameters().put('ssl15Remarks',ssl15Remarks);
+            pref.getParameters().put('ssl20Remarks',ssl20Remarks);
+            pref.getParameters().put('ssl25Remarks',ssl25Remarks);
+            pref.getParameters().put('ssl30Remarks',ssl30Remarks);
+            pref.getParameters().put('shellCompletionRemarks',shellCompletionRemarks);
+            pref.getParameters().put('masonryRemarks',masonryRemarks);
+            pref.getParameters().put('plasterRemarks',plasterRemarks);
+            pref.getParameters().put('rWaterProofRemarks',rWaterProofRemarks);
+            pref.getParameters().put('actualFloorRemarks',actualFloorRemarks);
+            pref.getParameters().put('bathWaterProofRemarks',bathWaterProofRemarks);
+            pref.getParameters().put('actualPlumbingRemarks',actualPlumbingRemarks);
+            pref.getParameters().put('dadoRemarks',dadoRemarks);
+            pref.getParameters().put('hvacRemarks',hvacRemarks);
+            pref.getParameters().put('metalRemarks',metalRemarks);
+            pref.getParameters().put('fceilingRemarks',fceilingRemarks);
+            pref.getParameters().put('paintingRemarks',paintingRemarks);
+            pref.getParameters().put('fenestraRemarks',fenestraRemarks);
+            pref.getParameters().put('wiresSwitchesRemarks',wiresSwitchesRemarks);
+            pref.getParameters().put('PnSRemarks',PnSRemarks);
+            pref.getParameters().put('furnitureRemarks',furnitureRemarks);
+            pref.getParameters().put('landscapeRemarks',landscapeRemarks);
+            pref.getParameters().put('FISRemarks',FISRemarks);
+            pref.getParameters().put('HandoverRemarks',HandoverRemarks);
+            if(userInputDate != null){
+                pref.getParameters().put('userInputDate',String.valueOf(userInputDate));
+            }
+            if(userInputDate2 != null){
+                pref.getParameters().put('userInputDate2',String.valueOf(userInputDate2));
+            }
+            
+        }    	
+        pref.setRedirect(true);
+        return pref;
+        
+    }
+    
+}
