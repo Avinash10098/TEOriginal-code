@@ -1,0 +1,81 @@
+public class payMilestonesHelperClass {
+    
+    public static void updatePM(List<Payment_Milestones__c> newPMsList){
+        
+        Map<Id,Map<String,Date>> UnitNameDateMap = new Map<Id,Map<String,Date>>();
+        Map<Payment_Milestones__c,Id> pmMap = new Map<Payment_Milestones__c,Id>();
+        Map<Id,Id> quoteUnitMap = new Map<Id,Id>();
+        List<Payment_Milestones__c> pmList = new List<Payment_Milestones__c>();
+        List<Payment_Milestones__c> pmList2Update = new List<Payment_Milestones__c>();
+        
+        pmList = [Select id,Quotation__c,Demand_Raised__c,is_demand_raised__c,Is_Unit_Linked__c,Milestone_Type_edit__c,Construction_Stage_Name__c,Milestone_Due_Date__c,
+                  Time_Period__c,Project_Construction_Stages__r.Actual_date_of_completion__c,Milestone_Status__c,Number_Of_Days__c,Milestone_Status_Update_Date__c
+                  from Payment_Milestones__c where Id IN : newPMsList];
+        
+        Set<Id> quoteId = new Set<Id>();
+        for(Payment_Milestones__c p : pmList){
+            quoteId.add(p.Quotation__c);
+        }
+        List<Quotation__c> quoteList = [Select Id,Unit__c from Quotation__c where Id IN: quoteId];
+        
+        Set<Id> unitId = new Set<Id>();
+        for(Quotation__c q : quoteList){
+            unitId.add(q.Unit__c);
+            quoteUnitMap.put(q.Id,q.Unit__c);
+        }
+        
+        List<Unit__c> unitList = [Select Id,Actual_Excavation__c,Actual_Foundation__c,Actual_1st_SSL__c,Actual_Shell_Completion__c,Actual_Masonry__c,
+                                  Actual_Plumbing__c,Actual_Flooring__c,Actual_Unit_s_Doors_Windows_Fenestra__c,Actual_On_Virtual_Completion__c,
+                                  Actual_Internal_Plaster__c from Unit__c where Id IN: unitId];
+        for(Unit__c u : unitList){
+            Map<String,Date> stringDateMap = new Map<String,Date>();
+            stringDateMap.put('Excavation',u.Actual_Excavation__c);
+            stringDateMap.put('Foundation',u.Actual_Foundation__c);
+            stringDateMap.put('1st Structural Slab',u.Actual_1st_SSL__c);
+            stringDateMap.put('Shell Completion',u.Actual_Shell_Completion__c);
+            stringDateMap.put('Masonry',u.Actual_Masonry__c);
+            stringDateMap.put('Plumbing',u.Actual_Plumbing__c);
+            stringDateMap.put('Flooring',u.Actual_Flooring__c);
+            stringDateMap.put('Doors and Windows',u.Actual_Unit_s_Doors_Windows_Fenestra__c);
+            stringDateMap.put('On Virtual Completion',u.Actual_On_Virtual_Completion__c);
+            stringDateMap.put('Internal Plaster',u.Actual_Internal_Plaster__c);
+            UnitNameDateMap.put(u.Id,stringDateMap);
+        }
+        
+        for(Payment_Milestones__c pm : pmList){
+            //Tower Linked Payment Milestones
+            if(pm.Demand_Raised__c == True && pm.is_demand_raised__c == False && pm.Project_Construction_Stages__r.Actual_date_of_completion__c != null &&
+               pm.Milestone_Type_edit__c == 'Construction Linked' && pm.Is_Unit_Linked__c != true){  //Demand_Raised__c label = is Demand Due
+                  // pm.Milestone_Due_Date__c = pm.Project_Construction_Stages__r.Actual_date_of_completion__c; 
+                   Date d = Date.Today();
+                   if(pm.Time_Period__c == 'Days'){
+                        pm.Milestone_Due_Date__c = d.addDays(Integer.valueOf(pm.Number_Of_Days__c));   
+                    }
+                    else{
+                        pm.Milestone_Due_Date__c = d.addDays(Integer.valueOf(pm.Number_Of_Days__c) * 30); 
+                    }
+                   pm.Milestone_Status__c = 'Submitted';
+                   pm.Milestone_Status_Update_Date__c = Datetime.now();
+                   pmList2Update.add(pm);
+               }
+            //Unit Linked Payment Milestones
+            if(pm.Milestone_Type_edit__c == 'Construction Linked' && pm.Is_Unit_Linked__c == true){
+                if(UnitNameDateMap.get(quoteUnitMap.get(pm.Quotation__c)).get(pm.Construction_Stage_Name__c) != Null){
+                    Date d = UnitNameDateMap.get(quoteUnitMap.get(pm.Quotation__c)).get(pm.Construction_Stage_Name__c);
+                    system.debug('date on unit : '+UnitNameDateMap.get(quoteUnitMap.get(pm.Quotation__c)) +' '+UnitNameDateMap.get(quoteUnitMap.get(pm.Quotation__c)).get(pm.Construction_Stage_Name__c));
+                    pm.Demand_Raised__c = True;
+                    pm.Milestone_Status__c = 'Submitted';
+                    pm.Milestone_Status_Update_Date__c = Datetime.now();
+                    if(pm.Time_Period__c == 'Days'){
+                        pm.Milestone_Due_Date__c = d.addDays(Integer.valueOf(pm.Number_Of_Days__c));   
+                    }
+                    else{
+                        pm.Milestone_Due_Date__c = d.addDays(Integer.valueOf(pm.Number_Of_Days__c) * 30); 
+                    }
+                    pmList2Update.add(pm);
+                }
+            }
+        }
+        update pmList2Update;
+    }
+}
