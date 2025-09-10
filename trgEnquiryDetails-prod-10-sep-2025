@@ -1,0 +1,85 @@
+trigger trgEnquiryDetails on Enquiry_Details__c (After insert,After Update) {
+    Set<Id> enqSetId = new Set<Id>();
+    for(Enquiry_Details__c enq :trigger.new) {
+        enqSetId.add(enq.Id);
+    }
+    if(Trigger.isAfter && Trigger.isInsert){
+        if(!enqSetId.IsEmpty()){
+            EnquiryIntegrationProcess.processEnquires(enqSetId);  
+        } 
+    }
+        
+        if(Trigger.isAfter && Trigger.isUpdate){
+            if(!enqSetId.IsEmpty()){
+                List <Id> accList = new List <Id>();
+                List <Account> accListtoUpdate = new List <Account>();
+                Map<Id,Enquiry_Details__c> AccEnqMap = new Map<Id,Enquiry_Details__c>();
+                List <Id> leadList = new List <Id>();
+                List <Lead> leadListtoUpdate = new List <Lead>();
+                Map<Id,Enquiry_Details__c> LeadEnqMap = new Map<Id,Enquiry_Details__c>();
+                
+                for(Enquiry_Details__c enq : trigger.new){
+                    if(enq.Account__c != Null && enq.result__c == 'EXISTING ACCOUNT'){
+                        accList.add(enq.Account__c);
+                        AccEnqMap.put(enq.Account__c,enq);
+                    }
+                    if(enq.Lead__c != Null && enq.result__c == 'EXISTING LEAD'){
+                        leadList.add(enq.Lead__c);
+                        LeadEnqMap.put(enq.Lead__c,enq);
+                    }
+                }
+                
+                if(accList != Null && !accList.isEmpty()){
+                    List<Account> accListQuery = [Select id,FB_Click_ID__c from Account where Id IN : accList];
+                    for(Account a: accListQuery){
+                        if(AccEnqMap.containskey(a.id)){
+                            a.FB_Click_ID__c = AccEnqMap.get(a.id).FB_Ad_ID__c;
+                            accListtoUpdate.add(a);
+                        }
+                    }
+                }
+                
+                if(accListtoUpdate != Null && !accListtoUpdate.isEmpty()){
+                    update accListtoUpdate;   
+                }
+                
+                if(leadList != Null && !leadList.isEmpty()){
+                    List<Lead> leadListQuery = [Select id,FB_Click_ID__c,UTM_Source__c,UTM_Campaign__c,UTM_Medium__c,UTM_Term__c,
+                                                UTM_Content__c,UTM_Display__c from Lead where Id IN : leadList];
+                    for(Lead l: leadListQuery){
+                        if(LeadEnqMap.containskey(l.id)){
+                            l.FB_Click_ID__c = LeadEnqMap.get(l.id).FB_Ad_ID__c;
+                            l.UTM_Source__c = LeadEnqMap.get(l.id).UTM_Source__c;
+                            l.UTM_Campaign__c = LeadEnqMap.get(l.id).UTM_Campaign__c;
+                            l.UTM_Medium__c = LeadEnqMap.get(l.id).UTM_Medium__c;
+                            l.UTM_Content__c = LeadEnqMap.get(l.id).UTM_Content__c;
+                            l.UTM_Display__c = LeadEnqMap.get(l.id).UTM_Display__c;
+                            leadListtoUpdate.add(l);
+                        }
+                    }    
+                }
+                if(leadListtoUpdate != Null && !leadListtoUpdate.isEmpty()){
+                    update leadListtoUpdate;   
+                } 
+            }  
+            
+            Set<Id> enquiryId = new Set<Id>();
+            if (Trigger.isAfter && Trigger.isUpdate) {
+                for (Enquiry_Details__c enq : Trigger.new) {
+                    //Condition 1 - New Re-Enquiry
+                    if (Trigger.oldMap.get(enq.id).Result__c != enq.Result__c &&
+                        String.isNotBlank(enq.Result__c) &&
+                        Trigger.oldMap.get(enq.id).Result__c == null &&
+                        (enq.Result__c == 'EXISTING LEAD' || enq.Result__c == 'EXISTING ACCOUNT')) {
+                            enquiryId.add(enq.Id);
+                        }
+                }
+            }
+            if (!checkRecursion.enquiryTriggerFired && !enquiryId.isEmpty()) {
+                checkRecursion.enquiryTriggerFired = true;
+               // System.enqueueJob(new LaunchCustReEnqBatchQueueable(enquiryId, 'New Re-Enquiry'));
+              //  Database.executeBatch(new custReEnq4EnqBatch(enquiryId, 'New Re-Enquiry'), 50);
+            }
+            
+        }
+    }
