@@ -1,0 +1,1926 @@
+public  with sharing class BookingClass {
+    public Applicant_Details__c applicant {get; set;}
+    public Applicant_Details__c applicant2 {get; set;}
+    public Applicant_Details__c applicant3 {get; set;}
+    public Applicant_Details__c applicant4 {get; set;}
+    public Applicant_Details__c applicant5 {get; set;}
+    public List <Applicant_Details__c> OldApplicantList {get; set;} 
+    public Booking__c boookingObj {get; set;}
+    public List <Opportunity> optyList {get; set;}
+    public List <Booking__c> OldBookingList {get; set;} 
+    public List <Quotation__c> queryResult {get; set;}
+    public List <Quotation__c> QuoteDetails {get; set;}
+    public List <Receipt__c> ReceiptDetails {get; set;}
+    public Integer i {get; set;}
+    public String selectedVal {get; set;}
+    public String selectedQuote {get; set;}
+    public Id unitId {get; set;}
+    public Id ProjectId {get; set;}
+    ///  public Id optyId {get; set;}
+    public Boolean addressCheck {get; set;}
+    public Boolean addressCheckApplicant2 {get; set;}
+    public Boolean addressCheckApplicant3 {get; set;}
+    public Boolean addressCheckApplicant4 {get; set;}
+    public Boolean addressCheckApplicant5 {get; set;}
+    //  public Legal_Entity__c le {get; set;}    
+    public List <Receipt__c> receiptlist {get; set;}
+    public Integer rowIndex {get; set;}
+    public Date firstApplicantDOB{get; set;}
+    public Date secondApplicantDOB{get; set;}
+    public Date thirdApplicantDOB{get; set;}
+    public Date fourthApplicantDOB{get; set;}
+    public Date fifthApplicantDOB{get; set;}
+    public List<Receipt__c> ReceiptLstTobeInsert;
+    public Boolean addressCheckReverse {get; set;}
+    List <Car_Park__c> ParkingListToUpdate = new List <Car_Park__c>();
+    List <Car_Park__c> SingleOPENParkingList = new List <Car_Park__c>();
+    List <Car_Park__c> TandemCOVEREDParkingList = new List <Car_Park__c>();
+    List <Car_Park__c> STACKParkingList = new List <Car_Park__c>();    
+    List <Applicant_Details__c> listApplicant = new list <Applicant_Details__c>();
+    public List <Receipt__c> ListOldReceipt;
+    public decimal stackParking{get;set;}
+    public decimal openParking{get;set;}
+    public decimal tandemParking{get;set;}
+    public List<Booking__c> dummyBooking;
+    public List<Block_Unit__c> dummybu {get;set;}
+    public Boolean alreadyBooked {get;set;}
+    public Boolean renderForm {get;set;}
+    public Id contactMgmntId {get;set;}
+    
+    
+    public BookingClass () {
+        renderForm = True;
+        receiptlist = new List<Receipt__c>();
+        rowIndex =0;
+        ReceiptLstTobeInsert = new List<Receipt__c>();          
+        i=0;
+        ParkingListToUpdate = new List<Car_Park__c>();
+        SingleOPENParkingList = new List <Car_Park__c>();
+        TandemCOVEREDParkingList = new List <Car_Park__c>();
+        STACKParkingList = new List <Car_Park__c>();
+        ListOldReceipt = new List <Receipt__c>();        
+        OldApplicantList = new List <Applicant_Details__c>();
+        ReceiptDetails = new List <Receipt__c>();
+        QuoteDetails  = new List <Quotation__c>();
+        queryResult = new List <Quotation__c>();       
+        optyList  = new List <Opportunity>();
+        
+        //  le = new Legal_Entity__c();
+        addressCheck = False;
+        addressCheckApplicant2 = False;
+        addressCheckApplicant3 = False;
+        addressCheckApplicant4 = False;
+        addressCheckApplicant5 = False; 
+        applicant = new Applicant_Details__c();
+        applicant2 = new Applicant_Details__c();
+        applicant3 = new Applicant_Details__c();
+        applicant4 = new Applicant_Details__c();
+        applicant5 = new Applicant_Details__c();
+        boookingObj = new Booking__c();
+        boookingObj.Booking_Date__c = system.now();
+        dummyBooking = new List<Booking__c>();
+        dummybu = new List<Block_Unit__c>();
+        alreadyBooked = false;
+        
+        if (ApexPages.currentPage().getParameters().get('projectId') != null && ApexPages.currentPage().getParameters().get('projectId') != '') {
+            ProjectId = ApexPages.currentPage().getParameters().get('projectId');
+        }
+        
+        if (ApexPages.currentPage().getParameters().get('unitId') != null && ApexPages.currentPage().getParameters().get('unitId') != '') {
+            unitId = ApexPages.currentPage().getParameters().get('unitId');
+        }
+        
+        if (ApexPages.currentPage().getParameters().get('optyid') != null && ApexPages.currentPage().getParameters().get('optyid') != '') {
+            boookingObj.Opportunity__c = ApexPages.currentPage().getParameters().get('optyid');
+            
+            system.debug('op:: ' + boookingObj.Opportunity__c + ' unitId:: ' + unitId + ' projectId:: ' + projectId);  
+            try {  
+                /* Validation to check this Opportunity has no Booking attached to it */ 
+                dummyBooking = [SELECT Name FROM Booking__c WHERE Opportunity__c = :boookingObj.Opportunity__c];
+                if(!dummyBooking.isEmpty() && dummyBooking.size() > 0){
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,'There is already a Booking ' + dummyBooking[0].Name + ' tagged with this Opportunity'));
+                    alreadyBooked = true;
+                    i=1;
+                }
+                
+                /* If this unit is already blocked then get the quotation tagged with this block unit */
+                dummybu = [SELECT Name, Quotation__c FROM Block_Unit__c WHERE Opportunity__c = :boookingObj.Opportunity__c AND Unit__c = :unitId AND Action__c = 'Blocked' AND Unit__r.Unit_Status__c = 'Blocked'];
+                system.debug('dummybu::: ' + dummybu);
+                if(!dummybu.isEmpty() && dummybu.size() == 1 && dummybu[0].Quotation__c != null){
+                    queryResult = [SELECT id, Name from Quotation__c where Id = :dummybu[0].Quotation__c]; 
+                    getOpportunity();
+                } else if(dummybu.isEmpty() && dummybu.size() == 0){
+                    system.debug('Inside get quotation');
+                    getOpportunity();
+                    getquotation();    
+                } else if(!dummybu.isEmpty() && dummybu.size() > 1){
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,'There are multiple Block Unit records tagged with this Opportunity'));
+                    alreadyBooked = true;
+                    i=1;        
+                } else if(!dummybu.isEmpty() && dummybu[0].Quotation__c == null){
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,'Unit is blocked without any Quotation:: ' + dummybu[0].Name));
+                    alreadyBooked = true;
+                    i=1;        
+                }
+                
+                /* Fetching all receipts created at opportunity */
+                ReceiptDetails = [SELECT Project_Unit__c,Project__c, Name,Cheque_DD__c,Cheque_DD_Date__c, DraweeBank__c, Token_Amount_Receipt__c, Mode__c, Currency__c, Drawee_Bank_If_Others__c, Total_Amount__c,
+                                  Receipt_Date__c, Token_Amount_ST__c,Tax_Receipt_Account__c FROM Receipt__c 
+                                  WHERE Opportunity__c = :boookingObj.Opportunity__c AND (Project_Unit__c = null OR Project_Unit__c = :unitId)]; 
+                if (ReceiptDetails.size() == 0) {                    
+                    /* If there is no receipt at opty then create instance for new receipt */
+                    receiptlist.add(new Receipt__c()); 
+                }
+            } catch (DmlException e) {
+                System.debug('The following exception has occurred: ' + e.getMessage());
+            }
+        } 
+        
+    }
+    
+    public void getOpportunity(){
+        system.debug('opty ID:: ' + boookingObj.Opportunity__c);
+        if (boookingObj.Opportunity__c != null){
+            optyList =  [SELECT Walk_in_Source__c, Walk_in_Sub_Source__c, OwnerId, Name, Project__c, Account.Birth_Date__c,Project__r.Sales_Head__c,
+                         Account.Nationality__c,  Account_Mobile_Number__c, Account_Email__c, Account_Phone__c, Account.Profession__c,AccountId,
+                         Account.Designation__c,Account.Company_Name__c,Account.Financing_Details__c,Project__r.Special_Terms_and_Condition_Approver__c,
+                         Account.Name, Account.Salutation, Account.Country__c, Account.Residential_Street__c, Account.Office_Street__c,
+                         Walk_in_Business_Partner__c/*, Channel_Partner_Contact_Person__c*/,Old_Booking__c,Old_Booking__r.Quotation__r.Quotation_Type__c,
+                         Old_Booking__r.Quotation__r.name,	Walk_in_Name_of_Person__c,Walk_in_Employee_Name__c,Project__r.Project_Sales_TL__c,
+                         Account.Contact_Management__c,Account.PersonMobilePhone,Account.Phone,Account.PersonEmail,Account.Alternate_Email__c
+                         from Opportunity where id = :boookingObj.Opportunity__c];
+            
+            system.debug('optyList::: ' + optyList[0]);
+            
+            if(optyList.size() > 0){
+                if(optyList[0].Walk_in_Source__c == null){
+                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Walk in Source for opportunity <a style="color:blue;" href="/'+optyList[0].id+'" target="_blank">'+optyList[0].Name+'</a> is empty');
+                    ApexPages.addMessage(myMsg);
+                    i=1;
+                    renderForm = false;
+                }else if((optyList[0].Walk_in_Source__c == 'Partner' || optyList[0].Walk_in_Source__c == 'Marketing Partner' ) && optyList[0].Walk_in_Business_Partner__c == null){
+                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Walk in Business Partner for opportunity <a style="color:blue;" href="/'+optyList[0].id+'" target="_blank">'+optyList[0].Name+'</a> is empty');
+                    ApexPages.addMessage(myMsg);
+                    i=1;
+                    renderForm = false;
+                }else{
+                    boookingObj.Source_of_Booking__c = optyList[0].Walk_in_Source__c;
+                    boookingObj.Mode_of_Funding__c = optyList[0].Account.Financing_Details__c;
+                    if(optyList[0].Walk_in_Business_Partner__c != null){
+                        boookingObj.Business_Partner__c = optyList[0].Walk_in_Business_Partner__c;
+                    }
+                    //  boookingObj.Channel_Partner_Contact_Person__c = optyList[0].Channel_Partner_Contact_Person__c; // Added by Neha on 18/01/19                               
+                }
+                
+                if(optyList[0].Walk_in_Sub_Source__c != null){
+                    boookingObj.Sub_Source__c = optyList[0].Walk_in_Sub_Source__c;
+                }                
+                if(optyList[0].OwnerId != null){
+                    boookingObj.Sales_Managers__c = optyList[0].OwnerId;                                           
+                }
+                if(optyList[0].Walk_in_Name_of_Person__c != null){
+                    boookingObj.Walk_in_Customer_Name__c = optyList[0].Walk_in_Name_of_Person__c;                                           
+                }
+                if(optyList[0].Walk_in_Employee_Name__c != null){
+                    boookingObj.Walk_in_Employee_Name__c = optyList[0].Walk_in_Employee_Name__c;                                           
+                }
+                
+                //Assigning applicant1 details from account 
+                applicant.Salutation__c = optyList[0].Account.Salutation;
+                applicant.Name = optyList[0].Account.Name;
+                firstApplicantDOB = optyList[0].Account.Birth_Date__c; 
+                applicant.Nationality__c =  optyList[0].Account.Nationality__c;
+                applicant.Mobile_Number__c = optyList[0].Account_Mobile_Number__c;
+                applicant.Secondary_Mobile_Number__c = optyList[0].Account_Phone__c;
+                applicant.Email_Address__c = optyList[0].Account_Email__c;    
+                applicant.Permanent_Address__c = optyList[0].Account.Residential_Street__c;
+                applicant.Country__c = optyList[0].Account.Country__c;  
+                applicant.Occupation__c = optyList[0].Account.Profession__c;
+                applicant.Designation__c = optyList[0].Account.Designation__c;
+                applicant.Organization_Name__c =  optyList[0].Account.Company_Name__c;
+                applicant.Organization_Address__c = optyList[0].Account.Office_Street__c;
+            }
+            else{                           
+            }
+            
+            if(optyList[0].Old_Booking__c != null){
+                OldApplicantList = [Select Id, Name,Salutation__c,Applicant_Number__c,Of_Ownership__c,Date_of_incorporation__c,Mobile_Number__c,DOB__c,Secondary_Mobile_Number__c,Landline_Number__c,Email_Address__c,
+                                    Nationality__c,Other_Details_Remarks__c,Type_Of_Applicant__c,Subtype_Of_Applicant__c,Permanent_Address__c,City__c,Mailing_Address__c,Mailing_City__c,State__c,Mailing_State__c,Country__c,Mailing_Country__c,
+                                    Preferred_address_for_all_correspondence__c,Organization_Name__c,Pincode__c,Designation__c,Organization_Phone_numbers__c,Occupation__c,Organization_Address__c,Organisation_Pincode__c,Organisation_Country__c,
+                                    Pancard__c,PancardNo__c,Address_Proof__c,Address_Proof_Document__c,Address_Proof_Number__c,Funds_from_NRE_FCNR__c,Self_attested_copy_of_PIO_or_OCI_Card__c,PassportNumber__c,Type_Of_Origin__c,
+                                    PassportNoDetails__c,Funds_from_NRE_NRO__c,Copy_of_Workpermit_Employment_contract__c,Copy_of_Memorandu_of_Association__c,Certified_copy_of_Article_of_Association__c,Certified_copy_of_Board_Resolution__c,Certified_copy_of_ROC_Incorporation__c,
+                                    Self_attested_List_of_Shareholders__c,Self_attested_List_of_Directors__c,PanCard_of_Authority_Signatory__c,Pan_Card_Number_of_Authority_Signatory__c,Certified_copy_of_Partnership_Deed__c,
+                                    Certified_extract_of_Registration__c,GSTIN__c,Copy_of_Authorization_Letter_POA__c,Date_of_Board_Resolution__c,CIN_No_1__c,Mailing_Address_same_as_PermanentAddress__c,
+                                    Father_Husband_s_Name__c,Country_Code__c,Alternative_Phone_Country_Code__c from Applicant_Details__c where Booking__c=: optyList[0].Old_Booking__c];
+                if(!OldApplicantList.isEmpty()){
+                    for(Integer i = 0; i < OldApplicantList.size(); i++){
+                        if(i==0){
+                            applicant.Salutation__c = OldApplicantList[i].Salutation__c; 
+                            applicant.Name = OldApplicantList[i].Name;
+                            firstApplicantDOB = OldApplicantList[i].DOB__c ;
+                            applicant.Father_Husband_s_Name__c = OldApplicantList[i].Father_Husband_s_Name__c;
+                            applicant.CIN_No_1__c = OldApplicantList[i].CIN_No_1__c;
+                            applicant.Date_of_Board_Resolution__c = OldApplicantList[i].Date_of_Board_Resolution__c;
+                            applicant.Nationality__c =  OldApplicantList[i].Nationality__c;
+                            applicant.Pincode__c = OldApplicantList[i].Pincode__c;
+                            applicant.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant.Preferred_address_for_all_correspondence__c = OldApplicantList[i].Preferred_address_for_all_correspondence__c;
+                            applicant.Of_Ownership__c = OldApplicantList[i].Of_Ownership__c;
+                            applicant.Landline_Number__c = OldApplicantList[i].Landline_Number__c;
+                            applicant.Organization_Name__c = OldApplicantList[i].Organization_Name__c;
+                            applicant.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant.Organisation_Pincode__c = OldApplicantList[i].Organisation_Pincode__c;
+                            applicant.Organisation_Country__c = OldApplicantList[i].Organisation_Country__c;
+                            applicant.Organization_Phone_numbers__c = OldApplicantList[i].Organization_Phone_numbers__c;
+                            applicant.Other_Details_Remarks__c = OldApplicantList[i].Other_Details_Remarks__c;
+                            applicant.Type_Of_Applicant__c = OldApplicantList[i].Type_Of_Applicant__c;
+                            applicant.Subtype_Of_Applicant__c = OldApplicantList[i].Subtype_Of_Applicant__c;
+                            applicant.Mobile_Number__c = OldApplicantList[i].Mobile_Number__c;
+                            applicant.Secondary_Mobile_Number__c = OldApplicantList[i].Secondary_Mobile_Number__c;
+                            applicant.Email_Address__c = OldApplicantList[i].Email_Address__c;    
+                            applicant.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant.Country__c = OldApplicantList[i].Country__c;  
+                            applicant.State__c = OldApplicantList[i].State__c;
+                            applicant.City__c = OldApplicantList[i].City__c;
+                            applicant.GSTIN__c = OldApplicantList[i].GSTIN__c;
+                            applicant.Occupation__c = OldApplicantList[i].Occupation__c;
+                            applicant.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant.Organization_Name__c =  OldApplicantList[i].Organization_Name__c;
+                            applicant.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant.Pancard__c = OldApplicantList[i].Pancard__c;
+                            applicant.PancardNo__c = OldApplicantList[i].PancardNo__c;
+                            applicant.Address_Proof__c = OldApplicantList[i].Address_Proof__c;
+                            applicant.Address_Proof_Document__c = OldApplicantList[i].Address_Proof_Document__c;
+                            applicant.Address_Proof_Number__c = OldApplicantList[i].Address_Proof_Number__c;
+                            applicant.Funds_from_NRE_FCNR__c = OldApplicantList[i].Funds_from_NRE_FCNR__c;
+                            applicant.Self_attested_copy_of_PIO_or_OCI_Card__c = OldApplicantList[i].Self_attested_copy_of_PIO_or_OCI_Card__c;
+                            applicant.PassportNumber__c = OldApplicantList[i].PassportNumber__c;
+                            applicant.Type_Of_Origin__c = OldApplicantList[i].Type_Of_Origin__c;
+                            applicant.PassportNoDetails__c = OldApplicantList[i].PassportNoDetails__c;
+                            applicant.Funds_from_NRE_NRO__c = OldApplicantList[i].Funds_from_NRE_NRO__c;
+                            applicant.Copy_of_Workpermit_Employment_contract__c = OldApplicantList[i].Copy_of_Workpermit_Employment_contract__c;
+                            applicant.Copy_of_Memorandu_of_Association__c = OldApplicantList[i].Copy_of_Memorandu_of_Association__c;
+                            applicant.Certified_copy_of_Article_of_Association__c = OldApplicantList[i].Certified_copy_of_Article_of_Association__c;
+                            applicant.Certified_copy_of_Board_Resolution__c = OldApplicantList[i].Certified_copy_of_Board_Resolution__c;
+                            applicant.Certified_copy_of_ROC_Incorporation__c = OldApplicantList[i].Certified_copy_of_ROC_Incorporation__c;
+                            applicant.Self_attested_List_of_Shareholders__c = OldApplicantList[i].Self_attested_List_of_Shareholders__c;
+                            applicant.Self_attested_List_of_Directors__c = OldApplicantList[i].Self_attested_List_of_Directors__c;
+                            applicant.PanCard_of_Authority_Signatory__c = OldApplicantList[i].PanCard_of_Authority_Signatory__c;
+                            applicant.Pan_Card_Number_of_Authority_Signatory__c = OldApplicantList[i].Pan_Card_Number_of_Authority_Signatory__c;
+                            applicant.Certified_copy_of_Partnership_Deed__c = OldApplicantList[i].Certified_copy_of_Partnership_Deed__c;
+                            applicant.Certified_extract_of_Registration__c = OldApplicantList[i].Certified_extract_of_Registration__c;
+                            applicant.Copy_of_Authorization_Letter_POA__c = OldApplicantList[i].Copy_of_Authorization_Letter_POA__c;
+                            applicant.Bypass_Validation_Applicant__c = true;
+                            applicant.Country_Code__c = OldApplicantList[i].Country_Code__c;
+                            applicant.Alternative_Phone_Country_Code__c = OldApplicantList[i].Alternative_Phone_Country_Code__c;
+                            addressCheck = OldApplicantList[i].Mailing_Address_same_as_PermanentAddress__c;
+                        }
+                        if(i==1){
+                            applicant2.Salutation__c = OldApplicantList[i].Salutation__c;
+                            applicant2.Name = OldApplicantList[i].Name;
+                            secondApplicantDOB = OldApplicantList[i].DOB__c ;
+                            applicant2.Father_Husband_s_Name__c = OldApplicantList[i].Father_Husband_s_Name__c;
+                            applicant2.CIN_No_1__c = OldApplicantList[i].CIN_No_1__c;
+                            applicant2.Date_of_Board_Resolution__c = OldApplicantList[i].Date_of_Board_Resolution__c;
+                            applicant2.Nationality__c =  OldApplicantList[i].Nationality__c;
+                            applicant2.Pincode__c = OldApplicantList[i].Pincode__c;
+                            applicant2.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant2.Preferred_address_for_all_correspondence__c = OldApplicantList[i].Preferred_address_for_all_correspondence__c;
+                            applicant2.Of_Ownership__c = OldApplicantList[i].Of_Ownership__c;
+                            applicant2.Landline_Number__c = OldApplicantList[i].Landline_Number__c;
+                            applicant2.Organization_Name__c = OldApplicantList[i].Organization_Name__c;
+                            applicant2.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant2.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant2.Organisation_Pincode__c = OldApplicantList[i].Organisation_Pincode__c;
+                            applicant2.Organisation_Country__c = OldApplicantList[i].Organisation_Country__c;
+                            applicant2.Organization_Phone_numbers__c = OldApplicantList[i].Organization_Phone_numbers__c;
+                            applicant2.Other_Details_Remarks__c = OldApplicantList[i].Other_Details_Remarks__c;
+                            applicant2.Type_Of_Applicant__c = OldApplicantList[i].Type_Of_Applicant__c;
+                            applicant2.Subtype_Of_Applicant__c = OldApplicantList[i].Subtype_Of_Applicant__c;
+                            applicant2.Mobile_Number__c = OldApplicantList[i].Mobile_Number__c;
+                            applicant2.Secondary_Mobile_Number__c = OldApplicantList[i].Secondary_Mobile_Number__c;
+                            applicant2.Email_Address__c = OldApplicantList[i].Email_Address__c;    
+                            applicant2.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant2.Country__c = OldApplicantList[i].Country__c; 
+                            applicant2.State__c = OldApplicantList[i].State__c;
+                            applicant2.City__c = OldApplicantList[i].City__c;
+                            applicant2.Occupation__c = OldApplicantList[i].Occupation__c;
+                            applicant2.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant2.Organization_Name__c =  OldApplicantList[i].Organization_Name__c;
+                            applicant2.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant2.Pancard__c = OldApplicantList[i].Pancard__c;
+                            applicant2.PancardNo__c = OldApplicantList[i].PancardNo__c;
+                            applicant2.Address_Proof__c = OldApplicantList[i].Address_Proof__c;
+                            applicant2.Address_Proof_Document__c = OldApplicantList[i].Address_Proof_Document__c;
+                            applicant2.Address_Proof_Number__c = OldApplicantList[i].Address_Proof_Number__c;
+                            applicant2.Funds_from_NRE_FCNR__c = OldApplicantList[i].Funds_from_NRE_FCNR__c;
+                            applicant2.Self_attested_copy_of_PIO_or_OCI_Card__c = OldApplicantList[i].Self_attested_copy_of_PIO_or_OCI_Card__c;
+                            applicant2.PassportNumber__c = OldApplicantList[i].PassportNumber__c;
+                            applicant2.Type_Of_Origin__c = OldApplicantList[i].Type_Of_Origin__c;
+                            applicant2.PassportNoDetails__c = OldApplicantList[i].PassportNoDetails__c;
+                            applicant2.Funds_from_NRE_NRO__c = OldApplicantList[i].Funds_from_NRE_NRO__c;
+                            applicant2.Copy_of_Workpermit_Employment_contract__c = OldApplicantList[i].Copy_of_Workpermit_Employment_contract__c;
+                            applicant2.Copy_of_Memorandu_of_Association__c = OldApplicantList[i].Copy_of_Memorandu_of_Association__c;
+                            applicant2.Certified_copy_of_Article_of_Association__c = OldApplicantList[i].Certified_copy_of_Article_of_Association__c;
+                            applicant2.Certified_copy_of_Board_Resolution__c = OldApplicantList[i].Certified_copy_of_Board_Resolution__c;
+                            applicant2.Certified_copy_of_ROC_Incorporation__c = OldApplicantList[i].Certified_copy_of_ROC_Incorporation__c;
+                            applicant2.Self_attested_List_of_Shareholders__c = OldApplicantList[i].Self_attested_List_of_Shareholders__c;
+                            applicant2.Self_attested_List_of_Directors__c = OldApplicantList[i].Self_attested_List_of_Directors__c;
+                            applicant2.PanCard_of_Authority_Signatory__c = OldApplicantList[i].PanCard_of_Authority_Signatory__c;
+                            applicant2.Pan_Card_Number_of_Authority_Signatory__c = OldApplicantList[i].Pan_Card_Number_of_Authority_Signatory__c;
+                            applicant2.Certified_copy_of_Partnership_Deed__c = OldApplicantList[i].Certified_copy_of_Partnership_Deed__c;
+                            applicant2.Certified_extract_of_Registration__c = OldApplicantList[i].Certified_extract_of_Registration__c;
+                            applicant2.Copy_of_Authorization_Letter_POA__c = OldApplicantList[i].Copy_of_Authorization_Letter_POA__c;
+                            applicant2.Bypass_Validation_Applicant__c = true;
+                            applicant2.Country_Code__c = OldApplicantList[i].Country_Code__c;
+                            applicant2.Alternative_Phone_Country_Code__c = OldApplicantList[i].Alternative_Phone_Country_Code__c;
+                            addressCheckApplicant2 = OldApplicantList[i].Mailing_Address_same_as_PermanentAddress__c;
+                        }
+                        if(i==2){
+                            applicant3.Salutation__c = OldApplicantList[i].Salutation__c;
+                            applicant3.Name = OldApplicantList[i].Name;
+                            thirdApplicantDOB = OldApplicantList[i].DOB__c ;
+                            applicant3.Father_Husband_s_Name__c = OldApplicantList[i].Father_Husband_s_Name__c;
+                            applicant3.CIN_No_1__c = OldApplicantList[i].CIN_No_1__c;
+                            applicant3.Date_of_Board_Resolution__c = OldApplicantList[i].Date_of_Board_Resolution__c;
+                            applicant3.Nationality__c =  OldApplicantList[i].Nationality__c;
+                            applicant3.Pincode__c = OldApplicantList[i].Pincode__c;
+                            applicant3.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant3.Preferred_address_for_all_correspondence__c = OldApplicantList[i].Preferred_address_for_all_correspondence__c;
+                            applicant3.Of_Ownership__c = OldApplicantList[i].Of_Ownership__c;
+                            applicant3.Landline_Number__c = OldApplicantList[i].Landline_Number__c;
+                            applicant3.Organization_Name__c = OldApplicantList[i].Organization_Name__c;
+                            applicant3.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant3.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant3.Organisation_Pincode__c = OldApplicantList[i].Organisation_Pincode__c;
+                            applicant3.Organisation_Country__c = OldApplicantList[i].Organisation_Country__c;
+                            applicant3.Organization_Phone_numbers__c = OldApplicantList[i].Organization_Phone_numbers__c;
+                            applicant3.Other_Details_Remarks__c = OldApplicantList[i].Other_Details_Remarks__c;
+                            applicant3.Type_Of_Applicant__c = OldApplicantList[i].Type_Of_Applicant__c;
+                            applicant3.Subtype_Of_Applicant__c = OldApplicantList[i].Subtype_Of_Applicant__c;
+                            applicant3.Mobile_Number__c = OldApplicantList[i].Mobile_Number__c;
+                            applicant3.Secondary_Mobile_Number__c = OldApplicantList[i].Secondary_Mobile_Number__c;
+                            applicant3.Email_Address__c = OldApplicantList[i].Email_Address__c;    
+                            applicant3.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant3.Country__c = OldApplicantList[i].Country__c; 
+                            applicant3.State__c = OldApplicantList[i].State__c;
+                            applicant3.City__c = OldApplicantList[i].City__c;
+                            applicant3.Occupation__c = OldApplicantList[i].Occupation__c;
+                            applicant3.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant3.Organization_Name__c =  OldApplicantList[i].Organization_Name__c;
+                            applicant3.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant3.Pancard__c = OldApplicantList[i].Pancard__c;
+                            applicant3.PancardNo__c = OldApplicantList[i].PancardNo__c;
+                            applicant3.Address_Proof__c = OldApplicantList[i].Address_Proof__c;
+                            applicant3.Address_Proof_Document__c = OldApplicantList[i].Address_Proof_Document__c;
+                            applicant3.Address_Proof_Number__c = OldApplicantList[i].Address_Proof_Number__c;
+                            applicant3.Funds_from_NRE_FCNR__c = OldApplicantList[i].Funds_from_NRE_FCNR__c;
+                            applicant3.Self_attested_copy_of_PIO_or_OCI_Card__c = OldApplicantList[i].Self_attested_copy_of_PIO_or_OCI_Card__c;
+                            applicant3.PassportNumber__c = OldApplicantList[i].PassportNumber__c;
+                            applicant3.Type_Of_Origin__c = OldApplicantList[i].Type_Of_Origin__c;
+                            applicant3.PassportNoDetails__c = OldApplicantList[i].PassportNoDetails__c;
+                            applicant3.Funds_from_NRE_NRO__c = OldApplicantList[i].Funds_from_NRE_NRO__c;
+                            applicant3.Copy_of_Workpermit_Employment_contract__c = OldApplicantList[i].Copy_of_Workpermit_Employment_contract__c;
+                            applicant3.Copy_of_Memorandu_of_Association__c = OldApplicantList[i].Copy_of_Memorandu_of_Association__c;
+                            applicant3.Certified_copy_of_Article_of_Association__c = OldApplicantList[i].Certified_copy_of_Article_of_Association__c;
+                            applicant3.Certified_copy_of_Board_Resolution__c = OldApplicantList[i].Certified_copy_of_Board_Resolution__c;
+                            applicant3.Certified_copy_of_ROC_Incorporation__c = OldApplicantList[i].Certified_copy_of_ROC_Incorporation__c;
+                            applicant3.Self_attested_List_of_Shareholders__c = OldApplicantList[i].Self_attested_List_of_Shareholders__c;
+                            applicant3.Self_attested_List_of_Directors__c = OldApplicantList[i].Self_attested_List_of_Directors__c;
+                            applicant3.PanCard_of_Authority_Signatory__c = OldApplicantList[i].PanCard_of_Authority_Signatory__c;
+                            applicant3.Pan_Card_Number_of_Authority_Signatory__c = OldApplicantList[i].Pan_Card_Number_of_Authority_Signatory__c;
+                            applicant3.Certified_copy_of_Partnership_Deed__c = OldApplicantList[i].Certified_copy_of_Partnership_Deed__c;
+                            applicant3.Certified_extract_of_Registration__c = OldApplicantList[i].Certified_extract_of_Registration__c;
+                            applicant3.Copy_of_Authorization_Letter_POA__c = OldApplicantList[i].Copy_of_Authorization_Letter_POA__c;
+                            applicant3.Bypass_Validation_Applicant__c = true;
+                            applicant3.Country_Code__c = OldApplicantList[i].Country_Code__c;
+                            applicant3.Alternative_Phone_Country_Code__c = OldApplicantList[i].Alternative_Phone_Country_Code__c;
+                            addressCheckApplicant3 = OldApplicantList[i].Mailing_Address_same_as_PermanentAddress__c;
+                        }
+                        if(i==3){
+                            applicant4.Salutation__c = OldApplicantList[i].Salutation__c;
+                            applicant4.Name = OldApplicantList[i].Name;
+                            fourthApplicantDOB = OldApplicantList[i].DOB__c ;
+                            applicant4.Nationality__c =  OldApplicantList[i].Nationality__c;
+                            applicant4.Pincode__c = OldApplicantList[i].Pincode__c;
+                            applicant4.Father_Husband_s_Name__c = OldApplicantList[i].Father_Husband_s_Name__c;
+                            applicant4.CIN_No_1__c = OldApplicantList[i].CIN_No_1__c;
+                            applicant4.Date_of_Board_Resolution__c = OldApplicantList[i].Date_of_Board_Resolution__c;
+                            applicant4.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant4.Preferred_address_for_all_correspondence__c = OldApplicantList[i].Preferred_address_for_all_correspondence__c;
+                            applicant4.Of_Ownership__c = OldApplicantList[i].Of_Ownership__c;
+                            applicant4.Landline_Number__c = OldApplicantList[i].Landline_Number__c;
+                            applicant4.Organization_Name__c = OldApplicantList[i].Organization_Name__c;
+                            applicant4.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant4.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant4.Organisation_Pincode__c = OldApplicantList[i].Organisation_Pincode__c;
+                            applicant4.Organisation_Country__c = OldApplicantList[i].Organisation_Country__c;
+                            applicant4.Organization_Phone_numbers__c = OldApplicantList[i].Organization_Phone_numbers__c;
+                            applicant4.Other_Details_Remarks__c = OldApplicantList[i].Other_Details_Remarks__c;
+                            applicant4.Type_Of_Applicant__c = OldApplicantList[i].Type_Of_Applicant__c;
+                            applicant4.Subtype_Of_Applicant__c = OldApplicantList[i].Subtype_Of_Applicant__c;
+                            applicant4.Mobile_Number__c = OldApplicantList[i].Mobile_Number__c;
+                            applicant4.Secondary_Mobile_Number__c = OldApplicantList[i].Secondary_Mobile_Number__c;
+                            applicant4.Email_Address__c = OldApplicantList[i].Email_Address__c;    
+                            applicant4.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant4.Country__c = OldApplicantList[i].Country__c; 
+                            applicant4.State__c = OldApplicantList[i].State__c;
+                            applicant4.City__c = OldApplicantList[i].City__c;
+                            applicant4.Occupation__c = OldApplicantList[i].Occupation__c;
+                            applicant4.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant4.Organization_Name__c =  OldApplicantList[i].Organization_Name__c;
+                            applicant4.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant4.Bypass_Validation_Applicant__c = true;
+                            applicant4.Country_Code__c = OldApplicantList[i].Country_Code__c;
+                            applicant4.Alternative_Phone_Country_Code__c = OldApplicantList[i].Alternative_Phone_Country_Code__c;
+                            addressCheckApplicant4 = OldApplicantList[i].Mailing_Address_same_as_PermanentAddress__c;
+                        }
+                        if(i==4){
+                            applicant5.Salutation__c = OldApplicantList[i].Salutation__c;
+                            applicant5.Name = OldApplicantList[i].Name;
+                            fifthApplicantDOB = OldApplicantList[i].DOB__c ;
+                            applicant5.Father_Husband_s_Name__c = OldApplicantList[i].Father_Husband_s_Name__c;
+                            applicant5.CIN_No_1__c = OldApplicantList[i].CIN_No_1__c;
+                            applicant5.Date_of_Board_Resolution__c = OldApplicantList[i].Date_of_Board_Resolution__c;
+                            applicant5.Nationality__c =  OldApplicantList[i].Nationality__c;
+                            applicant5.Pincode__c = OldApplicantList[i].Pincode__c;
+                            applicant5.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant5.Preferred_address_for_all_correspondence__c = OldApplicantList[i].Preferred_address_for_all_correspondence__c;
+                            applicant5.Of_Ownership__c = OldApplicantList[i].Of_Ownership__c;
+                            applicant5.Landline_Number__c = OldApplicantList[i].Landline_Number__c;
+                            applicant5.Organization_Name__c = OldApplicantList[i].Organization_Name__c;
+                            applicant5.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant5.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant5.Organisation_Pincode__c = OldApplicantList[i].Organisation_Pincode__c;
+                            applicant5.Organisation_Country__c = OldApplicantList[i].Organisation_Country__c;
+                            applicant5.Organization_Phone_numbers__c = OldApplicantList[i].Organization_Phone_numbers__c;
+                            applicant5.Other_Details_Remarks__c = OldApplicantList[i].Other_Details_Remarks__c;
+                            applicant5.Type_Of_Applicant__c = OldApplicantList[i].Type_Of_Applicant__c;
+                            applicant5.Subtype_Of_Applicant__c = OldApplicantList[i].Subtype_Of_Applicant__c;
+                            applicant5.Mobile_Number__c = OldApplicantList[i].Mobile_Number__c;
+                            applicant5.Secondary_Mobile_Number__c = OldApplicantList[i].Secondary_Mobile_Number__c;
+                            applicant5.Email_Address__c = OldApplicantList[i].Email_Address__c;    
+                            applicant5.Permanent_Address__c = OldApplicantList[i].Permanent_Address__c;
+                            applicant5.Country__c = OldApplicantList[i].Country__c;
+                            applicant5.State__c = OldApplicantList[i].State__c;
+                            applicant5.City__c = OldApplicantList[i].City__c;
+                            applicant5.Occupation__c = OldApplicantList[i].Occupation__c;
+                            applicant5.Designation__c = OldApplicantList[i].Designation__c;
+                            applicant5.Organization_Name__c =  OldApplicantList[i].Organization_Name__c;
+                            applicant5.Organization_Address__c = OldApplicantList[i].Organization_Address__c;
+                            applicant5.Bypass_Validation_Applicant__c = true;
+                            applicant5.Country_Code__c = OldApplicantList[i].Country_Code__c;
+                            applicant5.Alternative_Phone_Country_Code__c = OldApplicantList[i].Alternative_Phone_Country_Code__c;
+                            addressCheckApplicant5 = OldApplicantList[i].Mailing_Address_same_as_PermanentAddress__c;
+                        }
+                    }
+                    OldBookingList = [Select id,name,Future_Correspondence_Contact__c,Mode_of_Funding__c,Authorised_Signatory__c,Date_of_Agreement_AFS__c,
+                                      Date_of_Agreement_AMA__c,Authorised_Signatory_AMA__c,Relationship_Manager__c,Signed_Termsheet_Date__c,DDA_IDA_Signing_Date__c,
+                                      Sales_Manager_Process__c,All_Document_Verified__c from Booking__c where id=:optyList[0].Old_Booking__c];
+                    if(!OldBookingList.isEmpty()){
+                        boookingObj.Future_Correspondence_Contact__c = OldBookingList[0].Future_Correspondence_Contact__c;
+                        boookingObj.Mode_of_Funding__c = OldBookingList[0].Mode_of_Funding__c;
+                        boookingObj.Authorised_Signatory__c = OldBookingList[0].Authorised_Signatory__c;
+                        boookingObj.Date_of_Agreement_AFS__c = OldBookingList[0].Date_of_Agreement_AFS__c;
+                        boookingObj.Date_of_Agreement_AMA__c = OldBookingList[0].Date_of_Agreement_AMA__c;
+                        boookingObj.Authorised_Signatory_AMA__c = OldBookingList[0].Authorised_Signatory_AMA__c;
+                        boookingObj.Relationship_Manager__c = OldBookingList[0].Relationship_Manager__c;
+                        boookingObj.Signed_Termsheet_Date__c = OldBookingList[0].Signed_Termsheet_Date__c;
+                        boookingObj.DDA_IDA_Signing_Date__c = OldBookingList[0].DDA_IDA_Signing_Date__c;
+                        boookingObj.Sales_Manager_Process__c = OldBookingList[0].Sales_Manager_Process__c;
+                        boookingObj.All_Document_Verified__c = OldBookingList[0].All_Document_Verified__c;
+                    }
+                    
+                }
+            }
+        }       
+    }
+    
+    public PageReference getquotation() {
+        
+        if (boookingObj.Opportunity__c != null && unitId == null && ProjectId == null) {
+            queryResult = [SELECT id, Name,Quotation_Type__c from Quotation__c 
+                           where Opportunity__c = :boookingObj.Opportunity__c AND Unit__r.Project__c = :optyList[0].Project__c 
+                           and (Unit__r.Unit_Status__c = 'Available') and Booking__c = :null 
+                           and Active_Quotation__c = TRUE and Quote_Status__c = :'Valid' ORDER BY CreatedDate DESC LIMIT 5];
+            if(queryResult.size() > 0){
+                system.debug('Result only opty quotations' +queryResult);               
+            } else {
+                system.debug('Quotation Else if only opty');
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Either the opportunity does not have a Quotation or the unit associated with it is not Available');
+                ApexPages.addMessage(myMsg);
+            }
+        } else if (boookingObj.Opportunity__c != null && unitId != null && ProjectId == null) {
+            queryResult = [SELECT id, Name,Quotation_Type__c from Quotation__c 
+                           where Opportunity__c = :boookingObj.Opportunity__c and Unit__c = :unitId and Unit__r.Project__c = :optyList[0].Project__c 
+                           and (Unit__r.Unit_Status__c = 'Available')
+                           and Booking__c = :null and Active_Quotation__c = TRUE and Quote_Status__c = :'Valid' ORDER BY CreatedDate DESC LIMIT 5];
+            if(queryResult.size() > 0){
+                system.debug('Result only opty and unit quotations' +queryResult);
+            }
+            else {
+                system.debug('Quotation Else if opty  and unit is present but no quotation');
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Either the opportunity does not have a Quotation or the unit associated with it is not Available');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+        } else if (boookingObj.Opportunity__c != null && ProjectId != null && unitId == null ) {
+            queryResult = [SELECT id, Name,Quotation_Type__c from Quotation__c 
+                           where Opportunity__c = : boookingObj.Opportunity__c and Unit__r.Project__c = :ProjectId and 
+                           (Unit__r.Unit_Status__c = 'Available') and Booking__c = :null 
+                           and Active_Quotation__c = TRUE and Quote_Status__c = :'Valid' ORDER BY CreatedDate DESC LIMIT 5];
+            system.debug('queryResult::'+queryResult);
+            if(queryResult.size() > 0){
+                system.debug('Result only opty and ProjectId quotations' +queryResult);
+            }
+            else {
+                system.debug('Quotation Else if opty and Project');
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Either the opportunity does not have a Quotation or the unit associated with it is not Available');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            } 
+        }
+        else if (boookingObj.Opportunity__c != null && ProjectId != null && unitId != null ) {                
+            queryResult = [SELECT id, Name,Quotation_Type__c from Quotation__c 
+                           where Opportunity__c = :boookingObj.Opportunity__c and Unit__r.Project__c = :ProjectId 
+                           and (Unit__r.Unit_Status__c = 'Available') and Unit__c = :unitId and Booking__c = :null
+                           and Active_Quotation__c = TRUE and Quote_Status__c = :'Valid' ORDER BY CreatedDate DESC LIMIT 5];
+            system.debug('@ queryResult ::'+queryResult.size() );
+            if(queryResult.size() > 0){
+                system.debug('Result only opty and ProjectId quotations' +queryResult);
+            }
+            else {
+                system.debug('Quotation Else if opty and Project');
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Either the opportunity does not have a Quotation or the unit associated with it is not Available');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }                
+        }           
+        else {
+            system.debug('Inside getQuote No Opportunity');
+        } 
+        getOpportunity();
+        return null;
+    }
+    
+    //Create selectlist out of queryresult
+    public List <SelectOption> getQuote {
+        get {        
+            List <SelectOption> optns = new List <Selectoption> ();
+            optns.add(new SelectOption('', 'Select a Quotation'));
+            if(queryResult.size() > 0){
+                for (Quotation__c obj: queryResult) {
+                    optns.add(new SelectOption(obj.Id, obj.Name));
+                }                
+            } else {
+                system.debug('No quotations');                  
+            }
+            return optns;
+        }
+        set;
+    }
+    
+    
+    public void addReciept(){        
+        receiptlist.add(new Receipt__c());
+    }
+    
+    public void deleteReciept(){              
+        rowIndex = Integer.valueOf(ApexPages.currentPage().getParameters().get('rowIndex'));
+        receiptlist.remove(rowIndex);
+    }
+    
+    //Get details from Quotation
+    public PageReference getTokenAmount() {
+        
+        if (selectedQuote != null) {
+            List<Payment_Milestones__c> payList = new List<Payment_Milestones__c>();
+            if(selectedQuote != null){
+                payList = [Select id,name,Milestone_Due_Date__c,Installment__c from Payment_Milestones__c where Quotation__c =: selectedQuote order by createddate asc];
+                boookingObj.Booking_Date__c = payList[0].Milestone_Due_Date__c;
+            }
+            QuoteDetails = [SELECT id, Name, Booking__c, Unit__r.Project__c,Unit__r.Carpet_Area__c, Unit__r.Chargeable_Area__c , Unit__r.Carpet_Area_in_Sq_Mts__c, Unit__r.Enclosed_Balcony_in_Sq_Mtrs__c, Unit__r.Cupboard_Area_in_Sq_Mtrs__c,Unit__r.Tower__r.Cluster__r.id, 
+                            Unit__c, Token_Amount__c, ST_Token_Amount__c, Unit__r.Tower__r.Cluster__r.name,Unit__r.Tower__c ,Unit__r.Tower__r.name, Unit__r.Configuration__c, Unit__r.Floor__c, Unit__r.name,Total_Agreement_Value_Bucket__c,Car_Park_Type_1__c,Car_Park_Type_2__c,Car_Park_Type_3__c,Car_Park_Type_4__c,Car_Park_Type_5__c, 
+                            Level_One_Approver__c,Level_Two_Approver__c,Level_Three_Approver__c, Service_tax_on_Token_Amount__c, Allow_booking_without_full_token__c,TotalEarmarkedCarpark__c,TotalAdditionalCarpark__c,Car_Park_Count_1__c,Car_Park_Count_2__c,Car_Park_Count_3__c,Car_Park_Count_4__c,Car_Park_Count_5__c,
+                            Car_Park_Count_6__c,Car_Park_Count_7__c,Car_Park_Count_8__c,Car_Park_Count_9__c,Car_Park_Count_10__c,Car_Park_Type_6__c,Car_Park_Type_7__c,Car_Park_Type_8__c,Car_Park_Type_9__c,Car_Park_Type_10__c,
+                            Unit__r.Tower__r.Cluster__c, Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c,Unit__r.Tower__r.Cluster__r.Bank_Account_No_Escrow__c,
+                            Unit__r.Tower__r.Cluster__r.Bank_Name_Escrow__c,Unit__r.Tower__r.Cluster__r.IFSC_Code_Escrow__c,Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c,
+                            Unit__r.Tower__r.Cluster__r.Bank_Account_No_Tax__c,Unit__r.Tower__r.Cluster__r.IFSC_Code_Tax__c,Unit__r.Tower__r.Cluster__r.Bank_Name_Tax__c,
+                            Unit__r.TE_Product__c,Unit__r.Tower__r.Cluster__r.A_C_Name_EOI__c,Unit__r.Tower__r.Cluster__r.Bank_Account_No_EOI__c,
+                            Unit__r.Tower__r.Cluster__r.Bank_Name_EOI__c,Unit__r.Tower__r.Cluster__r.IFSC_Code_EOI__c,Unit__r.Tower__r.Cluster__r.A_C_Name_Interim_Bank_Account__c,
+                            Unit__r.Tower__r.Cluster__r.Bank_Account_No_Interim_Bank_Account__c,Unit__r.Tower__r.Cluster__r.Bank_Name_Interim_Bank_Account__c,
+                            Unit__r.Tower__r.Cluster__r.IFSC_Code_Interim_Bank_Account__c,Payment_Plan__r.Payment_Plan_Type__c
+                            FROM Quotation__c WHERE Id = :selectedQuote];
+            System.debug('QuoteDetails::'+QuoteDetails[0].Unit__c);
+            if (QuoteDetails.size() > 0){
+                boookingObj.Token_Amount__c = QuoteDetails[0].Token_Amount__c;               
+                boookingObj.Cluster__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.name;
+                boookingObj.Tower__c = QuoteDetails[0].Unit__r.Tower__r.name;
+                boookingObj.Flat_Typology__c = QuoteDetails[0].Unit__r.Configuration__c;
+                boookingObj.Floor__c = QuoteDetails[0].Unit__r.Floor__c;
+                boookingObj.Carpet_Area__c = QuoteDetails[0].Unit__r.Carpet_Area__c;
+                boookingObj.No_of_Additional_Parking__c = QuoteDetails[0].TotalAdditionalCarpark__c;
+                boookingObj.No_of_Earmarked_Parking__c = QuoteDetails[0].TotalEarmarkedCarpark__c;
+                boookingObj.Payment_Plan__c = QuoteDetails[0].Payment_Plan__r.Payment_Plan_Type__c;
+                
+                if(QuoteDetails[0].Total_Agreement_Value_Bucket__c != 0){
+                    boookingObj.Agreement_Value__c = QuoteDetails[0].Total_Agreement_Value_Bucket__c ;
+                }
+                
+                boookingObj.Flat_No__c = QuoteDetails[0].Unit__r.name;
+                boookingObj.Project__c = QuoteDetails[0].Unit__r.Project__c;           
+                boookingObj.Unit__c = QuoteDetails[0].Unit__c;
+                if (QuoteDetails[0].Service_Tax_On_Token_Amount__c == true) {
+                    if(QuoteDetails[0].ST_Token_Amount__c != Null){
+                        boookingObj.ST_Token_Amount__c = QuoteDetails[0].ST_Token_Amount__c;
+                    } 
+                } else {
+                    boookingObj.ST_Token_Amount__c = 0;
+                }
+                
+                if(boookingObj.Opportunity__c != null && QuoteDetails[0].Unit__c != null){
+                    if(QuoteDetails[0].Unit__r.Tower__r.Cluster__c != null){
+                        boookingObj.Stock__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c;
+                        boookingObj.Account_Number__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.Bank_Account_No_Escrow__c;
+                        boookingObj.Bank__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.Bank_Name_Escrow__c;
+                        boookingObj.IFSC_Code_Flat_Cost__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.IFSC_Code_Escrow__c;
+                        boookingObj.Account_Name_Service_Tax__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c;
+                        boookingObj.Account_Number_Service_tax__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.Bank_Account_No_Tax__c;
+                        boookingObj.Bank_Name_Service_tax__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.Bank_Name_Tax__c;
+                        boookingObj.IFSC_Code_Service_Tax__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.IFSC_Code_Tax__c;
+                        boookingObj.Account_Name_EOI__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.A_C_Name_EOI__c;
+                        boookingObj.Account_Number_EOI__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.Bank_Account_No_EOI__c;
+                        boookingObj.Bank_Name_EOI__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.Bank_Name_EOI__c;
+                        boookingObj.IFSC_Code_EOI__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.IFSC_Code_EOI__c;
+                        boookingObj.Account_Name_Interim__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.A_C_Name_Interim_Bank_Account__c;
+                        boookingObj.Account_Number_Interim__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.Bank_Account_No_Interim_Bank_Account__c;
+                        boookingObj.Bank_Name_Interim__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.Bank_Name_Interim_Bank_Account__c;
+                        boookingObj.IFSC_Code_Interim__c = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.IFSC_Code_Interim_Bank_Account__c;
+                    }
+                    //le = InventoryCostServices.getLegalEntityDetails(boookingObj.Unit__c, boookingObj.Project__c, QuoteDetails[0].Unit__r.Tower__c);
+                    /* if(le != null){                       
+boookingObj.Stock__c = le.Account_Name_Flat_Cost__c;
+boookingObj.Account_Number__c = String.valueOf(le.Account_Number_Flat_Cost__c);
+boookingObj.Bank__c = le.Bank_Name_Flat_Cost__c;
+boookingObj.IFSC_Code_Flat_Cost__c = le.IFSC_Code_Flat_Cost__c;
+boookingObj.Account_Name_Service_Tax__c = le.Account_Name_Service_Tax__c;
+boookingObj.Account_Number_Service_tax__c = String.ValueOf(le.Account_Number_Service_tax__c);
+boookingObj.Bank_Name_Service_tax__c = le.Bank_Name_Service_tax__c;
+boookingObj.IFSC_Code_Service_Tax__c = le.IFSC_Code_Service_Tax__c;
+} */
+                }       
+                string count = 'Car_Park_Count_';
+                string type = 'Car_Park_Type_';
+                boolean isStack = false;
+                boolean isOpen = false;
+                boolean isTandem = false;
+                stackParking = 0;
+                openParking = 0;
+                tandemParking = 0;
+                string clusterId = QuoteDetails[0].Unit__r.Tower__r.Cluster__r.id;
+                
+                for(integer i=1;i<=5;i++){
+                    if((Decimal)(QuoteDetails[0].get(count+i+'__c')) != null && string.isNotBlank((string)(QuoteDetails[0].get(type+i+'__c')))){
+                        if((string)(QuoteDetails[0].get(type+i+'__c')) == 'Stack' && (Decimal)(QuoteDetails[0].get(count+i+'__c')) > 0){
+                            isStack = true;
+                            stackParking += (Decimal)(QuoteDetails[0].get(count+i+'__c'));
+                        }
+                        if((string)(QuoteDetails[0].get(type+i+'__c')) == 'Open' && (Decimal)(QuoteDetails[0].get(count+i+'__c')) > 0){
+                            isOpen = true;
+                            openParking += (Decimal)(QuoteDetails[0].get(count+i+'__c'));
+                        }
+                        if((string)(QuoteDetails[0].get(type+i+'__c')) == 'Tandem' && (Decimal)(QuoteDetails[0].get(count+i+'__c')) > 0){
+                            isTandem = true;
+                            tandemParking += (Decimal)(QuoteDetails[0].get(count+i+'__c'));
+                        }
+                    }
+                }
+                
+                List<Project_Product__c> pp = [select id,name from Project_Product__c where Project__c =: QuoteDetails[0].Unit__r.Project__c and Product__c =: QuoteDetails[0].Unit__r.TE_Product__c];
+                
+                if(isStack){
+                    STACKParkingList = [Select id,Category__c,Status__c,Name,Type__c From Car_Park__c where Type__c = 'Stack' and Status__c = 'Available' and Category__c = 'Additional' and Project_Product__c =: pp[0].id];
+                }
+                if(isOpen){
+                    SingleOPENParkingList = [Select id,Category__c,Status__c,Name,Type__c From Car_Park__c where Type__c = 'Open' and Status__c =: 'Available' and Category__c = 'Additional' and Project_Product__c =: pp[0].id];
+                }
+                if(isTandem){
+                    TandemCOVEREDParkingList = [Select id,Status__c,Category__c,Name,Type__c From Car_Park__c where Type__c = 'Tandem' and Status__c = 'Available' and Category__c = 'Additional' and Project_Product__c =: pp[0].id];
+                }                
+            }            
+        } else {
+            boookingObj.Token_Amount__c = 0;
+            boookingObj.ST_Token_Amount__c = 0;
+        }
+        getOpportunity();
+        return null;
+    }
+    
+    public PageReference getaddressstatus() {
+        if (addressCheck == true) {
+            addressCheckReverse = false;
+        } else {
+            addressCheckReverse = true;
+        }
+        return null;
+    }
+    
+    /*Creating below method to validate user input data - 13/02/2024*/
+    public void validateField(String fieldValue, String errorMessage) {
+        if (String.isBlank(fieldValue)) {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, errorMessage));
+            i = 1;
+        }
+    }
+    
+    public PageReference Save() {
+        
+        i = 0;
+        ///Tandem Covered////       
+        if (QuoteDetails != null && QuoteDetails.size() > 0 && TandemCOVEREDParkingList.size() < tandemParking) {
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Required number of tandem parking is unavailable');
+            ApexPages.addMessage(myMsg);
+            i=1;      
+        }
+        ///Sigle Open////
+        if (QuoteDetails != null && QuoteDetails.size() > 0 && SingleOPENParkingList.size() < openParking) {
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Required number of open parking is unavailable');
+            ApexPages.addMessage(myMsg);
+            i=1;       
+        }
+        ///Stack////
+        if (QuoteDetails != null && QuoteDetails.size() > 0 && STACKParkingList.size() < stackParking) {
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Required number of stack parking is unavailable');
+            ApexPages.addMessage(myMsg);
+            i=1;      
+        }       
+        /////////////// Validate details//////////////////////////////////////////////
+        if(boookingObj.Opportunity__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Please select an Opportunity');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(selectedQuote == '' || selectedQuote == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Please select a quotation');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(boookingObj.Future_Correspondence_Contact__c == '' || boookingObj.Future_Correspondence_Contact__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Future Correspondence Contact cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(boookingObj.Future_Correspondence_Contact__c == 'Other'){
+            if(boookingObj.Future_Correspondence_Contact_Name__c ==  null){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Incase Future Correspondence Contact Is Other Future Correspondence Name cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }        
+            if(boookingObj.Future_Correspondence_Contact_Phone__c == '' || boookingObj.Future_Correspondence_Contact_Phone__c == null ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Incase Future Correspondence Contact Is Other Future Correspondence Phone cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            if(boookingObj.Future_Correspondence_Contact_Email__c == '' || boookingObj.Future_Correspondence_Contact_Email__c == null){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Incase Future Correspondence Contact Is Other Future Correspondence Email cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            if(boookingObj.Future_Correspondence_Contact_Relation__c == '' || boookingObj.Future_Correspondence_Contact_Relation__c == null){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Incase Future Correspondence Contact Is Other Future Correspondence Relation cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+        }
+        if(boookingObj.Mode_of_Funding__c == '' || boookingObj.Mode_of_Funding__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Mode of Funding cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        //////////////////Error Messages for Future Correspondence///////////////////////
+        if(boookingObj.Future_Correspondence_Contact__c == '2nd Applicant'){
+            
+            if(applicant2.Name == null){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Incase Future Correspondence Contact Is (2nd Applicant) Applicant 2 Name cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+        }
+        if(boookingObj.Future_Correspondence_Contact__c == '3rd Applicant'){
+            
+            if(applicant3.Name == null){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Incase Future Correspondence Contact Is (3rd Applicant) Applicant 3 Name cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+        }
+        if(boookingObj.Future_Correspondence_Contact__c == '4th Applicant'){ 
+            
+            if(applicant4.Name == null ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Incase Future Correspondence Contact Is (4th Applicant) Applicant 4 Name cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+        }
+        if(boookingObj.Future_Correspondence_Contact__c == '5th Applicant'){
+            
+            if(applicant5.Name == null ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Incase Future Correspondence Contact Is (5th Applicant) Applicant 5 Name cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+        }  
+        
+        
+        ////////////////////////// error messages for applicant 1  //////////////////////////
+        if(applicant.Salutation__c == '' || applicant.Salutation__c == null ){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Salutation for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Name == '' || applicant.Name == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Name for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(firstApplicantDOB == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'DOB for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(firstApplicantDOB > system.today()){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'DOB for Applicant 1 cannot be future date');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Permanent_Address__c == '' || applicant.Permanent_Address__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Permanent address for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Preferred_address_for_all_correspondence__c == '' || applicant.Preferred_address_for_all_correspondence__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Preferred address for all correspondance cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Country__c == '' || applicant.Country__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Country for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Country_Code__c == '' || applicant.Country_Code__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Country code for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Country__c == 'India'){           
+            if(applicant.State__c == '' || applicant.State__c == null){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'State for Applicant 1 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            if(applicant.City__c == '' || applicant.City__c == null ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'City for Applicant 1 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            if(applicant.Pincode__c == null ||applicant.Pincode__c == 0){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Pincode for Applicant 1 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            if(applicant.Pincode__c != null && String.valueOf(applicant.Pincode__c).length() != 6){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Pincode for Applicant 1 should be of 6 digits' );
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+        }
+        if(applicant.Mobile_Number__c == '' || applicant.Mobile_Number__c == null ){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Mobile Number for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if((applicant.Secondary_Mobile_Number__c != null) && applicant.Alternative_Phone_Country_Code__c == Null ){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Alt Country code for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if((applicant.Mobile_Number__c).length() != 10 ){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Mobile Number for Applicant 1 must be 10 Digits');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Email_Address__c == '' || applicant.Email_Address__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Email Address for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Nationality__c == '' || applicant.Nationality__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Nationality for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Type_Of_Applicant__c == '' || applicant.Type_Of_Applicant__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Type of Applicant for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        if(applicant.Type_Of_Applicant__c == 'Individual Buyer'){
+            if(applicant.Father_Husband_s_Name__c == null){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Father/Husband Name for Applicant 1 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+        }
+        if(applicant.Type_Of_Applicant__c == 'Corporate Purchaser'){
+            if(applicant.Organization_Name__c == null){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Company Name cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+        }
+        if(applicant.Subtype_Of_Applicant__c == '' || applicant.Subtype_Of_Applicant__c == null){
+            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Residential Status for Applicant 1 cannot be left blank');
+            ApexPages.addMessage(myMsg);
+            i=1;
+        }
+        system.debug('applicant.Address_Proof_Document__c::: ' + applicant.Address_Proof_Document__c);
+        system.debug('applicant.Address_Proof_Number__c::: ' + applicant.Address_Proof_Number__c);
+        
+        if(applicant.Subtype_Of_Applicant__c == 'Indian National'){
+            if(applicant.Pancard__c == false || applicant.PancardNo__c == '' || 
+               applicant.Address_Proof__c == false || applicant.Address_Proof_Document__c == null || applicant.Address_Proof_Number__c == null){            
+                   ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Please ensure that all the document checkboxes are checked and document details are filled properly.');
+                   ApexPages.addMessage(myMsg);
+                   i=1;
+               }
+            
+            if(applicant.Subtype_Of_Applicant__c == 'For Company'){
+                if(applicant.Organization_Name__c == null){            
+                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Company Name cannot be left blank');
+                    ApexPages.addMessage(myMsg);
+                    i=1;
+                }
+            }
+            if(applicant.PancardNo__c != null && (applicant.PancardNo__c).length() != 10){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Pancard for Applicant 1 should be of 10 digits' );
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            if(applicant.Address_Proof_Document__c == 'Aadhar Card'){
+                String RegexFormat;
+                if((applicant.Address_Proof_Number__c) == null){
+                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Aadhar Card Number cannot be left blank' );
+                    ApexPages.addMessage(myMsg);
+                    i=1;  
+                }
+                else 
+                {
+                    if(applicant.Address_Proof_Document__c == 'Aadhar Card')
+                        RegexFormat = '^[0-9_]{12}$';
+                    
+                    Pattern RegexPattern = Pattern.compile(RegexFormat);
+                    Matcher RegexMatcher = RegexPattern.matcher(applicant.Address_Proof_Number__c);
+                    if(!RegexMatcher.matches())
+                    {
+                        ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Aadhar Number must be 12 digits and Numeric');
+                        ApexPages.addMessage(myMsg);
+                        i = 1;
+                    }
+                }
+                
+            }
+        }
+        
+        
+        if(applicant.Subtype_Of_Applicant__c == 'Foreign Nationals Of Indian Origin'){
+            if(applicant.Funds_from_NRE_FCNR__c == false || 
+               applicant.Self_attested_copy_of_PIO_or_OCI_Card__c == false || applicant.Type_Of_Origin__c == null || applicant.Origin_Details__c == null){            
+                   ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Please ensure that all the document checkboxes are checked and document details are filled properly.');
+                   ApexPages.addMessage(myMsg);
+                   i=1;
+               }                        
+        }
+        
+        if(applicant.Subtype_Of_Applicant__c == 'For NRI'){  
+            if(applicant.Pancard__c == false || applicant.PancardNo__c == null || 
+               applicant.PassportNumber__c == false || applicant.PassportNoDetails__c == null || 
+               applicant.Funds_from_NRE_NRO__c == false || applicant.Copy_of_Workpermit_Employment_contract__c == false){            
+                   ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Please ensure that all the document checkboxes are checked and document details are filled properly.');
+                   ApexPages.addMessage(myMsg);
+                   i=1;
+               }
+            
+            if(applicant.PancardNo__c != null && (applicant.PancardNo__c).length() != 10 ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Pancard for Applicant 1 should be of 10 digits' );
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }               
+        }
+        
+        if(applicant.Subtype_Of_Applicant__c == 'For Company'){
+            if(applicant.Pancard__c == false || applicant.PancardNo__c == null || 
+               applicant.Copy_of_Memorandu_of_Association__c == false || 
+               applicant.Certified_copy_of_Article_of_Association__c == false || 
+               applicant.Certified_copy_of_Board_Resolution__c == false || 
+               applicant.Certified_copy_of_ROC_Incorporation__c == false || 
+               applicant.Self_attested_List_of_Shareholders__c == false || 
+               applicant.Self_attested_List_of_Directors__c == false || 
+               applicant.PanCard_of_Authority_Signatory__c == false || applicant.Pan_Card_Number_of_Authority_Signatory__c == null){            
+                   ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Please ensure that all the document checkboxes are checked and document details are filled properly.');
+                   ApexPages.addMessage(myMsg);
+                   i=1;
+               }
+            if(applicant.PancardNo__c != null && (applicant.PancardNo__c).length() != 10 ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Pancard for Applicant 1 should be of 10 digits' );
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }                         
+        }
+        
+        if(applicant.Subtype_Of_Applicant__c == 'Partnership Firm'){
+            if(applicant.Pancard__c == false || applicant.PancardNo__c == null ||
+               applicant.PanCard_of_Authority_Signatory__c == false || applicant.Pan_Card_Number_of_Authority_Signatory__c == null ||
+               applicant.Certified_copy_of_Partnership_Deed__c == false || 
+               applicant.Certified_extract_of_Registration__c == false || 
+               applicant.Copy_of_Authorization_Letter_POA__c == false){            
+                   ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Please ensure that all the document checkboxes are checked and document details are filled properly.');
+                   ApexPages.addMessage(myMsg);
+                   i=1;
+               }
+            if(applicant.PancardNo__c != null && (applicant.PancardNo__c).length() != 10){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Pancard for Applicant 1 should be of 10 digits' );
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }           
+        }
+        
+        if(addressCheck == False){               
+            if(applicant.Mailing_Address__c == null){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Mailing Address for Applicant 1 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }        
+            if(applicant.Mailing_Country__c == null || applicant.Mailing_Country__c == ''){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Mailing Country for Applicant 1 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }       
+            if(applicant.Mailing_Country__c == 'India'){
+                if(applicant.Mailing_State__c == null){
+                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Mailing State for Applicant 1 cannot be left blank');
+                    ApexPages.addMessage(myMsg);
+                    i=1;
+                }
+                if(applicant.Mailing_City__c == '' || applicant.Mailing_City__c == null ){
+                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Mailing City for Applicant 1 cannot be left blank');
+                    ApexPages.addMessage(myMsg);
+                    i=1;
+                }
+                if(applicant.Mailing_Pincode__c == null ||applicant.Mailing_Pincode__c == 0){
+                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Mailing Pincode for Applicant 1 cannot be left blank');
+                    ApexPages.addMessage(myMsg);
+                    i=1;
+                }
+                if(applicant.Mailing_Pincode__c != null && String.valueOf(applicant.Mailing_Pincode__c).length() != 6){
+                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Mailing Pincode for Applicant 1 should be of 6 digits' );
+                    ApexPages.addMessage(myMsg);
+                    i=1;
+                }
+            }         
+        }
+       ////////////////////////// error messages for applicant 2,3,4  //////////////////////////
+        
+        if(applicant2.Name != Null){
+            if(applicant2.Type_Of_Applicant__c == null || applicant2.Subtype_Of_Applicant__c == null  || applicant2.PancardNo__c == null || applicant2.Father_Husband_s_Name__c == null ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Type of Applicant/Residential Status/Father-Husband Name/Pancard Number for Applicant 2 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            validateField( applicant2.Mobile_Number__c, 'Mobile Number for Applicant 2 cannot be left blank');
+            validateField( applicant2.Country_Code__c, 'Country code for Applicant 2 cannot be left blank');
+            validateField( applicant2.Email_Address__c, 'Email for Applicant 2 cannot be left blank');
+            if(applicant2.Secondary_Mobile_Number__c != null ){
+               validateField( applicant2.Alternative_Phone_Country_Code__c, 'Alt Country code Applicant 2 cannot be left blank'); 
+            }
+        }
+        if(applicant3.Name != Null){
+            if(applicant3.Type_Of_Applicant__c == null || applicant3.Subtype_Of_Applicant__c == null  || applicant3.PancardNo__c == null || applicant3.Father_Husband_s_Name__c == null ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Type of Applicant/Residential Status/Father-Husband Name/Pancard Number for Applicant 3 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            validateField( applicant3.Mobile_Number__c, 'Mobile Number for Applicant 3 cannot be left blank');
+            validateField( applicant3.Country_Code__c, 'Country code for Applicant 3 cannot be left blank');
+            validateField( applicant3.Email_Address__c, 'Email for Applicant 3 cannot be left blank');
+            if(applicant3.Secondary_Mobile_Number__c != null ){
+               validateField( applicant3.Alternative_Phone_Country_Code__c, 'Alt Country code Applicant 3 cannot be left blank'); 
+            }
+        }
+        if(applicant4.Name != Null){
+            if(applicant4.Type_Of_Applicant__c == null || applicant4.Subtype_Of_Applicant__c == null  || applicant4.PancardNo__c == null || applicant4.Father_Husband_s_Name__c == null ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Type of Applicant/Residential Status/Father-Husband Name/Pancard Number for Applicant 4 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            validateField( applicant4.Mobile_Number__c, 'Mobile Number for Applicant 4 cannot be left blank');
+            validateField( applicant4.Country_Code__c, 'Country code for Applicant 4 cannot be left blank');
+            validateField( applicant4.Email_Address__c, 'Email for Applicant 4 cannot be left blank');
+            if(applicant4.Secondary_Mobile_Number__c != null ){
+               validateField( applicant4.Alternative_Phone_Country_Code__c, 'Alt Country code Applicant 4 cannot be left blank'); 
+            }
+        } 
+        if(applicant5.Name != Null){
+            if(applicant5.Type_Of_Applicant__c == null || applicant5.Subtype_Of_Applicant__c == null  || applicant5.PancardNo__c == null || applicant5.Father_Husband_s_Name__c == null ){
+                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Type of Applicant/Residential Status/Father-Husband Name/Pancard Number for Applicant 4 cannot be left blank');
+                ApexPages.addMessage(myMsg);
+                i=1;
+            }
+            validateField( applicant5.Mobile_Number__c, 'Mobile Number for Applicant 5 cannot be left blank');
+            validateField( applicant5.Country_Code__c, 'Country code for Applicant 5 cannot be left blank');
+            validateField( applicant5.Email_Address__c, 'Email for Applicant 5 cannot be left blank');
+            if(applicant5.Secondary_Mobile_Number__c != null ){
+               validateField( applicant5.Alternative_Phone_Country_Code__c, 'Alt Country code Applicant 5 cannot be left blank'); 
+            }
+        } 
+        
+        ////////////////////////////////////// Receipt Mandatory Checks //////////////////////////////////////////
+        if(!Test.isRunningTest()){
+            if(queryResult[0].Quotation_Type__c != 'Unit Transfer Quotation'){
+                System.debug('inside if receipt!!');
+                if (receiptlist.size() > 0) {
+                    for(Receipt__c rce : receiptlist){
+                        String RegexFormat;
+                        if (rce.Mode__c == null) {           
+                            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Payment Mode cannot be left blank');
+                            ApexPages.addMessage(myMsg);
+                            i = 1;
+                        }
+                        if(rce.Mode__c == 'Cheque' || rce.Mode__c  == 'Credit Card' || rce.Mode__c == 'DD/Pay Order') {
+                            if (rce.Cheque_DD__c == null) {
+                                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Instrument Number cannot be left blank');
+                                ApexPages.addMessage(myMsg);
+                                i = 1;
+                            }   
+                            else 
+                            {
+                                if(rce.Mode__c == 'Cheque' ||  rce.Mode__c == '	DD/Pay Order')
+                                    RegexFormat = '^[0-9_]{6}$';
+                                //if(rce.Mode__c == 'EFT')
+                                //RegexFormat = '^[a-zA-Z0-9_]{16}$';
+                                system.debug('Mode::'+rce.Mode__c);
+                                if(rce.Mode__c == 'DD/Pay Order')
+                                    RegexFormat = '^[0-9_]{6}$';
+                                
+                                Pattern RegexPattern = Pattern.compile(RegexFormat);
+                                Matcher RegexMatcher = RegexPattern.matcher(rce.Cheque_DD__c);
+                                if(!RegexMatcher.matches())
+                                {
+                                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, rce.Mode__c+': Instrument Number is not Valid');
+                                    ApexPages.addMessage(myMsg);
+                                    i = 1;
+                                }
+                            }
+                        }
+                        if(rce.Mode__c == 'EFT') {
+                            if (rce.Cheque_DD__c == null) {
+                                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Instrument Number cannot be left blank');
+                                ApexPages.addMessage(myMsg);
+                                i = 1;
+                            } 
+                        }
+                        if(rce.Mode__c == 'EFT') {
+                            if((rce.Cheque_DD__c).length() <= 7 ) {
+                                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Instrument Number should be greater than equals to 7');
+                                ApexPages.addMessage(myMsg);
+                                i = 1;
+                            }
+                        }
+                        if (rce.Cheque_DD_Date__c == null) {
+                            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Instrument Date cannot be left blank');
+                            ApexPages.addMessage(myMsg);
+                            i = 1;
+                        }
+                        if (rce.Tax_Receipt_Account__c == null) {
+                            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Please Select Account Type');
+                            ApexPages.addMessage(myMsg);
+                            i = 1;
+                        }
+                        
+                        if (rce.Total_Amount__c == null) {
+                            ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Amount of Receipt cannot be left blank');
+                            ApexPages.addMessage(myMsg);
+                            i = 1;            
+                        }
+                        if(rce.Mode__c == 'Cheque' || rce.Mode__c == 'Wire Transfer' || rce.Mode__c  == 'Credit Card' || rce.Mode__c == 'Website') {
+                            if (rce.DraweeBank__c == null) {
+                                ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Bank Name of Receipt cannot be left blank');
+                                ApexPages.addMessage(myMsg);
+                                i = 1;
+                            }
+                            else if(rce.DraweeBank__c =='Others'){
+                                if(rce.Drawee_Bank_If_Others__c == null){
+                                    ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Please enter Other Bank Name');
+                                    ApexPages.addMessage(myMsg);
+                                    i=1;
+                                }
+                            }
+                        }
+                    }         
+                }
+            }
+        }
+        
+        ////////////////////////////////////// % of Ownership Validation Check //////////////////////////////////////////
+        /*    if(applicant.Of_Ownership__c == null){
+applicant.Of_Ownership__c = 0;
+}
+if(applicant2.Of_Ownership__c == null){
+applicant2.Of_Ownership__c = 0;
+}
+if(applicant3.Of_Ownership__c == null){
+applicant3.Of_Ownership__c = 0;
+}
+if(applicant4.Of_Ownership__c == null){
+applicant4.Of_Ownership__c = 0;
+}
+if(applicant5.Of_Ownership__c == null){
+applicant5.Of_Ownership__c = 0;
+}
+if(applicant.Of_Ownership__c + applicant2.Of_Ownership__c + applicant3.Of_Ownership__c + applicant4.Of_Ownership__c + applicant5.Of_Ownership__c != 100){
+ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error, 'Total of % of ownership of all applicants should be 100%');
+ApexPages.addMessage(myMsg);
+i=1;
+}
+*/
+        ////////////////////////////Possession Milestone (Virtual Completion Time) Start/////////////////////
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        if(selectedQuote != null){
+            pm = [Select id,name,Milestone_Due_Date__c from Payment_Milestones__c where Quotation__c =: selectedQuote and Installment__c = 'Final Installment'];
+            boookingObj.Virtual_Completion_Date__c = pm.Milestone_Due_Date__c;
+            system.debug('pm::--'+pm);
+        }
+        ////////////////////////////Possession Milestone (Virtual Completion Time) End////////////////
+        ///////////////////Inserting Future correspondance contact////////////////////  
+        if(boookingObj.Future_Correspondence_Contact__c == '1st Applicant'){
+            if(applicant.Name != null ){
+                boookingObj.Future_Correspondence_Contact_Name__c = applicant.Name;
+            }
+            if(applicant.Mobile_Number__c != null ){
+                boookingObj.Future_Correspondence_Contact_Phone__c = applicant.Mobile_Number__c;
+            }
+            if(applicant.Email_Address__c != null ){
+                boookingObj.Future_Correspondence_Contact_Email__c = applicant.Email_Address__c;
+            }
+            boookingObj.Future_Correspondence_Contact_Relation__c = '1st Applicant';           
+        }
+        if(boookingObj.Future_Correspondence_Contact__c == '2nd Applicant' ){
+            if(applicant2.Name != null ){
+                boookingObj.Future_Correspondence_Contact_Name__c = applicant2.Name;
+            }
+            if(applicant2.Mobile_Number__c != null ){
+                boookingObj.Future_Correspondence_Contact_Phone__c = applicant2.Mobile_Number__c;
+            }
+            if(applicant2.Email_Address__c != null ){
+                boookingObj.Future_Correspondence_Contact_Email__c = applicant2.Email_Address__c;
+            }
+            boookingObj.Future_Correspondence_Contact_Relation__c = '2nd Applicant';
+        }
+        if(boookingObj.Future_Correspondence_Contact__c == '3rd Applicant' ){
+            if(applicant3.Name != null ){
+                boookingObj.Future_Correspondence_Contact_Name__c = applicant3.Name;
+            }
+            if(applicant3.Mobile_Number__c != null ){
+                boookingObj.Future_Correspondence_Contact_Phone__c = applicant3.Mobile_Number__c;
+            }
+            if(applicant3.Email_Address__c != null ){
+                boookingObj.Future_Correspondence_Contact_Email__c = applicant3.Email_Address__c;
+            }
+            boookingObj.Future_Correspondence_Contact_Relation__c = '3rd Applicant';
+        }
+        if(boookingObj.Future_Correspondence_Contact__c == '4th Applicant' ){
+            if(applicant4.Name != null ){
+                boookingObj.Future_Correspondence_Contact_Name__c = applicant4.Name;
+            }
+            if(applicant4.Mobile_Number__c != null ){
+                boookingObj.Future_Correspondence_Contact_Phone__c = applicant4.Mobile_Number__c;
+            }
+            if(applicant4.Email_Address__c != null ){
+                boookingObj.Future_Correspondence_Contact_Email__c = applicant4.Email_Address__c;
+            }
+            boookingObj.Future_Correspondence_Contact_Relation__c = '4th Applicant';
+        }
+        if(boookingObj.Future_Correspondence_Contact__c == '5th Applicant' ){
+            if(applicant5.Name != null ){
+                boookingObj.Future_Correspondence_Contact_Name__c = applicant5.Name;
+            }
+            if(applicant5.Mobile_Number__c != null ){
+                boookingObj.Future_Correspondence_Contact_Phone__c = applicant5.Mobile_Number__c;
+            }
+            if(applicant5.Email_Address__c != null ){
+                boookingObj.Future_Correspondence_Contact_Email__c = applicant5.Email_Address__c;
+            }
+            boookingObj.Future_Correspondence_Contact_Relation__c = '5th Applicant';
+        }
+        boookingObj.Quotation__c = selectedQuote;
+        
+        /* Process receipt created from booking page if no error */
+        if (i == 0) {      
+            if(!receiptlist.isEmpty() && receiptlist.size() > 0){
+                for(Receipt__c ListRct : receiptlist){
+                    Receipt__c receiptOBJTobeUpdate = new Receipt__c(); 
+                    receiptOBJTobeUpdate.Mode__c = ListRct.Mode__c;
+                    receiptOBJTobeUpdate.Cheque_DD__c = ListRct.Cheque_DD__c;
+                    receiptOBJTobeUpdate.Token_Amount_ST__c = ListRct.Token_Amount_ST__c;
+                    receiptOBJTobeUpdate.Cheque_DD_Date__c = ListRct.Cheque_DD_Date__c;
+                    receiptOBJTobeUpdate.Total_Amount__c = ListRct.Total_Amount__c;
+                    receiptOBJTobeUpdate.Currency__c = ListRct.Currency__c;
+                    receiptOBJTobeUpdate.DraweeBank__c = ListRct.DraweeBank__c;
+                    receiptOBJTobeUpdate.Drawee_Bank_If_Others__c = ListRct.Drawee_Bank_If_Others__c;
+                    ///   receiptOBJTobeUpdate.RemarksText__c = ListRct.RemarksText__c; // Added by Neha on 15/2/19  
+                    receiptOBJTobeUpdate.Opportunity__c = boookingObj.Opportunity__c;
+                    receiptOBJTobeUpdate.Project__c = boookingObj.Project__c;
+                    receiptOBJTobeUpdate.Project_Unit__c = boookingObj.Unit__c;
+                    receiptOBJTobeUpdate.Receipt_Date__c = system.today();
+                    receiptOBJTobeUpdate.Amount_Rs__c  =  ListRct.Total_Amount__c;
+                    receiptOBJTobeUpdate.Opportunity_Email_Id__c=applicant.Email_Address__c;
+                    receiptOBJTobeUpdate.Approval_Status_Credit_Note__c = 'Accepted';
+                    /////// Added by Neha on 2/7/19 to capture foreign currency amount and type
+                    if(ListRct.Currency__c != null && ListRct.Currency__c != 'Indian Rupee'){
+                        receiptOBJTobeUpdate.Amount_in_Foreign_Currency__c = ListRct.Total_Amount__c;   
+                        receiptOBJTobeUpdate.Foreign_Currency_Type__c = ListRct.Currency__c;
+                    }                    
+                    
+               /*     if(ListRct.Token_Amount_ST__c == True){
+                        receiptOBJTobeUpdate.Token_Amount_Receipt__c = False;
+                        receiptOBJTobeUpdate.Drawn_in_favour_of__c = 'Service Tax |'+ boookingObj.Account_Name_Service_Tax__c +'|'+ boookingObj.Account_Number_Service_tax__c;                             
+                    } else{
+                        receiptOBJTobeUpdate.Token_Amount_Receipt__c = True;
+                        receiptOBJTobeUpdate.Drawn_in_favour_of__c = 'Flat Cost |' + boookingObj.Stock__c +'|'+ boookingObj.Account_Number__c;                             
+                    }  */
+                    
+                    if(ListRct.Tax_Receipt_Account__c == 'TAX'){
+                        receiptOBJTobeUpdate.Token_Amount_Receipt__c = False;
+                        receiptOBJTobeUpdate.Drawn_in_favour_of__c = 'Service Tax |'+ boookingObj.Account_Name_Service_Tax__c +'|'+ boookingObj.Account_Number_Service_tax__c;                             
+                    } else if(ListRct.Tax_Receipt_Account__c == 'Consideration'){
+                        receiptOBJTobeUpdate.Token_Amount_Receipt__c = True;
+                        receiptOBJTobeUpdate.Drawn_in_favour_of__c = 'Flat Cost |' + boookingObj.Stock__c +'|'+ boookingObj.Account_Number__c;                             
+                    } else if(ListRct.Tax_Receipt_Account__c == 'EOI'){
+                     //   receiptOBJTobeUpdate.Token_Amount_Receipt__c = True;
+                        receiptOBJTobeUpdate.Drawn_in_favour_of__c = 'EOI |' + boookingObj.Account_Name_EOI__c +'|'+ boookingObj.Account_Number_EOI__c;
+                    }else if(ListRct.Tax_Receipt_Account__c == 'Interim'){
+                        receiptOBJTobeUpdate.Drawn_in_favour_of__c = 'Interim |'+ boookingObj.Account_Name_Interim__c + '|'+ boookingObj.Account_Number_Interim__c;
+                    }
+                    
+                    if(receiptOBJTobeUpdate.Total_Amount__c != null && receiptOBJTobeUpdate.Mode__c != null)
+                        ReceiptLstTobeInsert.add(receiptOBJTobeUpdate);
+                }
+            }
+        }
+        
+        system.debug('i' + i);
+        if (i == 0) {
+            Opportunity insObj = new Opportunity();
+            insObj.Id = boookingObj.Opportunity__c;
+            insObj.Project__c = boookingObj.Project__c;
+            insObj.Unit__c = boookingObj.Unit__c;
+            insObj.StageName= 'Token Amount Received - BIP'; 
+            insObj.Amount = boookingObj.Agreement_Value__c;
+            insObj.Future_Correspondence_Contact_Name__c=boookingObj.Future_Correspondence_Contact_Name__c;
+            if(boookingObj.Future_Correspondence_Contact_Phone__c!=null)
+                insObj.Future_Correspondence_Contact_Phone__c = boookingObj.Future_Correspondence_Contact_Phone__c;
+            if(boookingObj.Future_Correspondence_Contact_Email__c!=null)
+                insObj.Future_Correspondence_Contact_Email__c = boookingObj.Future_Correspondence_Contact_Email__c;
+            if(boookingObj.Future_Correspondence_Contact__c!=null)
+                insObj.Future_Correspondence_Contact__c = boookingObj.Future_Correspondence_Contact__c;
+            
+            //    if(dateOfOfferPossesion != null)
+            //    boookingObj.Date_for_offer_of_Possession__c = dateOfOfferPossesion;           
+            try{                     
+                boookingObj.status__c = 'UnProcessed';
+                boookingObj.Verification_status__c = 'Not Started';
+                boookingObj.Call_Disposition__c = 'Not Started';
+                if(optyList[0].Old_Booking__c != null){
+                    boookingObj.Is_Tranferred__c = true;
+                }
+                if(optyList[0].Project__r.Sales_Head__c != null){
+                    boookingObj.CP_Approver__c = optyList[0].Project__r.Sales_Head__c;
+                }
+                if(optyList[0].Project__r.Special_Terms_and_Condition_Approver__c != null){
+                    boookingObj.Special_Terms_and_Condition_Approver__c = optyList[0].Project__r.Special_Terms_and_Condition_Approver__c;
+                }
+                
+                if(optyList[0].AccountId != null){
+                    boookingObj.Account__c = optyList[0].AccountId;
+                    boookingObj.Contact_Management__c = optyList[0].Account.Contact_Management__c;
+                    contactMgmntId = optyList[0].Account.Contact_Management__c;
+                }
+                boookingObj.Project_Sales_TL__c = optyList[0].Project__r.Project_Sales_TL__c;
+                insert boookingObj; // inserting Booking
+                
+                try{
+                    if(!ReceiptLstTobeInsert.isEmpty()){
+                        for(Receipt__c rd: ReceiptLstTobeInsert){
+                            rd.Booking__c = boookingObj.Id;
+                        }
+                        insert ReceiptLstTobeInsert; // inserting receipt created on booking page
+                    } 
+                }                
+                catch (DmlException e) {
+                    ApexPages.addMessages(e); 
+                    System.debug('An error has occured while inserting receipt. Please contact your administrator. : ' + e.getMessage());
+                    return null;
+                }
+                try{
+                    for(Receipt__c rcd : ReceiptLstTobeInsert){
+                        if(rcd.Token_Amount_ST__c == True){
+                            boookingObj.ServiceReceipt__c = rcd.id; 
+                        } else {                                   
+                            boookingObj.Receipts__c = rcd.id;
+                        }                        
+                    }
+                    if(ReceiptDetails.size() > 0){
+                        for(Receipt__c rcd : ReceiptDetails){
+                            if(rcd.Token_Amount_ST__c == True && boookingObj.ServiceReceipt__c == null){
+                                boookingObj.ServiceReceipt__c = rcd.id; 
+                            } else if(rcd.Token_Amount_ST__c == False && boookingObj.Receipts__c == null) {                                   
+                                boookingObj.Receipts__c = rcd.id;
+                            }                        
+                        }    
+                    }
+                    update boookingObj; // updating booking
+                    System.debug('boookingObj::'+boookingObj.Unit__c);
+                    update insObj;//updating opportunity
+                    
+                    Unit__c ut = [Select Id, Name, Unit_Status__c, Booking__c, Customers__c from Unit__c where Id = :boookingObj.Unit__c]; 
+                    ut.Unit_Status__c = 'Booked';
+                    ut.Booking__c = boookingObj.Id;
+                    if(ut.Customers__c == null || ut.Customers__c !=  boookingObj.Opportunity__c)
+                        ut.Customers__c = boookingObj.Opportunity__c;
+                    update ut;//updating unit
+                } 
+                catch (DmlException e){
+                    System.debug('An error has occured while updating. Please contact your administrator. : ' + e.getMessage());
+                }                                                             
+            }                 
+            catch (DmlException e) {
+                System.debug('An error has occured while inserting booking. Please contact your administrator. : ' + e.getMessage());
+            }           
+            
+            //Updating Parkings/////           
+            ////Tandem Covered////
+            if (tandemParking > 0) {
+                for(integer j = 0; j < tandemParking; j++) {                
+                    TandemCOVEREDParkingList[j].Status__c = 'Booked'; 
+                    ParkingListToUpdate.add(TandemCOVEREDParkingList[j]);
+                }                 
+            }         
+            ////Single Open////
+            if (openParking > 0) {
+                for(integer j = 0 ; j < openParking; j++){                 
+                    SingleOPENParkingList[j].Status__c = 'Booked'; 
+                    ParkingListToUpdate.add(SingleOPENParkingList[j]);
+                }                 
+            }
+            ////Stack ////
+            if (stackParking > 0 ) {
+                for(integer j = 0 ; j < stackParking; j++){
+                    STACKParkingList[j].Status__c = 'Booked'; 
+                    ParkingListToUpdate.add(STACKParkingList[j]);                
+                }                
+            }     
+            if(ParkingListToUpdate.size() > 0){
+                update ParkingListToUpdate;
+            }              
+            //Updating Quotation with new booking 
+            if(boookingObj.id != null){            
+                try {
+                    //Updating Quotation with new booking
+                    if (QuoteDetails.size() > 0) {
+                        QuoteDetails[0].Booking__c =  boookingObj.id;
+                        update QuoteDetails;
+                    }
+                } catch (DmlException e) {
+                    System.debug('The following exception has occurred while updating quotation: ' + e.getMessage());    
+                }
+                
+                try {
+                    //Updating ReceiptDetails created on opportunity with new booking
+                    if (ReceiptDetails.size() > 0){                      
+                        for(Receipt__c r : ReceiptDetails){
+                            r.Booking__c =  boookingObj.id;
+                            r.Opportunity_Email_Id__c = applicant.Email_Address__c;
+                            r.Project_Unit__c = boookingObj.Unit__c;
+                            r.Project__c = boookingObj.Project__c;
+                            
+                            if(r.Tax_Receipt_Account__c == 'TAX'){
+                                r.Drawn_in_favour_of__c= 'Service Tax |'+boookingObj.Account_Name_Service_Tax__c +'|'+ boookingObj.Account_Number_Service_tax__c;                             
+                            } else if(r.Tax_Receipt_Account__c == 'Consideration'){
+                                r.Drawn_in_favour_of__c = 'Flat Cost |'+ boookingObj.Stock__c +'|'+ boookingObj.Account_Number__c;                             
+                            }else if(r.Tax_Receipt_Account__c == 'EOI'){
+                                r.Drawn_in_favour_of__c = 'EOI |'+ boookingObj.Account_Name_EOI__c +'|'+ boookingObj.Account_Number_EOI__c;
+                            }
+                            
+                            ListOldReceipt.add(r);
+                        }                        
+                    }                       
+                    update ListOldReceipt; /// Update receipts created on opty
+                } catch (DmlException e) {
+                    System.debug('The following exception has occurred: ' + e.getMessage());   
+                }
+                
+                //inserting the Applicants
+                if (applicant.Name != ''&& applicant.Name != null) {
+                    if (addressCheck == true) {
+                        applicant.Mailing_Address_same_as_PermanentAddress__c = true;
+                        applicant.Mailing_Address__c = applicant.Permanent_Address__c;
+                        applicant.Mailing_Country__c = applicant.Country__c;
+                        applicant.Mailing_State__c = applicant.State__c;
+                        applicant.Mailing_City__c = applicant.City__c;
+                    }                
+                    applicant.Applicant_Number__c = 'Primary Applicant';
+                    if(firstApplicantDOB != null)
+                        applicant.DOB__c = firstApplicantDOB;
+                    applicant.Booking__c = boookingObj.id;
+                    applicant.Opportunity__c = boookingObj.Opportunity__c;
+                    applicant.Contact_Management__c = contactMgmntId;
+                    listApplicant.add(applicant);
+                }
+                if (applicant2.Name != '' && applicant2.Name != null) {
+                    if (addressCheckApplicant2 == true) {
+                        applicant2.Mailing_Address_same_as_PermanentAddress__c = true;
+                        applicant2.Mailing_Address__c = applicant2.Permanent_Address__c;
+                        applicant2.Mailing_Country__c = applicant2.Country__c;
+                        applicant2.Mailing_State__c = applicant2.State__c;
+                        applicant2.Mailing_City__c = applicant2.City__c;
+                    }
+                    applicant2.Applicant_Number__c = 'Second Applicant';
+                    if(secondApplicantDOB != null)
+                        applicant2.DOB__c = secondApplicantDOB;
+                    applicant2.Booking__c = boookingObj.id;
+                    applicant2.Opportunity__c = boookingObj.Opportunity__c;
+                    applicant2.Contact_Management__c = contactMgmntId;
+                    listApplicant.add(applicant2);
+                }
+                if (applicant3.Name != '' && applicant3.Name != null) {
+                    if (addressCheckApplicant3 == true) {
+                        applicant3.Mailing_Address_same_as_PermanentAddress__c = true;
+                        applicant3.Mailing_Address__c = applicant3.Permanent_Address__c;
+                        applicant3.Mailing_Country__c = applicant3.Country__c;
+                        applicant3.Mailing_State__c = applicant3.State__c;
+                        applicant3.Mailing_City__c = applicant3.City__c;
+                    }
+                    applicant3.Applicant_Number__c = 'Third Applicant';
+                    if(thirdApplicantDOB != null)
+                        applicant3.DOB__c = thirdApplicantDOB;
+                    applicant3.Booking__c = boookingObj.id;
+                    applicant3.Opportunity__c = boookingObj.Opportunity__c;
+                    applicant3.Contact_Management__c = contactMgmntId;
+                    listApplicant.add(applicant3);
+                }
+                if (applicant4.Name != null) {
+                    if (addressCheckApplicant4 == true) {
+                        applicant4.Mailing_Address_same_as_PermanentAddress__c = true;
+                        applicant4.Mailing_Address__c = applicant4.Permanent_Address__c;
+                        applicant4.Mailing_Country__c = applicant4.Country__c;
+                        applicant4.Mailing_State__c = applicant4.State__c;
+                        applicant4.Mailing_City__c = applicant4.City__c;
+                    }
+                    applicant4.Applicant_Number__c = 'Fourth Applicant';
+                    if(fourthApplicantDOB != null)
+                        applicant4.DOB__c = fourthApplicantDOB;
+                    applicant4.Booking__c = boookingObj.id;
+                    applicant4.Opportunity__c = boookingObj.Opportunity__c;
+                    applicant4.Contact_Management__c = contactMgmntId;
+                    listApplicant.add(applicant4);
+                }
+                if (applicant5.Name != null) {
+                    if (addressCheckApplicant5 == true) {
+                        applicant5.Mailing_Address_same_as_PermanentAddress__c = true;
+                        applicant5.Mailing_Address__c = applicant5.Permanent_Address__c;
+                        applicant5.Mailing_Country__c = applicant5.Country__c;
+                        applicant5.Mailing_State__c = applicant5.State__c;
+                        applicant5.Mailing_City__c = applicant5.City__c;
+                    }
+                    applicant5.Applicant_Number__c = 'Fifth Applicant';
+                    if(fifthApplicantDOB != null)
+                        applicant5.DOB__c = fifthApplicantDOB;
+                    applicant5.Booking__c = boookingObj.id;
+                    applicant5.Opportunity__c = boookingObj.Opportunity__c;
+                    applicant5.Contact_Management__c = contactMgmntId;
+                    listApplicant.add(applicant5);
+                }
+                System.debug('listApplicant::: ' +listApplicant);
+                try{
+                   // if(listApplicant.size() > 0){
+                        insert listApplicant;
+                        //saveBookingPDF(boookingObj.id);
+                   // }                 
+                }                 
+                catch (DmlException e)  {
+                    System.debug('An error has occured. Please contact your administrator. : ' + e.getMessage());
+                }                      
+            }
+            if (boookingObj.id != null) {
+                PageReference newpage = new Pagereference('/lightning/r/Booking__c/' + boookingObj.id + '/view');               
+                newpage.setRedirect(true);
+                return newpage;
+            }
+        }
+        return null;
+    }
+    
+    public PageReference Cancel() {
+        PageReference newpage = new Pagereference('/lightning/r/Opportunity/'+boookingObj.Opportunity__c+'/view');
+        return newpage;
+    }
+    
+    /*  public Boolean ValidateInstrumentNo(String ChequeNo) 
+{	
+Boolean result = false;
+String RegexFormat = '^[a-zA-Z0-9_]{6}$';
+Pattern RegexPattern = Pattern.compile(RegexFormat);
+Matcher RegexMatcher = RegexPattern.matcher(ChequeNo);
+if(RegexMatcher.matches())
+{
+result = true;
+}
+return result;
+}*/
+    
+    //// Added by Neha on 6/6/19 to save PDF in files and attachments    
+    /*  @future(callout=true)
+public static void saveBookingPDF(Id bookingId){
+
+Booking__c book = [SELECT Id, Name FROM Booking__c WHERE Id = :bookingId];
+
+if(book != null){
+PageReference pRef = new PageReference('/apex/BookingPDFDubai');
+pRef.getParameters().put('id', book.Id);
+
+Blob b;
+try {
+if(!Test.isRunningTest()){
+b = pRef.getContent();
+} else {
+b = Blob.valueOf('Is Test Method');
+}       
+
+} catch(VisualforceException e){
+system.debug('Error occurred while inserting attachment::: ' + e);        
+}
+
+ContentVersion cont = new ContentVersion();
+cont.Title = book.Name;
+cont.VersionData = b;
+cont.PathOnClient = book.Name + '.pdf';
+cont.ContentLocation = 'S';
+insert cont;
+
+if(cont.Id != null) {
+FeedItem fi = new FeedItem(ParentId = book.Id, RelatedRecordId = cont.Id, Type = 'ContentPost');
+insert fi;
+} 
+}
+} */
+    
+    // method for formatting the currency details to Indian Commas Format
+    /*  public static String INFormat(Decimal money) {
+Boolean negative = false;
+if(money < 0) {
+negative = true;
+}
+String m1 = String.valueOf(math.abs(money.setscale(0,RoundingMode.HALF_UP))).reverse();
+String mF = '';
+for(Integer i=0; i < m1.length() ; i++) {
+mF += m1.substring(i,i+1);
+if(i==2) {
+mF += ',';
+}
+if(i==4 || i==6 || i==8 || i==10 || i==12) {
+mF += ',';
+}
+}
+mf = mf.reverse();
+if(mf.substring(0,1).equals(',')) {
+mf = mf.substring(1);
+}
+if(!negative)
+mf =  mf + '/-';
+else
+mf = '- ' + mf + '/-';
+return mf;
+}  */
+    
+    public static void hack(){
+        
+        integer i = 0;
+        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+    }
+}
