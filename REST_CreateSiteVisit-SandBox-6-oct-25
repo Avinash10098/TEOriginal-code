@@ -1,0 +1,1891 @@
+@RestResource(urlMapping = '/createSiteVisits/*')
+global with sharing class REST_CreateSiteVisit {
+    /* First we will search by InvitationId then PeopleId and then by Mobile and Email */   
+    
+    @HttpPost
+    global static REST_result createSV() {
+        
+        String data = '';
+        REST_result r = new REST_Result();
+        Restrequest request = RestContext.request;       
+        JSONSiteVisitFromVSM jobj = JSONSiteVisitFromVSM.Parse(request.requestBody.toString());
+        system.debug('parser::' + jObj);
+        
+        if (String.isBlank(request.requestBody.toString())) {
+            r.returnCode = 1;
+            r.message = 'Unexpected Error Occurred';
+            return r;
+        } else {        
+            Boolean dataError = false;
+            String errMsg = '';
+            Id businessPartnerId;           
+            string strPeopleID = jobj.PeopleID;
+            string strInvitationId = jobj.InvitationID;
+            string strFirstName = jobj.FirstName;
+            string strLastName = jobj.LastName;
+            string strDailingCode = jobj.DialingCode;
+            string strDailingCountry = jobj.DialingCountry;
+            string strMobile = jobj.Mobile;
+            string strAltDailingCode = jobj.AlternateDialingCode;
+            string strAltDailingCountry = jobj.AlternateDialingCountry;
+            string strAltMobile = jobj.AlternateMobile;
+            string strEmail = jobj.Email;           
+            string strAlternateEmail = jobj.AlternateEmail;
+            string strAddress = jobj.Address;
+            string strDateOfBirth = jobj.DateOfBirth;
+            string strGender = jobj.Gender;
+            string strNationality = jobj.Nationality;
+            string strOccupation = jobj.Occupation;
+            string strCompanyOrBusinessName = jobj.CompanyOrBusinessName;
+            string strDesignation = jobj.Designation;
+            string strProject = jobj.Project;
+            string strProjectVisited = jobj.ProjectVisited;
+            string strDateOfVisit = jobj.DateOfVisit;
+            string strVisitType = jobj.VisitType;
+            string strVisitingOnBehalf = jobj.VisitingOnBehalf;
+            string strWalkinSource = jobj.WalkinSource;
+            string strWalkinSubSource = jobj.SubSource;
+            string strPartnerId = jobj.PartnerId;
+            string strUnregisteredPartnerName = jobj.UnregisteredPartnerName;
+            string strCustomerName = jobj.CustomerName;
+            string strEmployeeName = jobj.EmployeeName;
+            string strBudget = jobj.BudgetInCrores;
+            string strPurposeOfPurchase = jobj.PurposeOfPurchase;
+            string strProjectType = jobj.ProjectType;
+            string strConfiguration = jobj.UnitTypeConfiguration;
+            string strPossessionRequirement = jobj.PossessionRequirement;
+            string strSvStatus = jobj.SiteVisitStatus;
+            string strAttendedBySMEmail = jobj.AttendedBySM;
+            String strSiteVisitComment = jobj.comment;
+            
+            /* Mandatory Fields */                
+            if (String.isBlank(strFirstName)) {
+                dataError = true;
+                errMsg += 'First Name';
+            }
+            if (String.isBlank(strLastName)) {
+                dataError = true;
+                errMsg += ', Last Name';
+            }
+            if (String.isBlank(strMobile)) {
+                dataError = true;
+                errMsg += ', Mobile Number';
+            }
+            
+            if (String.isBlank(strPeopleID)) {
+                dataError = true;
+                errMsg += ', People ID';
+            }
+            if (String.isBlank(strWalkinSource)) {
+                dataError = true;
+                errMsg += ', Walk in Source';
+            }            
+            if (String.isBlank(strDateOfVisit)) {
+                dataError = true;
+                errMsg += ', Date of Visit';
+            }
+            if (String.isBlank(strProject)) {
+                dataError = true;
+                errMsg += ', Project Name';
+            }
+            if (String.isBlank(strVisitType)) {
+                dataError = true;
+                errMsg += ', Visit Type';
+            }            
+            if (String.isBlank(strSvStatus)) {
+                dataError = true;
+                errMsg += ', Site Visit Status';
+            }           
+            if (String.isNotBlank(strWalkinSource)) {                
+                if (strWalkinSource == 'Digital' || strWalkinSource == 'Events' || strWalkinSource == 'Outdoor' || strWalkinSource == 'Print') {                    
+                    if (String.IsBlank(strWalkinSubSource)) {
+                        dataError = true;
+                        errMsg += ', Walkin Sub Source';
+                    }                    
+                }     
+                if (strWalkinSource == 'Partner' && String.IsBlank(strPartnerId) && String.IsBlank(strUnregisteredPartnerName)) {                    
+                    dataError = true;
+                    errMsg += ', Partner or Unregistered Partner Name';
+                }                
+                if (strWalkinSource == 'Customer' && String.IsBlank(strCustomerName)) {                    
+                    dataError = true;
+                    errMsg += ', Customer Name';
+                }                
+                if (strWalkinSource == 'Employee' && String.IsBlank(strEmployeeName)) {                    
+                    dataError = true;
+                    errMsg += ', Employee Name';
+                }              
+            } 
+                 
+            List <Project__c> plist = new List<Project__c>(); 
+            plist = [select Id, name, Expiry_Days__c, Sales_Manager__c, Default_Presales_Agent__c from Project__c where name = :strProject];
+            system.debug('Project list ::' + plist);
+            if (plist == null || plist.size() == 0) {
+                dataError = true;
+                r.returnCode = 1;
+                r.message = 'Invalid Project';
+                system.debug('r @@' + r);               
+                return r;
+            }
+            List<Account> partnerList = new List<Account>();
+            if(String.isNotBlank(strpartnerId)){
+               partnerList = [SELECT Name FROm Account WHERE VMS_PartnerID__c = :strpartnerId];
+                if (partnerList == null || partnerList.size() == 0) {
+                    dataError = true;
+                    r.returnCode = 1;
+                    r.message = 'Invalid Partner Id';
+                    return r;
+                }
+            }
+            system.debug('strProjectVisited::: ' + strProjectVisited);
+            List <Project__c> projVisitedlist = new List <Project__c>();
+            if(String.isNotBlank(strProjectVisited)){
+               projVisitedlist = [select Id, name from Project__c where name = :strProjectVisited];
+                system.debug('Project list ::' + projVisitedlist);    
+            }
+            List<User> uList = new List<User>();
+            List<Id> attendedBySM = new List<Id>();
+            if(String.isNotBlank(strAttendedBySMEmail)) {
+              uList = [SELECT Id FROM USER WHERE Email = :strAttendedBySMEmail and IsActive = True];   
+                if(!uList.isEmpty() && uList.size() > 0){
+                    for(User u: uList){
+                      attendedBySM.add(u.Id);    
+                    }
+                }
+            } 
+            
+            if(attendedBySM.isEmpty() && attendedBySM.size() == 0){
+              attendedBySM.add(pList[0].Sales_Manager__c);      
+            }
+            system.debug('attendedBySM::: ' + attendedBySM);
+                                                      
+            if (dataError) {
+                r.returnCode = 1;
+                r.message = errMsg + ' are Missing.';
+                system.debug('r @@' + r);
+                return r;                
+            } else if (!dataError) {
+                List <Customer_Registration__c> svlist = new List <Customer_Registration__c> ();
+                List <Event> tempevent = new List <Event>(); 
+                List <Account> acclist = new List <Account> ();
+                List <Opportunity> oplist = new List <Opportunity> ();
+                List <Lead> lstLead = new List <Lead> ();
+                List <Lead> ConvertedLeadlist = new List <Lead> ();
+                List <Opportunity> convertedOPList = new List <Opportunity> ();
+                Id firstVisitRecTypeId = Schema.SObjectType.Customer_Registration__c.getRecordTypeInfosByName().get('Site Visit').getRecordTypeId();
+                Id reVisitRecTypeId = Schema.SObjectType.Customer_Registration__c.getRecordTypeInfosByName().get('Site Revisit').getRecordTypeId();
+                
+                system.debug('No Data Error::');
+                // For scheduled site visit with InvitationId
+                if (strInvitationId != null && strInvitationId != ''){
+                   system.debug('Inside Scheduled SV loop with Invitation Id:: ' + strInvitationId); 
+                    svlist = [Select Id, name, opportunity__c, Address__c, Alternate_Email_Id__c, Alternate_Mobile_Number__c, Birth_Date__c, Budget_In_Crores__c,
+                              Business_Partner__c, Company_Business_Location__c, Company_Business_Name__c, Configuration__c, Gender__c,
+                              Date__c, Designation__c, Email_Address__c, Employee_Id__c, First_Name__c, Project_Visited__c, Unregistered_Partner__c,
+                              How_Did_You_Hear_About_Us__c, Is_Pickup_Required_for_SV__c, Last_Name__c, project__c,
+                              LeadSource__c, Mobile_Number__c, Name_of_Person__c, Nationality__c, Occupation__c, Possessiom_Timeline__c,
+                              Property_Type__c, Purpose_Of_Purchase__c, RecordTypeId, Sub_Source__c, SV_Status__c, Visiting_On_Behalf_Of__c,
+                              VMS_Invitation_Id__c, opportunity__r.AccountId,opportunity__r.Account.People_Id__c, Attended_By_SM__c , Site_Visit_Comments__c
+                              FROM Customer_Registration__c 
+                              WHERE VMS_Invitation_Id__c = :strInvitationId AND (SV_Status__c = 'Scheduled' OR  SV_Status__c = 'Rescheduled')];                                                           
+                    
+                    system.debug('svlist ::' + svlist);                    
+                    If(svlist != null && svlist.size() == 1) {
+                        svlist[0].First_Name__c = strFirstName;
+                        svlist[0].Last_Name__c = strLastName;
+                        svlist[0].Mobile_Number__c = strMobile;
+                        svList[0].Alternate_Mobile_Number__c = strAltMobile;
+                        svlist[0].Email_Address__c = strEmail;
+                        svlist[0].Alternate_Email_Id__c = strAlternateEmail;
+                        svlist[0].Date__c = Date.ValueOf(strDateOfVisit); 
+                        svlist[0].Address__c = strAddress;
+                        if(String.isNotBlank(strDateOfBirth))
+                          svlist[0].Birth_Date__c = Date.valueOf(strDateOfBirth);
+                        svlist[0].Nationality__c = strNationality;     
+                        svlist[0].Gender__c = strGender;
+                        /* Professional Details */
+                        svlist[0].Occupation__c = strOccupation;
+                        svlist[0].Company_Business_Name__c = strCompanyOrBusinessName;
+                        svlist[0].Designation__c = strDesignation;
+                        /* Preferences*/
+                        svlist[0].project__c = plist[0].id;  
+                        if (projVisitedlist != null && projVisitedlist.size() == 1)
+                            svlist[0].Project_Visited__c = projVisitedlist[0].id;
+                        svlist[0].Visiting_On_Behalf_Of__c = strVisitingOnBehalf;
+                        svlist[0].Budget_In_Crores__c = strBudget;
+                        svlist[0].Purpose_Of_Purchase__c = strPurposeOfPurchase;
+                        svlist[0].Property_Type__c = strProjectType;
+                        svlist[0].Configuration__c = strConfiguration;
+                        svlist[0].Possessiom_Timeline__c = strPossessionRequirement;
+                        /* Walkin Details */
+                        svlist[0].How_Did_You_Hear_About_Us__c = strWalkinSource;
+                        svlist[0].Sub_Source__c = strWalkinSubSource;
+                        svlist[0].Name_of_Person__c = strCustomerName;
+                        svlist[0].Employee_Id__c = strEmployeeName;
+                        svlist[0].Unregistered_Partner__c = strUnregisteredPartnerName;
+                        if(!partnerList.isEmpty() && partnerList.size() > 0)
+                           svlist[0].Business_Partner__c = partnerList[0].Id;                        
+                        svlist[0].SV_Status__c = 'Completed';
+                        svlist[0].Attended_By_SM__c = attendedBySM[0];
+                        svlist[0].Site_Visit_Comments__c = strSiteVisitComment;
+                        
+                        /* Updating Scheduled Event */
+                        tempevent = [SELECT Id, EventStatus__c FROM Event WHERE WHATID = :svlist[0].opportunity__c AND EventStatus__c IN ('Open') AND Site_Visit__c = :svlist[0].Id];
+                        if(!tempevent.isEmpty() && tempevent.size() == 1)
+                            tempevent[0].EventStatus__c = 'Completed';                   
+                        
+                        acclist = [Select Id, FirstName, LastName, PersonMobilePhone, Phone, PersonEmail, Alternate_Email__c, People_Id__c, 
+                                   Country_Code__c, Country__c, Birth_Date__c, Residential_Street__c, Nationality__c, Company_Name__c,Phone_Third__c,Email_Third__c,
+                                   Designation__c, S_PReason_for_Purchase__c, Profession__c, Dialing_Country_2__c, Country_Code_2__c,Customer_Portal_User__c
+                                   from Account
+                                   where Id = :svlist[0].opportunity__r.AccountId AND IsPersonAccount = True];
+                        
+                        System.debug('Account List '+acclist);
+                        
+                        
+                        if(!acclist.isEmpty() && acclist.size() == 1){
+                            //---------------------------------------------------------------------------
+                            set<string> phoneNo = new set<string>();
+                            List<string> phoneNoList = new List<string>();
+                            if(acclist[0].PersonMobilePhone != Null && acclist[0].PersonMobilePhone!= ''){
+                                phoneNo.add(acclist[0].PersonMobilePhone);
+                            }
+                            if(acclist[0].Phone != Null && acclist[0].Phone!= ''){
+                                phoneNo.add(acclist[0].Phone);
+                            }
+                            if(acclist[0].Phone_Third__c != Null && acclist[0].Phone_Third__c!= ''){
+                                phoneNo.add(acclist[0].Phone_Third__c);
+                            }
+                            phoneNo.add(strMobile);
+                            if(!String.isBlank(strAltMobile)){
+                                phoneNo.add(strAltMobile);
+                            }
+                            for(String s : phoneNo){
+                                phoneNoList.add(s);
+                            }
+                            
+                            set<string> emailset = new set<string>();
+                            List<string> emailList = new List<string>();
+                            if(acclist[0].PersonEmail != Null && acclist[0].PersonEmail!= ''){
+                                emailset.add(acclist[0].PersonEmail);
+                            }
+                            if(acclist[0].Alternate_Email__c != Null && acclist[0].Alternate_Email__c!= ''){
+                                emailset.add(acclist[0].Alternate_Email__c);
+                            }
+                            if(acclist[0].Email_Third__c != Null && acclist[0].Email_Third__c!= ''){
+                                emailset.add(acclist[0].Email_Third__c);
+                            }
+                            if(!String.isBlank(strEmail)){
+                                emailset.add(strEmail);
+                            }
+                            if(!String.isBlank(strAlternateEmail)){
+                                emailset.add(strAlternateEmail);
+                            }
+                            for(String s : emailset){
+                                emailList.add(s);
+                            }
+                            //---------------------------------------------------------------------------
+                            acclist[0].FirstName = strFirstName;
+                            acclist[0].LastName = strLastName;
+                            acclist[0].Country_Code__c = strDailingCode; 
+                            acclist[0].Country__c = strDailingCountry;
+                            acclist[0].PersonMobilePhone = phoneNoList[0];
+                            acclist[0].Dialing_Country_2__c = strAltDailingCountry;
+                            acclist[0].Country_Code_2__c = strAltDailingCode;
+                            if(phoneNoList.size() >= 2){
+                                acclist[0].Phone = phoneNoList[1];
+                            }
+                            if(phoneNoList.size() >= 3){
+                                acclist[0].Phone_Third__c = phoneNoList[2];
+                            }
+                            // 09/02/2023 - Added this condition to avoid updating the email on Account where Customer portal is already created, as this 
+                            // was causing confusion due to diff email ids on account and portal username.
+                            if(acclist[0].Customer_Portal_User__c == False && emailList.size() > 0){
+                                acclist[0].PersonEmail = emailList[0];
+                            } 
+                            if(emailList.size() >= 2){
+                                acclist[0].Alternate_Email__c = emailList[1];
+                            }
+                            if(emailList.size() >= 3){
+                                acclist[0].Email_Third__c = emailList[2];
+                            }
+                            acclist[0].Residential_Street__c = strAddress;
+                            if(String.isNotBlank(strDateOfBirth))
+                              acclist[0].Birth_Date__c = Date.valueOf(strDateOfBirth);  
+                            acclist[0].Nationality__c = strNationality;
+                            acclist[0].Gender__c = strGender;
+                            acclist[0].Company_Name__c = strCompanyOrBusinessName;
+                            acclist[0].Designation__c = strDesignation;
+                            acclist[0].S_PReason_for_Purchase__c = strPurposeOfPurchase;
+                            acclist[0].Profession__c = strOccupation;                            
+                        }                        
+                        
+                        oplist = [Select Id, name, AccountId, Project__c, StageName, Is_SV_Created__c, Project_Type__c, Unit_type_configuration__c,
+                                  Reason_For_Purchase__c, Budget_In_Cr__c, Walk_in_Source__c, Walk_in_Sub_Source__c, Walk_in_Name_of_Person__c,
+                                  Walk_in_Employee_Name__c, Walk_in_Business_Partner__c, Walk_in_Channel_Partner_Name__c, First_Connect_Mode__c, Possession_Requirement__c
+                                  from Opportunity where AccountId = :acclist[0].Id];
+                        if(!oplist.isEmpty() && oplist.size() > 0){
+                            oplist[0].StageName = 'Site Visit Done';
+                            oplist[0].Is_SV_Created__c = false;    
+                            oplist[0].Name = strFirstName + ' ' + strLastName;
+                            oplist[0].Project_Type__c = strProjectType;
+                            oplist[0].Unit_type_configuration__c = strConfiguration;
+                            oplist[0].Reason_For_Purchase__c = strPurposeOfPurchase;
+                            oplist[0].Possession_Requirement__c = strPossessionRequirement;
+                            oplist[0].Budget_In_Cr__c = strBudget;
+                            if(String.isBlank(oplist[0].Walk_in_Source__c)){
+                                oplist[0].Walk_in_Source__c= strWalkinSource;
+                                oplist[0].Walk_in_Sub_Source__c= strWalkinSubSource;
+                                oplist[0].Walk_in_Name_of_Person__c = strCustomerName;
+                                oplist[0].Walk_in_Employee_Name__c = strEmployeeName;
+                                oplist[0].Walk_in_Channel_Partner_Name__c = strUnregisteredPartnerName;
+                                if(!partnerList.isEmpty() && partnerList.size() > 0)
+                               oplist[0].Walk_in_Business_Partner__c = partnerList[0].Id; 
+                            }
+                            if(String.isBlank(oplist[0].First_Connect_Mode__c))
+                                oplist[0].First_Connect_Mode__c = 'Walkin'; 
+                        }                                                   
+                        try {                                 
+                            update svlist;
+                            update tempevent;
+                            update acclist;
+                            update oplist;
+                            system.debug('after update svlist ::' + svlist);
+                            r.returnCode = 0;
+                            r.message = 'Your site visit updated successfully';
+                            r.recordId = svlist[0].Name;
+                            system.debug('r @@' + r);
+                            
+                            // API log creted for the site visit
+                            List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                            
+                            API_Log__c api = new API_Log__c();
+                            
+                            api.API_Name__c = 'Site visit Update';
+                            api.Site_Visit__c = svList[0].Id;
+                            api.Request__c = request.requestBody.toString();
+                            api.Status__c = '0';
+                            api.Message__c = 'Your site visit updated successfully';
+                            
+							apiLogList.add(api);
+                            
+                            if(apiLogList != null){
+                                Insert apiLogList;
+                            }
+                            //API log create for the site visit End
+                            
+                            return r; 
+                                                       
+                        } catch (exception ex) {
+                            System.debug('Site Visit Update failed with invitation Id' + ex);
+                            r.returnCode = 1;
+                            r.message = 'Error occurred while updating a site visit' + ex;
+                            r.recordId = null;
+                            
+                            // API log creted for the site visit
+                            List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                            
+                            API_Log__c api = new API_Log__c();
+                            
+                            api.API_Name__c = 'Site visit Update Error';
+                            api.Site_Visit__c = svList[0].Id;
+                            api.Request__c = request.requestBody.toString();
+                            api.Status__c = '1';
+                            api.Message__c = 'Error occurred while updating a site visit' + ex;
+                            
+							apiLogList.add(api);
+                            
+                            if(apiLogList != null){
+                                Insert apiLogList;
+                            }
+                            //API log create for the site visit End
+                            
+                            
+                            return r;                            
+                        }
+						
+						                        
+                    } else {
+                        r.returnCode = 1;
+                        r.message = 'INVALID INVITATION ID';
+                        r.recordId = null;
+                        
+                        // API log creted for the site visit
+                        List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                        
+                        API_Log__c api = new API_Log__c();
+                        
+                        api.API_Name__c = 'Site visit Update Error';
+                        api.Site_Visit__c = svList[0].Id;
+                        api.Request__c = request.requestBody.toString();
+                        api.Status__c = '1';
+                        api.Message__c = 'INVALID INVITATION ID';
+                        
+                        apiLogList.add(api);
+                        
+                        if(apiLogList != null){
+                            Insert apiLogList;
+                        }
+                        //API log create for the site visit End
+                        
+                        return r;
+                    }                   
+                } else if (strPeopleID != null && strPeopleID != '') {
+                    system.debug('In unscheduled site visit logic with people Id::');                    
+                    //  for unscheduled site visit                         
+                    lstLead = [Select Id, FirstName, LastName, MobilePhone, Phone, Email, RDS_Alternate_Email_Id__c, Project__c, Project__r.Name, Sales_Manager__c,
+                               Birthdate__c, Profession__c, Company_Name__c, Designation__c, Budget_In_Lacs__c, RDS_Unit_type_configuration__c,
+                               Nationality__c, Site_Visit_Lead__c, Project_Type__c, Reason_For_Purchase__c, OwnerId, Address_1_and_2_R__c, People_Id__c,
+                               Dialing_Country__c, Country_Code_2__c, Presales_Agent__c,Phone_Third__c,Email_Third__c
+                               from Lead
+                               where People_Id__c = :strPeopleID AND isConverted = false];
+                    System.debug('Lead list with people Id ::' + lstLead);                    
+                    if(!lstLead.isEmpty() && lstLead.size() > 0){
+                        
+                        //---------------------------------------------------------------------------
+                        set<string> phoneNo = new set<string>();
+                        List<string> phoneNoList = new List<string>();
+                        if(lstLead[0].MobilePhone != Null && lstLead[0].MobilePhone!= ''){
+                            phoneNo.add(lstLead[0].MobilePhone);
+                        }
+                        if(lstLead[0].Phone != Null && lstLead[0].Phone!= ''){
+                            phoneNo.add(lstLead[0].Phone);
+                        }
+                        if(lstLead[0].Phone_Third__c != Null && lstLead[0].Phone_Third__c!= ''){
+                            phoneNo.add(lstLead[0].Phone_Third__c);
+                        }
+                        phoneNo.add(strMobile);
+                        if(!String.isBlank(strAltMobile)){
+                            phoneNo.add(strAltMobile);
+                        }
+                        for(String s : phoneNo){
+                            phoneNoList.add(s);
+                        }
+                        
+                        set<string> emailset = new set<string>();
+                        List<string> emailList = new List<string>();
+                        if(lstLead[0].Email != Null && lstLead[0].Email!= ''){
+                            emailset.add(lstLead[0].Email);
+                        }
+                        if(lstLead[0].RDS_Alternate_Email_Id__c != Null && lstLead[0].RDS_Alternate_Email_Id__c!= ''){
+                            emailset.add(lstLead[0].RDS_Alternate_Email_Id__c);
+                        }
+                        if(lstLead[0].Email_Third__c != Null && lstLead[0].Email_Third__c!= ''){
+                            emailset.add(lstLead[0].Email_Third__c);
+                        }
+                        if(!String.isBlank(strEmail)){
+                            emailset.add(strEmail);
+                        }
+                        if(!String.isBlank(strAlternateEmail)){
+                            emailset.add(strAlternateEmail);
+                        }
+                        for(String s : emailset){
+                            emailList.add(s);
+                        }
+                        //---------------------------------------------------------------------------
+                        
+                        lstLead[0].firstname = strFirstName;                  
+                        lstLead[0].lastname = strLastName;
+                        lstLead[0].Address_1_and_2_R__c = strAddress;                                                                    
+                        lstLead[0].MobilePhone = phoneNoList[0];
+                        lstLead[0].Dialing_Country__c = strAltDailingCountry;
+                        lstLead[0].Country_Code_2__c = strAltDailingCode;
+                        if(phoneNoList.size() >= 2){
+                            lstLead[0].Phone = phoneNoList[1];
+                        }
+                        if(phoneNoList.size() >= 3){
+                            lstLead[0].Phone_Third__c = phoneNoList[2];
+                        }
+                        if(emailList.size() >= 1){
+                            lstLead[0].Email = emailList[0];
+                        }
+                        if(emailList.size() >= 2){
+                            lstLead[0].RDS_Alternate_Email_Id__c = emailList[1];
+                        }
+                        if(emailList.size() >= 3){
+                            lstLead[0].Email_Third__c = emailList[2];
+                        }
+                       /// lstLead[0].RDS_Alternate_Email_Id__c = strAlternateEmail;
+                        /* Demographics */
+                        if(String.isNotBlank(strDateOfBirth))
+                          lstLead[0].Birthdate__c = Date.valueOf(strDateOfBirth);
+                        lstLead[0].Nationality__c = strNationality; 
+                        lstLead[0].Gender__c = strGender;
+                        lstLead[0].Profession__c = strOccupation;
+                        lstLead[0].Company_Name__c = strCompanyOrBusinessName;                                   
+                        lstLead[0].Designation__c = strDesignation;
+                        /* Requirement Details */
+                        lstLead[0].Project__c = plist[0].Id;
+                        lstlead[0].Project_Type__c = strProjectType;
+                        lstLead[0].RDS_Unit_type_configuration__c = strConfiguration;  
+                        lstLead[0].Budget_In_Lacs__c = strBudget;  
+                        lstlead[0].Reason_For_Purchase__c = strPurposeOfPurchase; 
+                        lstlead[0].Possession_Requirement__c = strPossessionRequirement;
+                        lstlead[0].Site_Visit_Lead__c = true; 
+                        lstlead[0].Sales_Manager__c = attendedBySM[0];
+                        lstlead[0].People_Id__c = strPeopleID;
+                        if(string.valueOf(lstLead[0].OwnerId).startsWith('00G'))
+                            lstLead[0].OwnerId = plist[0].Default_Presales_Agent__c;
+                        if(string.isBlank(lstlead[0].Presales_Agent__c))
+                            lstlead[0].Presales_Agent__c = plist[0].Default_Presales_Agent__c;
+                        update lstLead; 
+                      
+                        convertLeads(lstLead);
+                        System.debug('Convert Method Call::');
+                        
+                        ConvertedLeadlist = [select Id, Name, IsConverted, ConvertedAccountId, ConvertedOpportunityId from Lead
+                                             where Id = :lstLead[0].Id and Isconverted = true order by LastModifiedDate Desc limit 1];
+                        
+                        //Fetch the converted Opportunity details                  
+                        convertedOPList = [Select StageName, Walk_in_Source__c, Walk_in_Sub_Source__c, Walk_in_Name_of_Person__c, Sales_Manager_lookup__c,
+                                           Walk_in_Employee_Name__c, Walk_in_Business_Partner__c, First_Connect_Mode__c, Walk_in_Channel_Partner_Name__c
+                                           from Opportunity where Id = :ConvertedLeadlist[0].ConvertedOpportunityId];
+                        system.debug('Converted Opportunity(convertedOPList ) details ::' + convertedOPList);
+                        
+                        convertedOPList[0].StageName = 'Site Visit Done';   
+                        convertedOPList[0].Walk_in_Source__c= strWalkinSource;
+                        convertedOPList[0].Walk_in_Sub_Source__c= strWalkinSubSource;
+                        convertedOPList[0].Walk_in_Name_of_Person__c = strCustomerName;
+                        convertedOPList[0].Walk_in_Employee_Name__c = strEmployeeName;
+                        convertedOPList[0].Walk_in_Channel_Partner_Name__c = strUnregisteredPartnerName;
+                        if(!partnerList.isEmpty() && partnerList.size() > 0)
+                            convertedOPList[0].Walk_in_Business_Partner__c = partnerList[0].Id; 
+                        if(String.isBlank(convertedOPList[0].First_Connect_Mode__c))
+                            convertedOPList[0].First_Connect_Mode__c = 'Walkin'; 
+                        update convertedOPList;
+                        system.debug('after update the converted opportunity ');
+                        
+                        // create site visit for converted opportunity
+                        Customer_Registration__c sv = new Customer_Registration__c();
+                        sv.Opportunity__c = convertedOPList[0].id;
+                        sv.First_Name__c = strFirstName;
+                        sv.Last_Name__c = strLastName;
+                        sv.Mobile_Number__c = strMobile;
+                        sv.Alternate_Mobile_Number__c = strAltMobile;
+                        sv.Email_Address__c = strEmail;
+                        sv.How_Did_You_Hear_About_Us__c = strWalkinSource;
+                        sv.Date__c = Date.ValueOf(strDateOfVisit);
+                        sv.Alternate_Email_Id__c = strAlternateEmail;
+                        sv.Address__c = strAddress;
+                        if(String.isNotBlank(strDateOfBirth))
+                          sv.Birth_Date__c = Date.valueOf(strDateOfBirth);
+                        sv.Nationality__c = strNationality;
+                        sv.Gender__c = strGender;
+                        sv.People_Id__c = strPeopleID;
+                        /* Professional Details */
+                        sv.Occupation__c = strOccupation;
+                        sv.Company_Business_Name__c = strCompanyOrBusinessName;
+                        sv.Designation__c = strDesignation;
+                        /* Preferences */
+                        sv.project__c = plist[0].id;
+                        if(projVisitedlist != null && projVisitedlist.size() == 1)
+                            sv.Project_Visited__c = projVisitedlist[0].id;
+                        sv.Visiting_On_Behalf_Of__c = strVisitingOnBehalf;
+                        sv.Budget_In_Crores__c = strBudget;
+                        sv.Purpose_Of_Purchase__c = strPurposeOfPurchase;
+                        sv.Property_Type__c = strProjectType;
+                        sv.Configuration__c = strConfiguration;
+                        sv.Possessiom_Timeline__c = strPossessionRequirement;
+                        /* Walkin Details */
+                        sv.How_Did_You_Hear_About_Us__c = strWalkinSource;
+                        sv.Sub_Source__c = strWalkinSubSource;
+                        if(!partnerList.isEmpty() && partnerList.size() > 0)
+                          sv.Business_Partner__c = partnerList[0].Id;
+                        sv.Unregistered_Partner__c = strUnregisteredPartnerName;
+                        sv.Name_of_Person__c = strCustomerName;
+                        sv.Employee_Id__c = strEmployeeName;                        
+                        sv.SV_Status__c = 'Completed';
+                        if (strVisitType == 'First Visit')
+                            sv.RecordTypeId = firstVisitRecTypeId;
+                        if (strVisitType == 'Revisit')
+                            sv.RecordTypeId = reVisitRecTypeId;
+                        sv.Attended_By_SM__c = attendedBySM[0];
+                        sv.OwnerId = convertedOPList[0].Sales_Manager_lookup__c;
+                        sv.Site_Visit_Comments__c = strSiteVisitComment;
+                        try{
+                            insert sv;
+                            List<Customer_Registration__c> svlist2 = new List<Customer_Registration__c >([Select Id,name from Customer_Registration__c WHERE id = :sv.id]);                                                           
+                            r.returnCode = 0;
+                            r.message = 'Your site visit completed successfully';
+                            r.recordId = svlist2[0].Name;
+                            system.debug('r @@' + r);
+                            
+                             // API log creted for the site visit
+                            List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                            
+                            API_Log__c api = new API_Log__c();
+                            
+                            api.API_Name__c = 'Site visit Insert';
+                            api.Site_Visit__c = sv.Id;
+                            api.Request__c = request.requestBody.toString();
+                            api.Status__c = '1';
+                            api.Message__c = 'Site Visit Record is Created';
+                            
+							apiLogList.add(api);
+                            
+                            if(apiLogList != null){
+                                Insert apiLogList;
+                            }
+                            //API log create for the site visit End
+                            
+                            
+                            return r;
+                        } catch(exception ex){
+                            r.returnCode = 1;
+                            r.message = 'Error occurred while inserting record:: ' + ex;
+                            r.recordId = null; 
+                            
+                            // API log creted for the site visit
+                            List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                            
+                            API_Log__c api = new API_Log__c();
+                            
+                            api.API_Name__c = 'Site visit Creation Error';
+                            api.Site_Visit__c = svList[0].Id;
+                            api.Request__c = request.requestBody.toString();
+                            api.Status__c = '1';
+                            api.Message__c = 'Error occurred while inserting record:: ' + ex;
+                            
+							apiLogList.add(api);
+                            
+                            if(apiLogList != null){
+                                Insert apiLogList;
+                            }
+                            //API log create for the site visit End
+                            
+                            return r;
+                        }                          
+                    } else {
+                        acclist = [Select FirstName, LastName, PersonMobilePhone, Phone, PersonEmail, Alternate_Email__c, People_Id__c, 
+                                   Country_Code__c, Country__c, Birth_Date__c, Residential_Street__c, Nationality__c, Company_Name__c,
+                                   Designation__c, S_PReason_for_Purchase__c, Profession__c, Dialing_Country_2__c, Country_Code_2__c,
+                                   Presales_Agent__c,Customer_Portal_User__c,Phone_Third__c,Email_Third__c
+                                   from Account
+                                   where People_Id__c = :strPeopleID AND IsPersonAccount = True];
+                        system.debug('acclist ::' + acclist);
+                        
+                        if (acclist != null && acclist.size() >= 1) {   
+                            
+                            //---------------------------------------------------------------------------
+                            set<string> phoneNo = new set<string>();
+                            List<string> phoneNoList = new List<string>();
+                            if(acclist[0].PersonMobilePhone != Null && acclist[0].PersonMobilePhone!= ''){
+                                phoneNo.add(acclist[0].PersonMobilePhone);
+                            }
+                            if(acclist[0].Phone != Null && acclist[0].Phone!= ''){
+                                phoneNo.add(acclist[0].Phone);
+                            }
+                            if(acclist[0].Phone_Third__c != Null && acclist[0].Phone_Third__c!= ''){
+                                phoneNo.add(acclist[0].Phone_Third__c);
+                            }
+                            phoneNo.add(strMobile);
+                            if(!String.isBlank(strAltMobile)){
+                                phoneNo.add(strAltMobile);
+                            }
+                            for(String s : phoneNo){
+                                phoneNoList.add(s);
+                            }
+                            
+                            set<string> emailset = new set<string>();
+                            List<string> emailList = new List<string>();
+                            if(acclist[0].PersonEmail != Null && acclist[0].PersonEmail!= ''){
+                                emailset.add(acclist[0].PersonEmail);
+                            }
+                            if(acclist[0].Alternate_Email__c != Null && acclist[0].Alternate_Email__c!= ''){
+                                emailset.add(acclist[0].Alternate_Email__c);
+                            }
+                            if(acclist[0].Email_Third__c != Null && acclist[0].Email_Third__c!= ''){
+                                emailset.add(acclist[0].Email_Third__c);
+                            }
+                            if(!String.isBlank(strEmail)){
+                                emailset.add(strEmail);
+                            }
+                            if(!String.isBlank(strAlternateEmail)){
+                                emailset.add(strAlternateEmail);
+                            }
+                            for(String s : emailset){
+                                emailList.add(s);
+                            }
+                            //---------------------------------------------------------------------------
+                            
+                            acclist[0].FirstName = strFirstName;
+                            acclist[0].LastName = strLastName;
+                            acclist[0].Country_Code__c = strDailingCode; 
+                            acclist[0].Country__c = strDailingCountry;
+                            acclist[0].PersonMobilePhone = phoneNoList[0];
+                            acclist[0].Dialing_Country_2__c = strAltDailingCountry;
+                			acclist[0].Country_Code_2__c = strAltDailingCode;
+                            if(phoneNoList.size() >= 2){
+                                acclist[0].Phone = phoneNoList[1];
+                            }
+                            if(phoneNoList.size() >= 3){
+                                acclist[0].Phone_Third__c = phoneNoList[2];
+                            }
+                            // 09/02/2023 - Added this condition to avoid updating the email on Account where Customer portal is already created, as this 
+                            // was causing confusion due to diff email ids on account and portal username.
+                            if(acclist[0].Customer_Portal_User__c == False && emailList.size() > 0){
+                                acclist[0].PersonEmail = emailList[0];
+                            } 
+                            if(emailList.size() >= 2){
+                                acclist[0].Alternate_Email__c = emailList[1];
+                            }
+                            if(emailList.size() >= 3){
+                                acclist[0].Email_Third__c = emailList[2];
+                            }
+                            acclist[0].Residential_Street__c = strAddress;
+                            if(String.isNotBlank(strDateOfBirth))
+                              acclist[0].Birth_Date__c = Date.valueOf(strDateOfBirth);
+                            if(String.isBlank(acclist[0].Presales_Agent__c))
+                                acclist[0].Presales_Agent__c = plist[0].Default_Presales_Agent__c; 
+                            acclist[0].Nationality__c = strNationality;
+                            acclist[0].Gender__c = strGender;
+                            acclist[0].Company_Name__c = strCompanyOrBusinessName;
+                            acclist[0].Designation__c = strDesignation;
+                            acclist[0].S_PReason_for_Purchase__c = strPurposeOfPurchase;
+                            acclist[0].Profession__c = strOccupation; 
+                        
+                            oplist = [Select Id, name, AccountId, Project__c, StageName, Project_Type__c, Unit_type_configuration__c, Walk_in_Channel_Partner_Name__c,
+                                      Reason_For_Purchase__c, Budget_In_Cr__c, Walk_in_Source__c, Walk_in_Sub_Source__c, Sales_Manager_lookup__c,
+                                      Walk_in_Name_of_Person__c, Walk_in_Employee_Name__c, Walk_in_Business_Partner__c, Possession_Requirement__c, 
+                                      First_Connect_Mode__c, Presales_Agent__c
+                                      from Opportunity where Project__c = :plist[0].Id and AccountId = :acclist[0].Id and
+                                      (StageName NOT IN ('Closed Won','Resale','Cancelled','Booking confirmed','Token Amount Received - BIP','Proposal')) ORDER BY LastModifieddate DESC]; //06/06/2025 Added this filter to allow duplicate opportunities on same project under certain conditions only.
+                            if (oplist != null && oplist.size() >= 1) {    
+                                oplist[0].StageName = 'Site Visit Done';
+                                oplist[0].Name = strFirstName + ' ' + strLastName;
+                                oplist[0].Project_Type__c = strProjectType;
+                                oplist[0].Unit_type_configuration__c = strConfiguration;
+                                oplist[0].Reason_For_Purchase__c = strPurposeOfPurchase;
+                                oplist[0].Possession_Requirement__c = strPossessionRequirement;
+                                oplist[0].Budget_In_Cr__c = strBudget;
+                                if(String.isNotBlank(acclist[0].Presales_Agent__c) && String.isBlank(oplist[0].Presales_Agent__c))
+                                    oplist[0].Presales_Agent__c = acclist[0].Presales_Agent__c;
+                                if(String.isBlank(oplist[0].Walk_in_Source__c)){
+                                    oplist[0].Walk_in_Source__c= strWalkinSource;
+                                    oplist[0].Walk_in_Sub_Source__c= strWalkinSubSource;
+                                    oplist[0].Walk_in_Name_of_Person__c = strCustomerName;
+                                    oplist[0].Walk_in_Employee_Name__c = strEmployeeName;
+                                    oplist[0].Walk_in_Channel_Partner_Name__c = strUnregisteredPartnerName;
+                                    if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                oplist[0].Walk_in_Business_Partner__c = partnerList[0].Id;
+                                }
+                                if(String.isBlank(oplist[0].Sales_Manager_lookup__c))
+                                  oplist[0].Sales_Manager_lookup__c = attendedBySM[0];
+                                
+                                if(String.isBlank(oplist[0].First_Connect_Mode__c))
+                                    oplist[0].First_Connect_Mode__c = 'Walkin'; 
+                                
+                                system.debug('Create new site visit for existing Project::');
+                                Customer_Registration__c sv = new Customer_Registration__c();
+                                sv.Opportunity__c = oplist[0].id;
+                                sv.First_Name__c = strFirstName;
+                                sv.Last_Name__c = strLastName;
+                                sv.Mobile_Number__c = strMobile;
+                                sv.Alternate_Mobile_Number__c = strAltMobile;
+                                sv.Email_Address__c = strEmail;
+                                sv.Alternate_Email_Id__c = strAlternateEmail;
+                                sv.Address__c = strAddress;
+                                sv.Date__c = Date.ValueOf(strDateOfVisit);
+                                if(String.isNotBlank(strDateOfBirth))
+                                  sv.Birth_Date__c = Date.valueOf(strDateOfBirth);
+                                sv.Nationality__c = strNationality;    
+                                sv.Gender__c = strGender;
+                                sv.People_Id__c = strPeopleID;
+                                /* Professional Details */
+                                sv.Occupation__c = strOccupation;
+                                sv.Company_Business_Name__c = strCompanyOrBusinessName;
+                                sv.Designation__c = strDesignation;
+                                /* Preferences*/
+                                sv.project__c = plist[0].id;
+                                if(projVisitedlist != null && projVisitedlist.size()== 1)
+                                    sv.Project_Visited__c = projVisitedlist[0].id;
+                                sv.Visiting_On_Behalf_Of__c = strVisitingOnBehalf;
+                                sv.Budget_In_Crores__c = strBudget;
+                                sv.Purpose_Of_Purchase__c = strPurposeOfPurchase;
+                                sv.Property_Type__c = strProjectType;
+                                sv.Configuration__c = strConfiguration;
+                                sv.Possessiom_Timeline__c = strPossessionRequirement;
+                                /* Walkin Details */
+                                sv.How_Did_You_Hear_About_Us__c = strWalkinSource;
+                                sv.Sub_Source__c = strWalkinSubSource;
+                                sv.Name_of_Person__c = strCustomerName;
+                                sv.Employee_Id__c = strEmployeeName;
+                                 if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                sv.Business_Partner__c = partnerList[0].Id;
+                                sv.Unregistered_Partner__c = strUnregisteredPartnerName;
+                                sv.SV_Status__c = 'Completed';
+                                if (strVisitType == 'First Visit')
+                                    sv.RecordTypeId = firstVisitRecTypeId;
+                                if (strVisitType == 'Revisit')
+                                    sv.RecordTypeId = reVisitRecTypeId;
+                                sv.Attended_By_SM__c = attendedBySM[0];
+                                sv.ownerId = oplist[0].Sales_Manager_lookup__c;
+                                sv.Site_Visit_Comments__c = strSiteVisitComment;
+                                try{
+                                    update acclist;
+                                    update oplist;
+                                    insert sv;
+                                    List<Customer_Registration__c> svlist2 = new List<Customer_Registration__c >([Select Id,name from Customer_Registration__c WHERE id =: sv.id]);                                                          
+                                    r.returnCode = 0;
+                                    r.message = 'Your site visit completed successfully';
+                                    r.recordId = svlist2[0].Name;
+                                    system.debug('r @@' + r);
+                                    
+                                    // API log creted for the site visit
+                                    List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                    
+                                    API_Log__c api = new API_Log__c();
+                                    
+                                    api.API_Name__c = 'Site visit Insert';
+                                    api.Site_Visit__c = sv.Id;
+                                    api.Request__c = request.requestBody.toString();
+                                    api.Status__c = '1';
+                                    api.Message__c = 'Site Visit Record is Created';
+                                    
+                                    apiLogList.add(api);
+                                    
+                                    if(apiLogList != null){
+                                        Insert apiLogList;
+                                    }
+                                    //API log create for the site visit End
+                                    
+                                    return r;
+                                } catch(exception ex){
+                                    r.returnCode = 1;
+                                    r.message = 'Error occurred while inserting record:::' + ex;
+                                    r.recordId = null;
+                                    
+                                     // API log creted for the site visit
+                                    List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                    
+                                    API_Log__c api = new API_Log__c();
+                                    
+                                    api.API_Name__c = 'Site visit Creation Error';
+                                    api.Site_Visit__c = svList[0].Id;
+                                    api.Request__c = request.requestBody.toString();
+                                    api.Status__c = '1';
+                                    api.Message__c = 'Error occurred while inserting record:: ' + ex;
+                                    
+                                    apiLogList.add(api);
+                                    
+                                    if(apiLogList != null){
+                                        Insert apiLogList;
+                                    }
+                                    //API log create for the site visit End
+                                    
+                                    
+                                    return r;
+                                }
+                            } else if (oplist.isEmpty() && oplist.size() == 0) {                             
+                                system.debug('Create new Opportunity for new Project::');
+                                Opportunity op = new Opportunity();
+                                op.Name = strFirstName + ' ' + strLastName + '-' + plist[0].name;
+                                op.StageName = 'Site Visit Done';
+                                op.Project__c = plist[0].id;
+                                op.Sales_Manager_lookup__c = attendedBySM[0];
+                                op.CloseDate = System.Today().addDays((Integer)plist[0].Expiry_Days__c);
+                                op.AccountId = acclist[0].Id;
+                                if(String.isNotBlank(acclist[0].Presales_Agent__c))
+                                   op.Presales_Agent__c = acclist[0].Presales_Agent__c;
+                                op.Project_Type__c = strProjectType;
+                                op.Unit_type_configuration__c = strConfiguration;
+                                op.Reason_For_Purchase__c = strPurposeOfPurchase;
+                                op.Possession_Requirement__c = strPossessionRequirement;
+                                op.Budget_In_Cr__c = strBudget;
+                                op.Walk_in_Source__c= strWalkinSource;
+                                op.Walk_in_Sub_Source__c= strWalkinSubSource;
+                                op.Walk_in_Name_of_Person__c = strCustomerName;
+                                op.Walk_in_Employee_Name__c = strEmployeeName;
+                                op.Walk_in_Channel_Partner_Name__c = strUnregisteredPartnerName;
+                                if(!partnerList.isEmpty() && partnerList.size() > 0)
+                              op.Walk_in_Business_Partner__c = partnerList[0].Id;                            
+                                if(String.isBlank(op.First_Connect_Mode__c))
+                                    op.First_Connect_Mode__c = 'Walkin'; 
+                                insert op;
+                                
+                                Customer_Registration__c sv = new Customer_Registration__c();
+                                sv.Opportunity__c = op.id;
+                                sv.First_Name__c = strFirstName;
+                                sv.Last_Name__c = strLastName;
+                                sv.Mobile_Number__c = strMobile;
+                                sv.Alternate_Mobile_Number__c = strAltMobile;
+                                sv.Date__c = Date.ValueOf(strDateOfVisit);
+                                sv.Email_Address__c = strEmail;                                
+                                sv.Alternate_Email_Id__c = strAlternateEmail;
+                                sv.Address__c = strAddress;
+                                if(String.isNotBlank(strDateOfBirth))
+                                   sv.Birth_Date__c = Date.valueOf(strDateOfBirth);
+                                sv.Nationality__c = strNationality;
+                                sv.Gender__c = strGender;
+                                sv.People_Id__c = strPeopleID;
+                                /* Professional Details */
+                                sv.Occupation__c = strOccupation;
+                                sv.Company_Business_Name__c = strCompanyOrBusinessName;
+                                sv.Designation__c = strDesignation;
+                                /* Preferences*/
+                                sv.project__c = plist[0].id;
+                                if(projVisitedlist != null && projVisitedlist.size()==1)
+                                    sv.Project_Visited__c = projVisitedlist[0].id;
+                                sv.Visiting_On_Behalf_Of__c = strVisitingOnBehalf;
+                                sv.Budget_In_Crores__c = strBudget;
+                                sv.Purpose_Of_Purchase__c = strPurposeOfPurchase;
+                                sv.Property_Type__c = strProjectType;
+                                sv.Configuration__c = strConfiguration;
+                                sv.Purpose_Of_Purchase__c = strPurposeOfPurchase;    
+                                sv.Possessiom_Timeline__c = strPossessionRequirement;                                
+                                /* Walkin Details */
+                                sv.How_Did_You_Hear_About_Us__c = strWalkinSource;                                
+                                sv.Sub_Source__c = strWalkinSubSource;
+                                sv.Name_of_Person__c = strCustomerName;
+                                sv.Employee_Id__c = strEmployeeName;
+                                if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                sv.Business_Partner__c = partnerList[0].Id; 
+                                sv.Unregistered_Partner__c = strUnregisteredPartnerName;
+                                sv.SV_Status__c = 'Completed';
+                                if (strVisitType == 'First Visit')
+                                    sv.RecordTypeId = firstVisitRecTypeId;
+                                if (strVisitType == 'Revisit')
+                                    sv.RecordTypeId = reVisitRecTypeId;
+                                sv.Attended_By_SM__c = attendedBySM[0];
+                                sv.ownerId = op.Sales_Manager_lookup__c;
+                                sv.Site_Visit_Comments__c = strSiteVisitComment;
+                                try{
+                                    insert sv;
+                                    List<Customer_Registration__c> svlist2 = new List<Customer_Registration__c >([Select Id,name from Customer_Registration__c WHERE id =: sv.id]);                                    
+                                    r.returnCode = 0;
+                                    r.message = 'Your site visit completed successfully';
+                                    r.recordId = svlist2[0].Name;
+                                    system.debug('r @@' + r);
+                                    
+                                    // API log creted for the site visit
+                                    List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                    
+                                    API_Log__c api = new API_Log__c();
+                                    
+                                    api.API_Name__c = 'Site visit Insert';
+                                    api.Site_Visit__c = sv.Id;
+                                    api.Request__c = request.requestBody.toString();
+                                    api.Status__c = '1';
+                                    api.Message__c = 'Site Visit Record is Created';
+                                    
+                                    apiLogList.add(api);
+                                    
+                                    if(apiLogList != null){
+                                        Insert apiLogList;
+                                    }
+                                    //API log create for the site visit End
+
+                                    
+                                    return r;
+                                } catch(Exception ex){                                                                        
+                                    r.returnCode = 1;
+                                    r.message = 'Error occurred while inserting record:::' + ex;
+                                    r.recordId = null;
+                                    
+                                    // API log creted for the site visit
+                                    List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                    
+                                    API_Log__c api = new API_Log__c();
+                                    
+                                    api.API_Name__c = 'Site visit Creation Error';
+                                    api.Site_Visit__c = svList[0].Id;
+                                    api.Request__c = request.requestBody.toString();
+                                    api.Status__c = '1';
+                                    api.Message__c = 'Error occurred while inserting record:: ' + ex;
+                                    
+                                    apiLogList.add(api);
+                                    
+                                    if(apiLogList != null){
+                                        Insert apiLogList;
+                                    }
+                                    //API log create for the site visit End
+
+                                    
+                                    return r; 
+                                }                                                  
+                            }
+                        } else {
+                            /// Search by mobile number and email
+                        /*   if(String.IsNotBlank(strMobile)){
+                                if (String.IsNotBlank(strEmail) && String.IsNotBlank(strAltMobile)) {
+                                    lstLead = [Select FirstName, Lastname, MobilePhone, Phone, Email, RDS_Alternate_Email_Id__c, Project__c, Project__r.Name, 
+                                               Birthdate__c, Profession__c, Company_Name__c, Designation__c, Budget_In_Lacs__c, RDS_Unit_type_configuration__c,
+                                         Nationality__c, Site_Visit_Lead__c, Project_Type__c, Reason_For_Purchase__c, OwnerId, Sales_Manager__c, People_Id__c,
+                                               Dialing_Country__c, Country_Code_2__c, Presales_Agent__c
+                                               from Lead
+                                               where (Mobilephone = :strMobile OR Phone = :strMobile OR Phone = :strAltMobile OR MobilePhone = :strAltMobile OR Email =: strEmail OR RDS_Alternate_Email_Id__c =: strEmail) AND isConverted = false];
+                                } else if(String.IsNotBlank(strEmail) && String.IsBlank(strAltMobile)){
+                                    lstLead = [Select FirstName, Lastname, MobilePhone, Phone, Email, RDS_Alternate_Email_Id__c, Project__c, Project__r.Name, 
+                                               Birthdate__c, Profession__c, Company_Name__c, Designation__c, Budget_In_Lacs__c, RDS_Unit_type_configuration__c,
+                                         Nationality__c, Site_Visit_Lead__c, Project_Type__c, Reason_For_Purchase__c, OwnerId, Sales_Manager__c, People_Id__c,
+                                               Dialing_Country__c, Country_Code_2__c, Presales_Agent__c
+                                               from Lead
+                                               where (Mobilephone = :strMobile OR Phone = :strMobile OR Email = :strEmail OR RDS_Alternate_Email_Id__c =: strEmail) AND isConverted = false];
+                                } else if (String.IsBlank(strEmail) && String.IsBlank(strAltMobile)) {
+                                    lstLead = [Select FirstName, Lastname, MobilePhone, Phone, Email, RDS_Alternate_Email_Id__c, Project__c, Project__r.Name,
+                                               Birthdate__c, Profession__c, Company_Name__c, Designation__c, Budget_In_Lacs__c, RDS_Unit_type_configuration__c,
+                                         Nationality__c, Site_Visit_Lead__c, Project_Type__c, Reason_For_Purchase__c, OwnerId, Sales_Manager__c, People_Id__c,
+                                               Dialing_Country__c, Country_Code_2__c, Presales_Agent__c
+                                               from Lead
+                                               where (Mobilephone = :strMobile OR phone = :strMobile) AND isConverted = false];
+                                } else if(String.IsBlank(strEmail) && String.IsNotBlank(strAltMobile)){
+                                    lstLead = [Select FirstName, Lastname, MobilePhone, Phone, Email, RDS_Alternate_Email_Id__c, Project__c, Project__r.Name, 
+                                               Birthdate__c, Profession__c, Company_Name__c, Designation__c, Budget_In_Lacs__c, RDS_Unit_type_configuration__c,
+                                         Nationality__c, Site_Visit_Lead__c, Project_Type__c, Reason_For_Purchase__c, OwnerId, Sales_Manager__c, People_Id__c,
+                                               Dialing_Country__c, Country_Code_2__c, Presales_Agent__c
+                                               from Lead
+                                               where (Mobilephone = :strMobile OR Phone = :strMobile OR Phone = :strAltMobile OR MobilePhone = :strAltMobile) AND isConverted = false];                                  
+                                }
+                            }  */ 
+                            if(String.IsNotBlank(strMobile)){
+                                String searchStr1 = strMobile;
+                                
+                                if(String.IsNotBlank(strAltMobile)){
+                                    searchStr1 += ' or '+strAltMobile;
+                                }
+                                if(String.IsNotBlank(strEmail)){
+                                    searchStr1 += ' or '+strEmail;
+                                }
+                                if(String.IsNotBlank(strAlternateEmail)){
+                                    searchStr1 += ' or '+strAlternateEmail;
+                                }
+                                system.debug('str::::'+searchStr1);
+                                String searchQuery = 'FIND \'' + searchStr1 + '\' IN ALL FIELDS RETURNING Lead(Id,FirstName, Lastname, MobilePhone, Phone, Email, RDS_Alternate_Email_Id__c, Project__c,Phone_Third__c,Email_Third__c, Project__r.Name,Birthdate__c, Profession__c, Company_Name__c, Designation__c, Budget_In_Lacs__c, RDS_Unit_type_configuration__c,Nationality__c, Site_Visit_Lead__c, Project_Type__c, Reason_For_Purchase__c, OwnerId, Sales_Manager__c, People_Id__c,Dialing_Country__c, Country_Code_2__c, Presales_Agent__c  where isConverted = false)';
+                                List<List <sObject>> searchList = search.query(searchQuery);
+                                lstLead = ((List<Lead>)searchList[0]);
+                            }
+                            
+                            System.debug('Lead list ::' + lstLead); 
+                            If(lstLead != null && lstLead.size() >= 1) {
+                                
+                                //---------------------------------------------------------------------------
+                                set<string> phoneNo = new set<string>();
+                                List<string> phoneNoList = new List<string>();
+                                if(lstLead[0].MobilePhone != Null && lstLead[0].MobilePhone!= ''){
+                                    phoneNo.add(lstLead[0].MobilePhone);
+                                }
+                                if(lstLead[0].Phone != Null && lstLead[0].Phone!= ''){
+                                    phoneNo.add(lstLead[0].Phone);
+                                }
+                                if(lstLead[0].Phone_Third__c != Null && lstLead[0].Phone_Third__c!= ''){
+                                    phoneNo.add(lstLead[0].Phone_Third__c);
+                                }
+                                phoneNo.add(strMobile);
+                                if(!String.isBlank(strAltMobile)){
+                                    phoneNo.add(strAltMobile);
+                                }
+                                for(String s : phoneNo){
+                                    phoneNoList.add(s);
+                                }
+                                
+                                set<string> emailset = new set<string>();
+                                List<string> emailList = new List<string>();
+                                if(lstLead[0].Email != Null && lstLead[0].Email!= ''){
+                                    emailset.add(lstLead[0].Email);
+                                }
+                                if(lstLead[0].RDS_Alternate_Email_Id__c != Null && lstLead[0].RDS_Alternate_Email_Id__c!= ''){
+                                    emailset.add(lstLead[0].RDS_Alternate_Email_Id__c);
+                                }
+                                if(lstLead[0].Email_Third__c != Null && lstLead[0].Email_Third__c!= ''){
+                                    emailset.add(lstLead[0].Email_Third__c);
+                                }
+                                if(!String.isBlank(strEmail)){
+                                    emailset.add(strEmail);
+                                }
+                                if(!String.isBlank(strAlternateEmail)){
+                                    emailset.add(strAlternateEmail);
+                                }
+                                for(String s : emailset){
+                                    emailList.add(s);
+                                }
+                                //---------------------------------------------------------------------------
+                                
+                                system.debug('if lstLead is not null');
+                                lstLead[0].People_Id__c = strPeopleId;
+                                lstLead[0].firstname = strFirstName;                  
+                                lstLead[0].lastname = strLastName;
+                                lstLead[0].Address_1_and_2_R__c = strAddress;                                                                    
+                                lstLead[0].MobilePhone = phoneNoList[0];
+                                lstLead[0].Dialing_Country__c = strAltDailingCountry;
+                               lstLead[0].Country_Code_2__c = strAltDailingCode;
+                                if(phoneNoList.size() >= 2){
+                                    lstLead[0].Phone = phoneNoList[1];
+                                }
+                                if(phoneNoList.size() >= 3){
+                                    lstLead[0].Phone_Third__c = phoneNoList[2];
+                                }
+                                if(emailList.size() >= 1){
+                                    lstLead[0].Email = emailList[0];
+                                }
+                                if(emailList.size() >= 2){
+                                    lstLead[0].RDS_Alternate_Email_Id__c = emailList[1];
+                                }
+                                if(emailList.size() >= 3){
+                                    lstLead[0].Email_Third__c = emailList[2];
+                                }
+                              ////  lstLead[0].RDS_Alternate_Email_Id__c = strAlternateEmail;
+                                if(String.isNotBlank(strDateOfBirth))
+                                  lstLead[0].Birthdate__c = Date.valueOf(strDateOfBirth);
+                                lstLead[0].Profession__c = strOccupation;
+                                lstLead[0].Company_Name__c = strCompanyOrBusinessName;                                   
+                                lstLead[0].Designation__c = strDesignation;
+                                lstLead[0].Budget_In_Lacs__c = strBudget;                                
+                                lstLead[0].RDS_Unit_type_configuration__c = strConfiguration;
+                                lstLead[0].Nationality__c = strNationality; 
+                                lstLead[0].Gender__c = strGender;
+                                lstLead[0].Project__c = plist[0].Id;
+                                lstlead[0].Site_Visit_Lead__c = true;
+                                lstlead[0].Project_Type__c = strProjectType;
+                                lstlead[0].Reason_For_Purchase__c = strPurposeOfPurchase;
+                                lstlead[0].Possession_Requirement__c = strPossessionRequirement;
+                                if(string.valueOf(lstLead[0].OwnerId).startsWith('00G'))
+                                    lstLead[0].OwnerId = plist[0].Default_Presales_Agent__c;
+                                if(string.isBlank(lstlead[0].Presales_Agent__c))
+                                  lstlead[0].Presales_Agent__c = plist[0].Default_Presales_Agent__c;
+                                 lstlead[0].Sales_Manager__c = attendedBySM[0];  
+                                update lstLead;
+                                
+                                convertLeads(lstLead);
+                                System.debug('Convert Method Call::');
+                                
+                                ConvertedLeadlist = [select Id, Name, IsConverted, ConvertedAccountId, ConvertedOpportunityId from Lead
+                                                     where Id =: lstLead[0].Id and Isconverted = true order by LastModifiedDate Desc limit 1];
+                                //Fetch the converted Opportunity details                  
+                                convertedOPList = [Select Id, name, StageName, Walk_in_Source__c, Walk_in_Sub_Source__c, Walk_in_Name_of_Person__c, Sales_Manager_lookup__c,
+                                                   Walk_in_Employee_Name__c, Walk_in_Business_Partner__c, First_Connect_Mode__c, Walk_in_Channel_Partner_Name__c
+                                                   from Opportunity where Id =: ConvertedLeadlist[0].ConvertedOpportunityId];
+                                system.debug('Converted Opportunity(convertedOPList ) details ::' + convertedOPList);
+                                
+                                convertedOPList[0].StageName = 'Site Visit Done'; 
+                                convertedOPList[0].Walk_in_Source__c= strWalkinSource;
+                                convertedOPList[0].Walk_in_Sub_Source__c= strWalkinSubSource;
+                                convertedOPList[0].Walk_in_Name_of_Person__c = strCustomerName;
+                                convertedOPList[0].Walk_in_Employee_Name__c = strEmployeeName;
+                                convertedOPList[0].Walk_in_Channel_Partner_Name__c = strUnregisteredPartnerName;
+                                if(!partnerList.isEmpty() && partnerList.size() > 0)
+                              convertedOPList[0].Walk_in_Business_Partner__c = partnerList[0].Id;                                
+                                if(String.isBlank(convertedOPList[0].First_Connect_Mode__c))
+                                 convertedOPList[0].First_Connect_Mode__c = 'Walkin'; 
+                                update convertedOPList;
+                                system.debug('after update the converted opportunity ');
+                                
+                                // create site visit for converted opportunity
+                                Customer_Registration__c sv = new Customer_Registration__c();
+                                sv.Opportunity__c = convertedOPList[0].id;                                                               
+                                sv.First_Name__c = strFirstName;
+                                sv.Last_Name__c = strLastName;
+                                sv.Mobile_Number__c = strMobile;
+                                sv.Alternate_Mobile_Number__c = strAltMobile;
+                                sv.Date__c = Date.ValueOf(strDateOfVisit);
+                                sv.Email_Address__c = strEmail;                                
+                                sv.Alternate_Email_Id__c = strAlternateEmail;
+                                sv.Address__c = strAddress;
+                                if(String.isNotBlank(strDateOfBirth))
+                                  sv.Birth_Date__c = Date.valueOf(strDateOfBirth);
+                                sv.Nationality__c = strNationality;
+                                sv.Gender__c = strGender;
+                                sv.People_Id__c = strPeopleID;
+                                /* Professional Details */
+                                sv.Occupation__c = strOccupation;
+                                sv.Company_Business_Name__c = strCompanyOrBusinessName;
+                                sv.Designation__c = strDesignation;
+                                /* Preferences*/
+                                sv.project__c = plist[0].id;
+                                if(projVisitedlist != null && projVisitedlist.size()==1)
+                                    sv.Project_Visited__c = projVisitedlist[0].id;
+                                sv.Visiting_On_Behalf_Of__c = strVisitingOnBehalf;
+                                sv.Budget_In_Crores__c = strBudget;
+                                sv.Purpose_Of_Purchase__c = strPurposeOfPurchase;
+                                sv.Property_Type__c = strProjectType;
+                                sv.Configuration__c = strConfiguration;
+                                sv.Purpose_Of_Purchase__c = strPurposeOfPurchase; 
+                                sv.Possessiom_Timeline__c = strPossessionRequirement;
+                                /* Walkin Details */
+                                sv.How_Did_You_Hear_About_Us__c = strWalkinSource;                                
+                                sv.Sub_Source__c = strWalkinSubSource;
+                                sv.Name_of_Person__c = strCustomerName;
+                                sv.Employee_Id__c = strEmployeeName;
+                                if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                sv.Business_Partner__c = partnerList[0].Id; 
+                                sv.Unregistered_Partner__c = strUnregisteredPartnerName;
+                                sv.SV_Status__c = 'Completed';
+                                if (strVisitType == 'First Visit')
+                                    sv.RecordTypeId = firstVisitRecTypeId;
+                                if (strVisitType == 'Revisit')
+                                    sv.RecordTypeId = reVisitRecTypeId;
+                                sv.Attended_By_SM__c = attendedBySM[0];
+                                sv.ownerId = convertedOPList[0].Sales_Manager_lookup__c;
+                                sv.Site_Visit_Comments__c = strSiteVisitComment;
+                                try{
+                                    insert sv;
+                                    List<Customer_Registration__c> svlist2 = new List<Customer_Registration__c >([Select Id,name from Customer_Registration__c WHERE id =: sv.id]);                                                           
+                                    r.returnCode = 0;
+                                    r.message = 'Your site visit completed successfully';
+                                    r.recordId = svlist2[0].Name;
+                                    system.debug('r @@' + r);
+                                    
+                                    // API log creted for the site visit
+                                    List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                    
+                                    API_Log__c api = new API_Log__c();
+                                    
+                                    api.API_Name__c = 'Site visit Insert';
+                                    api.Site_Visit__c = sv.Id;
+                                    api.Request__c = request.requestBody.toString();
+                                    api.Status__c = '1';
+                                    api.Message__c = 'Site Visit Record is Created';
+                                    
+                                    apiLogList.add(api);
+                                    
+                                    if(apiLogList != null){
+                                        Insert apiLogList;
+                                    }
+                                    //API log create for the site visit End
+                                    
+                                    return r;
+                                } catch(exception ex ){
+                                   r.returnCode = 1;
+                                    r.message = 'Error occurred while inserting record:::' + ex;
+                                    r.recordId = null;
+                                    
+                                     // API log creted for the site visit
+                                    List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                    
+                                    API_Log__c api = new API_Log__c();
+                                    
+                                    api.API_Name__c = 'Site visit Creation Error';
+                                    api.Site_Visit__c = svList[0].Id;
+                                    api.Request__c = request.requestBody.toString();
+                                    api.Status__c = '1';
+                                    api.Message__c = 'Error occurred while inserting record:: ' + ex;
+                                    
+                                    apiLogList.add(api);
+                                    
+                                    if(apiLogList != null){
+                                        Insert apiLogList;
+                                    }
+                                    //API log create for the site visit End
+                                    
+                                    return r;   
+                                }                        
+                            } else if (lstLead.isEmpty() && lstLead.size() == 0){
+                                system.debug('Else in Account::');
+                             /*   if (String.IsNotBlank(strMobile)){
+                                    if (String.IsNotBlank(strEmail) && String.IsNotBlank(strAltMobile)) {                                        
+                                        acclist = [Select Id, FirstName, LastName, PersonMobilePhone, Phone, PersonEmail, Alternate_Email__c, People_Id__c, 
+                                                   Country_Code__c, Country__c, Birth_Date__c, Residential_Street__c, Nationality__c, Company_Name__c,
+                                                   Designation__c, S_PReason_for_Purchase__c, Profession__c, Dialing_Country_2__c, Country_Code_2__c,
+                                                   Presales_Agent__c,Customer_Portal_User__c
+                                                  from Account
+                                                   where(PersonMobilePhone = :strMobile OR Phone = :strMobile OR PersonMobilePhone = :strAltMobile OR Phone = :strAltMobile OR PersonEmail = :strEmail OR Alternate_Email__c = :strEmail) AND IsPersonAccount = True];
+                                    } else if(String.IsNotBlank(strEmail) && String.IsBlank(strAltMobile)){
+                                        acclist = [Select Id, FirstName, LastName, PersonMobilePhone, Phone, PersonEmail, Alternate_Email__c, People_Id__c, 
+                                                   Country_Code__c, Country__c, Birth_Date__c, Residential_Street__c, Nationality__c, Company_Name__c,
+                                                   Designation__c, S_PReason_for_Purchase__c, Profession__c, Dialing_Country_2__c, Country_Code_2__c,
+                                                   Presales_Agent__c,Customer_Portal_User__c
+                                                   from Account
+                                                   where(PersonMobilePhone = :strMobile OR Phone = :strMobile OR PersonEmail = :strEmail OR Alternate_Email__c = :strEmail) AND IsPersonAccount = True];   
+                                    } else if (String.IsBlank(strEmail) && String.IsBlank(strAltMobile)) {
+                                        acclist = [Select Id, FirstName, LastName, PersonMobilePhone, Phone, PersonEmail, Alternate_Email__c, People_Id__c, 
+                                                   Country_Code__c, Country__c, Birth_Date__c, Residential_Street__c, Nationality__c, Company_Name__c,
+                                                   Designation__c, S_PReason_for_Purchase__c, Profession__c, Dialing_Country_2__c, Country_Code_2__c,
+                                                   Presales_Agent__c,Customer_Portal_User__c
+                                                   from Account
+                                                   where(PersonMobilePhone = :strMobile OR Phone = :strMobile) AND IsPersonAccount = True];    
+                                    } else if(String.IsBlank(strEmail) && String.IsNotBlank(strAltMobile)){
+                                        acclist = [Select Id, FirstName, LastName, PersonMobilePhone, Phone, PersonEmail, Alternate_Email__c, People_Id__c, 
+                                                   Country_Code__c, Country__c, Birth_Date__c, Residential_Street__c, Nationality__c, Company_Name__c,
+                                                   Designation__c, S_PReason_for_Purchase__c, Profession__c, Dialing_Country_2__c, Country_Code_2__c,
+                                                   Presales_Agent__c,Customer_Portal_User__c
+                                                   from Account
+                                                   where(PersonMobilePhone = :strMobile OR Phone = :strMobile OR PersonMobilePhone = :strAltMobile OR Phone = :strAltMobile) AND IsPersonAccount = True];    
+                                    }                                    
+                                }  */
+                                if(String.IsNotBlank(strMobile)){
+                                    String searchStr1 = strMobile;
+                                    
+                                    if(String.IsNotBlank(strAltMobile)){
+                                        searchStr1 += ' or '+strAltMobile;
+                                    }
+                                    if(String.IsNotBlank(strEmail)){
+                                        searchStr1 += ' or '+strEmail;
+                                    }
+                                    if(String.IsNotBlank(strAlternateEmail)){
+                                        searchStr1 += ' or '+strAlternateEmail;
+                                    }
+                                    system.debug('str::::'+searchStr1);
+                                    String searchQuery = 'FIND \'' + searchStr1 + '\' IN ALL FIELDS RETURNING Account(Id, FirstName, LastName, PersonMobilePhone, Phone, PersonEmail, Alternate_Email__c, People_Id__c, Phone_Third__c,Email_Third__c,Country_Code__c, Country__c, Birth_Date__c, Residential_Street__c, Nationality__c, Company_Name__c,Designation__c, S_PReason_for_Purchase__c, Profession__c, Dialing_Country_2__c, Country_Code_2__c,Presales_Agent__c,Customer_Portal_User__c)';
+                                    List<List <sObject>> searchList = search.query(searchQuery);
+                                    acclist = ((List<Account>)searchList[0]);
+                                }
+                                system.debug('accList::' + accList);
+                                if (acclist != null && acclist.size() >= 1) {
+                                    
+                                    //---------------------------------------------------------------------------
+                                    set<string> phoneNo = new set<string>();
+                                    List<string> phoneNoList = new List<string>();
+                                    if(acclist[0].PersonMobilePhone != Null && acclist[0].PersonMobilePhone!= ''){
+                                        phoneNo.add(acclist[0].PersonMobilePhone);
+                                    }
+                                    if(acclist[0].Phone != Null && acclist[0].Phone!= ''){
+                                        phoneNo.add(acclist[0].Phone);
+                                    }
+                                    if(acclist[0].Phone_Third__c != Null && acclist[0].Phone_Third__c!= ''){
+                                        phoneNo.add(acclist[0].Phone_Third__c);
+                                    }
+                                    phoneNo.add(strMobile);
+                                    if(!String.isBlank(strAltMobile)){
+                                        phoneNo.add(strAltMobile);
+                                    }
+                                    for(String s : phoneNo){
+                                        phoneNoList.add(s);
+                                    }
+                                    
+                                    set<string> emailset = new set<string>();
+                                    List<string> emailList = new List<string>();
+                                    if(acclist[0].PersonEmail != Null && acclist[0].PersonEmail!= ''){
+                                        emailset.add(acclist[0].PersonEmail);
+                                    }
+                                    if(acclist[0].Alternate_Email__c != Null && acclist[0].Alternate_Email__c!= ''){
+                                        emailset.add(acclist[0].Alternate_Email__c);
+                                    }
+                                    if(acclist[0].Email_Third__c != Null && acclist[0].Email_Third__c!= ''){
+                                        emailset.add(acclist[0].Email_Third__c);
+                                    }
+                                    if(!String.isBlank(strEmail)){
+                                        emailset.add(strEmail);
+                                    }
+                                    if(!String.isBlank(strAlternateEmail)){
+                                        emailset.add(strAlternateEmail);
+                                    }
+                                    for(String s : emailset){
+                                        emailList.add(s);
+                                    }
+                                    //---------------------------------------------------------------------------
+                                    
+                                    acclist[0].People_Id__c = strPeopleId;
+                                    acclist[0].FirstName = strFirstName;
+                                    acclist[0].LastName = strLastName;
+                                    acclist[0].Country_Code__c = strDailingCode; 
+                                    acclist[0].Country__c = strDailingCountry;
+                                    acclist[0].PersonMobilePhone = phoneNoList[0];
+                                    acclist[0].Dialing_Country_2__c = strAltDailingCountry;
+                                    acclist[0].Country_Code_2__c = strAltDailingCode;
+                                    if(phoneNoList.size() >= 2){
+                                        acclist[0].Phone = phoneNoList[1];
+                                    }
+                                    if(phoneNoList.size() >= 3){
+                                        acclist[0].Phone_Third__c = phoneNoList[2];
+                                    }
+                                    // 09/02/2023 - Added this condition to avoid updating the email on Account where Customer portal is already created, as this 
+                                    // was causing confusion due to diff email ids on account and portal username.
+                                    if(acclist[0].Customer_Portal_User__c == False && emailList.size() > 0){
+                                        acclist[0].PersonEmail = emailList[0]; 
+                                    }
+                                    if(emailList.size() >= 2){
+                                        acclist[0].Alternate_Email__c = emailList[1];
+                                    }
+                                    if(emailList.size() >= 3){
+                                        acclist[0].Email_Third__c = emailList[2];
+                                    }
+                                    acclist[0].Residential_Street__c = strAddress;
+                                    if(String.isNotBlank(strDateOfBirth))
+                                      acclist[0].Birth_Date__c = Date.valueOf(strDateOfBirth);  
+                                    if(String.isBlank(acclist[0].Presales_Agent__c))
+                                      acclist[0].Presales_Agent__c = plist[0].Default_Presales_Agent__c;    
+                                    acclist[0].Nationality__c = strNationality;
+                                    acclist[0].Gender__c = strGender;
+                                    acclist[0].Company_Name__c = strCompanyOrBusinessName;
+                                    acclist[0].Designation__c = strDesignation;
+                                    acclist[0].S_PReason_for_Purchase__c = strPurposeOfPurchase;
+                                    acclist[0].Profession__c = strOccupation; 
+                                    update acclist;//// Update Account with peopleId
+                                    
+                                    oplist = [Select Id, name, AccountId, Project__c, StageName, Walk_in_Source__c, Walk_in_Sub_Source__c, Walk_in_Name_of_Person__c,
+                                              Walk_in_Employee_Name__c, Walk_in_Business_Partner__c, CloseDate, Project_Type__c, Unit_type_configuration__c,
+                                              Reason_For_Purchase__c, Budget_In_Cr__c, First_Connect_Mode__c, Sales_Manager_lookup__c, Possession_Requirement__c,
+                                              Walk_in_Channel_Partner_Name__c, Presales_Agent__c                                              
+                                              from Opportunity where Project__c In: plist and AccountId = :acclist[0].Id and
+                                              (StageName NOT IN ('Closed Won','Resale','Cancelled','Booking confirmed','Token Amount Received - BIP','Proposal')) ORDER BY LastModifieddate DESC]; //Active_Opt__c = true
+                                    if (oplist != null && oplist.size() == 1) {                                
+                                        system.debug('Create new site visit for existing Project::');
+                                        
+                                        oplist[0].StageName = 'Site Visit Done';
+                                        oplist[0].Name = strFirstName + ' ' + strLastName + '-' + plist[0].name;
+                                        oplist[0].Project__c = plist[0].id;
+                                        oplist[0].CloseDate = System.Today().addDays((Integer)plist[0].Expiry_Days__c);
+                                        if(String.isNotBlank(acclist[0].Presales_Agent__c) && String.isBlank(oplist[0].Presales_Agent__c))
+                                       oplist[0].Presales_Agent__c = acclist[0].Presales_Agent__c;
+                                        oplist[0].Project_Type__c = strProjectType;
+                                        oplist[0].Unit_type_configuration__c = strConfiguration;
+                                        oplist[0].Reason_For_Purchase__c = strPurposeOfPurchase;
+                                        oplist[0].Possession_Requirement__c = strPossessionRequirement;
+                                        oplist[0].Budget_In_Cr__c = strBudget;
+                                        if(String.isBlank(oplist[0].Walk_in_Source__c)){
+                                            oplist[0].Walk_in_Source__c= strWalkinSource;
+                                            oplist[0].Walk_in_Sub_Source__c= strWalkinSubSource;
+                                            oplist[0].Walk_in_Name_of_Person__c = strCustomerName;
+                                            oplist[0].Walk_in_Employee_Name__c = strEmployeeName;
+                                            oplist[0].Walk_in_Channel_Partner_Name__c = strUnregisteredPartnerName;
+                                            if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                               oplist[0].Walk_in_Business_Partner__c = partnerList[0].Id; 
+                                        }
+                                        if(String.isBlank(oplist[0].First_Connect_Mode__c))
+                                            oplist[0].First_Connect_Mode__c = 'Walkin';  
+                                        if(String.isBlank(oplist[0].Sales_Manager_lookup__c))
+                                            oplist[0].Sales_Manager_lookup__c = attendedBySM[0];
+                                        
+                                        Customer_Registration__c sv = new Customer_Registration__c();
+                                        sv.Opportunity__c = oplist[0].id;
+                                        sv.First_Name__c = strFirstName;
+                                        sv.Last_Name__c = strLastName;
+                                        sv.Mobile_Number__c = strMobile;
+                                        sv.Alternate_Mobile_Number__c = strAltMobile;
+                                        sv.Date__c = Date.ValueOf(strDateOfVisit);
+                                        sv.Email_Address__c = strEmail;                                
+                                        sv.Alternate_Email_Id__c = strAlternateEmail;
+                                        sv.Address__c = strAddress;
+                                        if(String.isNotBlank(strDateOfBirth))
+                                          sv.Birth_Date__c = Date.valueOf(strDateOfBirth);
+                                        sv.Nationality__c = strNationality;
+                                        sv.Gender__c = strGender;
+                                        sv.People_Id__c = strPeopleID;
+                                        /* Professional Details */
+                                        sv.Occupation__c = strOccupation;
+                                        sv.Company_Business_Name__c = strCompanyOrBusinessName;
+                                        sv.Designation__c = strDesignation;
+                                        /* Preferences*/
+                                        sv.project__c = plist[0].id;
+                                        if(projVisitedlist != null && projVisitedlist.size()==1)
+                                            sv.Project_Visited__c = projVisitedlist[0].id;
+                                        sv.Visiting_On_Behalf_Of__c = strVisitingOnBehalf;
+                                        sv.Budget_In_Crores__c = strBudget;
+                                        sv.Purpose_Of_Purchase__c = strPurposeOfPurchase;
+                                        sv.Property_Type__c = strProjectType;
+                                        sv.Configuration__c = strConfiguration;
+                                        sv.Purpose_Of_Purchase__c = strPurposeOfPurchase;   
+                                        sv.Possessiom_Timeline__c = strPossessionRequirement;
+                                        /* Walkin Details */
+                                        sv.How_Did_You_Hear_About_Us__c = strWalkinSource;                                
+                                        sv.Sub_Source__c = strWalkinSubSource;
+                                        sv.Name_of_Person__c = strCustomerName;
+                                        sv.Employee_Id__c = strEmployeeName;
+                                        if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                  sv.Business_Partner__c = partnerList[0].Id; 
+                                        sv.Unregistered_Partner__c = strUnregisteredPartnerName;
+                                        sv.SV_Status__c = 'Completed';
+                                        if (strVisitType == 'First Visit')
+                                            sv.RecordTypeId = firstVisitRecTypeId;
+                                        if (strVisitType == 'Revisit')
+                                            sv.RecordTypeId = reVisitRecTypeId;
+                                        sv.Attended_By_SM__c = attendedBySM[0];
+                                        sv.OwnerId = opList[0].Sales_Manager_Lookup__c;
+                                        sv.Site_Visit_Comments__c = strSiteVisitComment;
+                                        try{
+                                            update oplist;
+                                            insert sv;
+                                            List<Customer_Registration__c> svlist2 = new List<Customer_Registration__c >([Select Id,name from Customer_Registration__c WHERE id =: sv.id]);                                                          
+                                            r.returnCode = 0;
+                                            r.message = 'Your site visit completed successfully';
+                                            r.recordId = svlist2[0].Name;
+                                            
+                                            // API log creted for the site visit
+                                            List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                            
+                                            API_Log__c api = new API_Log__c();
+                                            
+                                            api.API_Name__c = 'Site visit Insert';
+                                            api.Site_Visit__c = sv.Id;
+                                            api.Request__c = request.requestBody.toString();
+                                            api.Status__c = '1';
+                                            api.Message__c = 'Site Visit Record is Created';
+                                            
+                                            apiLogList.add(api);
+                                            
+                                            if(apiLogList != null){
+                                                Insert apiLogList;
+                                            }
+                                            //API log create for the site visit End
+
+                                            
+                                            return r;
+                                        } catch(exception ex){
+                                            r.returnCode = 1;
+                                            r.message = 'Error occurred while inserting record:::' + ex;
+                                            r.recordId = null;
+                                            
+                                             // API log creted for the site visit
+                                            List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                            
+                                            API_Log__c api = new API_Log__c();
+                                            
+                                            api.API_Name__c = 'Site visit Creation Error';
+                                            api.Site_Visit__c = svList[0].Id;
+                                            api.Request__c = request.requestBody.toString();
+                                            api.Status__c = '1';
+                                            api.Message__c = 'Error occurred while inserting record:: ' + ex;
+                                            
+                                            apiLogList.add(api);
+                                            
+                                            if(apiLogList != null){
+                                                Insert apiLogList;
+                                            }
+                                            //API log create for the site visit End
+                                            
+                                            
+                                            return r;                                               
+                                        }
+                                    } else if (oplist.isEmpty()) {                             
+                                        system.debug('Create new Opportunity for new Project::');
+                                        //create new opportunity for new project 
+                                        Opportunity op = new Opportunity();
+                                        op.Name = strFirstName + ' ' + strLastName + '-' + plist[0].name;
+                                        op.StageName = 'Site Visit Done';
+                                        op.Project__c = plist[0].id;
+                                        op.CloseDate = System.Today().addDays((Integer)plist[0].Expiry_Days__c);
+                                        op.AccountId = acclist[0].Id;     
+                                        if(String.isNotBlank(acclist[0].Presales_Agent__c))
+                                       op.Presales_Agent__c = acclist[0].Presales_Agent__c;
+                                        op.Project_Type__c = strProjectType;
+                                        op.Unit_type_configuration__c = strConfiguration;
+                                        op.Reason_For_Purchase__c = strPurposeOfPurchase;
+                                        op.Possession_Requirement__c = strPossessionRequirement;
+                                        op.Budget_In_Cr__c = strBudget;
+                                        op.Walk_in_Source__c= strWalkinSource;
+                                        op.Walk_in_Sub_Source__c= strWalkinSubSource;
+                                        op.Walk_in_Name_of_Person__c = strCustomerName;
+                                        op.Walk_in_Employee_Name__c = strEmployeeName;
+                                        op.Walk_in_Channel_Partner_Name__c = strUnregisteredPartnerName;
+                                        op.Sales_Manager_lookup__c = attendedBySM[0];
+                                        if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                  op.Walk_in_Business_Partner__c = partnerList[0].Id; 
+                                        if(String.isBlank(op.First_Connect_Mode__c))
+                                            op.First_Connect_Mode__c = 'Walkin'; 
+                                        insert op;
+                                        
+                                        // create site visit for existing opportunity
+                                        Customer_Registration__c sv = new Customer_Registration__c();
+                                        sv.Opportunity__c = op.id;
+                                        sv.First_Name__c = strFirstName;
+                                        sv.Last_Name__c = strLastName;
+                                        sv.Mobile_Number__c = strMobile;
+                                        sv.Alternate_Mobile_Number__c = strAltMobile;
+                                        sv.Date__c = Date.ValueOf(strDateOfVisit);
+                                        sv.Email_Address__c = strEmail;                                
+                                        sv.Alternate_Email_Id__c = strAlternateEmail;
+                                        sv.Address__c = strAddress;
+                                        if(String.isNotBlank(strDateOfBirth))
+                                           sv.Birth_Date__c = Date.valueOf(strDateOfBirth);
+                                        sv.Nationality__c = strNationality;
+                                        sv.Gender__c = strGender;
+                                        sv.People_Id__c = strPeopleID;
+                                        /* Professional Details */
+                                        sv.Occupation__c = strOccupation;
+                                        sv.Company_Business_Name__c = strCompanyOrBusinessName;
+                                        sv.Designation__c = strDesignation;
+                                        /* Preferences*/
+                                        sv.project__c = plist[0].id;
+                                        if(projVisitedlist != null && projVisitedlist.size()==1)
+                                            sv.Project_Visited__c = projVisitedlist[0].id;
+                                        sv.Visiting_On_Behalf_Of__c = strVisitingOnBehalf;
+                                        sv.Budget_In_Crores__c = strBudget;
+                                        sv.Purpose_Of_Purchase__c = strPurposeOfPurchase;
+                                        sv.Property_Type__c = strProjectType;
+                                        sv.Configuration__c = strConfiguration;
+                                        sv.Purpose_Of_Purchase__c = strPurposeOfPurchase;
+                                        sv.Possessiom_Timeline__c = strPossessionRequirement;
+                                        /* Walkin Details */
+                                        sv.How_Did_You_Hear_About_Us__c = strWalkinSource;                                
+                                        sv.Sub_Source__c = strWalkinSubSource;
+                                        sv.Name_of_Person__c = strCustomerName;
+                                        sv.Employee_Id__c = strEmployeeName;
+                                        if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                  sv.Business_Partner__c = partnerList[0].Id; 
+                                        sv.Unregistered_Partner__c = strUnregisteredPartnerName;
+                                        sv.SV_Status__c = 'Completed';
+                                        if (strVisitType == 'First Visit')
+                                            sv.RecordTypeId = firstVisitRecTypeId;
+                                        if (strVisitType == 'Revisit')
+                                            sv.RecordTypeId = reVisitRecTypeId;
+                                        sv.Attended_By_SM__c = attendedBySM[0];
+                                        sv.OwnerId = op.Sales_Manager_Lookup__c;
+                                        sv.Site_Visit_Comments__c = strSiteVisitComment;
+                                        try{
+                                            insert sv;
+                                            List<Customer_Registration__c> svlist2 = new List<Customer_Registration__c >([Select Id,name from Customer_Registration__c WHERE id =: sv.id]);                                            
+                                            r.returnCode = 0;
+                                            r.message = 'Your site visit completed successfully';
+                                            r.recordId = svlist2[0].Name;
+                                            system.debug('r @@' + r);
+                                            
+                                            // API log creted for the site visit
+                                            List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                            
+                                            API_Log__c api = new API_Log__c();
+                                            
+                                            api.API_Name__c = 'Site visit Insert';
+                                            api.Site_Visit__c = sv.Id;
+                                            api.Request__c = request.requestBody.toString();
+                                            api.Status__c = '1';
+                                            api.Message__c = 'Site Visit Record is Created';
+                                            
+                                            apiLogList.add(api);
+                                            
+                                            if(apiLogList != null){
+                                                Insert apiLogList;
+                                            }
+                                            //API log create for the site visit End
+                                            
+                                            return r;
+                                        } catch(Exception ex){ 
+                                            r.returnCode = 1;
+                                            r.message = 'Error occurred while inserting record:::' + ex;
+                                            r.recordId = null;
+                                            
+                                            // API log creted for the site visit
+                                            List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                            
+                                            API_Log__c api = new API_Log__c();
+                                            
+                                            api.API_Name__c = 'Site visit Creation Error';
+                                            api.Site_Visit__c = svList[0].Id;
+                                            api.Request__c = request.requestBody.toString();
+                                            api.Status__c = '1';
+                                            api.Message__c = 'Error occurred while inserting record:: ' + ex;
+                                            
+                                            apiLogList.add(api);
+                                            
+                                            if(apiLogList != null){
+                                                Insert apiLogList;
+                                            }
+                                            //API log create for the site visit End
+                                            
+                                            return r;
+                                        }                               
+                                    } else {
+                                        r.returnCode = 1;
+                                        r.message = 'SOMETHING WENT WRONG';
+                                        r.recordId = null;
+                                        
+                                        // API log creted for the site visit
+                                        List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                        
+                                        API_Log__c api = new API_Log__c();
+                                        
+                                        api.API_Name__c = 'Site visit Creation Error';
+                                        api.Site_Visit__c = svList[0].Id;
+                                        api.Request__c = request.requestBody.toString();
+                                        api.Status__c = '1';
+                                        api.Message__c = 'SOMETHING WENT WRONG';
+                                        
+                                        apiLogList.add(api);
+                                        
+                                        if(apiLogList != null){
+                                            Insert apiLogList;
+                                        }
+                                        //API log create for the site visit End
+                                        
+                                        return r;
+                                    }                            
+                                }                         
+                                else if (acclist.isEmpty() && acclist.size() == 0) {
+                                    system.debug('Create new Lead ::');
+                                    Lead lObj = new Lead();
+                                    lObj.FirstName = strFirstName;
+                                    lObj.LastName = strLastName;
+                                    lObj.RDS_Country__c = strDailingCountry;
+                                    lObj.RDS_Country_Code__c = strDailingCode;
+                                    lObj.MobilePhone = strMobile;
+                                    lObj.Dialing_Country__c = strAltDailingCountry;
+                                    lObj.Country_Code_2__c = strAltDailingCode;
+                                    lObj.Phone = strAltMobile;
+                                    lObj.Email = strEmail;                                        
+                                   //// lObj.RDS_Alternate_Email_Id__c = strAlternateEmail;                                                                        
+                                    lObj.Project__c = plist[0].id;
+                                    
+                                    if(String.isNotBlank(strDateOfBirth))
+                                      lObj.Birthdate__c = Date.valueOf(strDateOfBirth);
+                                    
+                                    lObj.Nationality__c = strNationality;
+                                    lObj.Gender__c = strGender;
+                                    lObj.Company_Name__c = strCompanyOrBusinessName;
+                                    lObj.Designation__c = strDesignation;
+                                    lObj.Profession__c = strOccupation;
+                                    lObj.Budget_In_Lacs__c = strBudget;                                
+                                     lObj.RDS_Unit_type_configuration__c = strConfiguration;
+                                    lObj.Project_Type__c = strProjectType;
+                                lObj.Reason_For_Purchase__c = strPurposeOfPurchase;
+                                    lObj.Possession_Requirement__c = strPossessionRequirement;
+                                    lObj.Address_1_and_2_R__c = strAddress;
+                                    lObj.People_Id__c = strPeopleID;
+                                    lObj.Site_Visit_Lead__c = TRUE;
+                                    lObj.Do_Not_Fire_Trigger__c = TRUE; 
+                                    lObj.Sales_Manager__c = attendedBySM[0]; 
+                                    system.debug('PA::: ' + pList[0].Default_Presales_Agent__c);
+                                    if(string.isNotBlank(pList[0].Default_Presales_Agent__c)){
+                                        lObj.Presales_Agent__c = pList[0].Default_Presales_Agent__c;
+                                      lObj.OwnerId = plist[0].Default_Presales_Agent__c;                                           
+                                    }
+                                                                      
+                                    /* Lead Source Details */
+                                    lObj.LeadSource = strWalkinSource;
+                                    lObj.Lead_Sub_Source__c = strWalkinSubSource;
+                                    lObj.Name_of_Person__c = strCustomerName;
+                                    lObj.Employee_Id__c = strEmployeeName;    
+                                    lObj.Unregistered_Partner_Name__c = strUnregisteredPartnerName;
+                                    if(!partnerList.isEmpty() && partnerList.size() > 0)
+                               		 lObj.Business_Partner__c = partnerList[0].Id; 
+                                    insert lObj;
+                                    system.debug('New lead inserted');
+                                    List <Lead> newLdList = new List <Lead> ([Select Id, Name from Lead where Id =: lObj.Id]);
+                                    convertLeads(newLdList);
+                                    System.debug('Convert Method Call::');
+                                    
+                                    ConvertedLeadlist = [select Id, Name, IsConverted, ConvertedAccountId, ConvertedOpportunityId from Lead
+                                                         where Id = :newLdList[0].Id and Isconverted = true order by LastModifiedDate Desc limit 1];
+                                    //Fetch the converted Opportunity details                                     
+                                    convertedOPList = [Select Id, name, StageName, Walk_in_Source__c, First_Connect_Mode__c, Walk_in_Sub_Source__c,
+                                                       Walk_in_Name_of_Person__c, Walk_in_Employee_Name__c, Walk_in_Business_Partner__c, Budget_In_Cr__c,
+                                                       Walk_in_Channel_Partner_Name__c, Sales_Manager_lookup__c
+                                                       from Opportunity where Id =: ConvertedLeadlist[0].ConvertedOpportunityId];
+                                    system.debug('Converted Opportunity(convertedOPList ) details ::' + convertedOPList);
+                                    
+                                    convertedOPList[0].StageName = 'Site Visit Done';                                                                        
+                                    convertedOPList[0].Walk_in_Source__c= strWalkinSource;
+                                    convertedOPList[0].Walk_in_Sub_Source__c= strWalkinSubSource;
+                                    convertedOPList[0].Walk_in_Name_of_Person__c = strCustomerName;
+                                    convertedOPList[0].Walk_in_Employee_Name__c = strEmployeeName;
+                                    convertedOPList[0].Walk_in_Channel_Partner_Name__c = strUnregisteredPartnerName;
+                                    convertedOPList[0].Budget_In_Cr__c = strBudget;
+                                    if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                convertedOPList[0].Walk_in_Business_Partner__c = partnerList[0].Id; 
+                                    if(String.isBlank(convertedOPList[0].First_Connect_Mode__c))
+                                        convertedOPList[0].First_Connect_Mode__c = 'Walkin';                                                                       
+                                    update convertedOPList;
+                                    system.debug('after update the convertedOPList' + convertedOPList);
+                                    // create site visit for converted opportunity
+                                    Customer_Registration__c sv = new Customer_Registration__c();
+                                    sv.Opportunity__c = convertedOPList[0].id;
+                                    sv.First_Name__c = strFirstName;
+                                    sv.Last_Name__c = strLastName;
+                                    sv.Mobile_Number__c = strMobile;
+                                    sv.Alternate_Mobile_Number__c = strAltMobile;
+                                    sv.Email_Address__c = strEmail;
+                                    sv.Alternate_Email_Id__c = strAlternateEmail;
+                                    sv.Date__c = Date.ValueOf(strDateOfVisit);
+                                    sv.Address__c = strAddress;  
+                                    if(String.isNotBlank(strDateOfBirth))
+                                      sv.Birth_Date__c = Date.valueOf(strDateOfBirth);                                   
+                                    sv.Nationality__c = strNationality;
+                                    sv.Gender__c = strGender;
+                                    sv.People_Id__c = strPeopleID;
+                                    sv.Gender__c = strGender;
+                                    /* Professional Details */
+                                    sv.Occupation__c = strOccupation;
+                                    sv.Company_Business_Name__c = strCompanyOrBusinessName;
+                                    sv.Designation__c = strDesignation;
+                                    /* Preferences*/
+                                    sv.project__c = plist[0].id;
+                                    sv.Property_Type__c = strProjectType;
+                                    sv.Configuration__c = strConfiguration;
+                                    sv.Visiting_On_Behalf_Of__c = strVisitingOnBehalf;
+                                    if(projVisitedlist != null && projVisitedlist.size() >= 1)
+                                        sv.Project_Visited__c = projVisitedlist[0].id;   
+                                    sv.Budget_In_Crores__c = strBudget;
+                                    sv.Purpose_Of_Purchase__c = strPurposeOfPurchase; 
+                                    sv.Possessiom_Timeline__c = strPossessionRequirement;
+                                    /* Walkin Details */
+                                    sv.How_Did_You_Hear_About_Us__c = strWalkinSource;
+                                    sv.Sub_Source__c = strWalkinSubSource;
+                                    sv.Name_of_Person__c = strCustomerName;
+                                    sv.Employee_Id__c = strEmployeeName;
+                                    if(!partnerList.isEmpty() && partnerList.size() > 0)
+                                sv.Business_Partner__c = partnerList[0].Id; 
+                                    sv.Unregistered_Partner__c = strUnregisteredPartnerName;
+                                    sv.SV_Status__c = 'Completed';
+                                    if (strVisitType == 'First Visit')
+                                        sv.RecordTypeId = firstVisitRecTypeId;
+                                    if (strVisitType == 'Revisit')
+                                        sv.RecordTypeId = reVisitRecTypeId;  
+                                    sv.Attended_By_SM__c = attendedBySM[0];
+                                    sv.OwnerId = convertedOPList[0].Sales_Manager_lookup__c;
+                                    sv.Site_Visit_Comments__c = strSiteVisitComment;
+                                    try{
+                                        insert sv;
+                                        List<Customer_Registration__c> svlist2 = new List<Customer_Registration__c >([Select Id,name from Customer_Registration__c WHERE id =: sv.id]);
+                                        r.returnCode = 0;
+                                        r.message = 'Your site visit completed successfully';
+                                        r.recordId = svlist2[0].Name;
+                                        system.debug('r @@' + r);
+                                        
+                                        // API log creted for the site visit
+                                        List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                        
+                                        API_Log__c api = new API_Log__c();
+                                        
+                                        api.API_Name__c = 'Site visit Insert';
+                                        api.Site_Visit__c = sv.Id;
+                                        api.Request__c = request.requestBody.toString();
+                                        api.Status__c = '1';
+                                        api.Message__c = 'Site Visit Record is Created';
+                                        
+                                        apiLogList.add(api);
+                                        
+                                        if(apiLogList != null){
+                                            Insert apiLogList;
+                                        }
+                                        //API log create for the site visit End
+                                        
+                                        return r;
+                                    } catch(exception ex){  
+                                        r.returnCode = 1;
+                                        r.message = 'Error occurred while inserting record:::' + ex;
+                                        r.recordId = null;
+                                        
+                                        // API log creted for the site visit
+                                        List<API_Log__c>apiLogList  = new List<API_Log__c>();
+                                        
+                                        API_Log__c api = new API_Log__c();
+                                        
+                                        api.API_Name__c = 'Site visit Creation Error';
+                                        api.Site_Visit__c = svList[0].Id;
+                                        api.Request__c = request.requestBody.toString();
+                                        api.Status__c = '1';
+                                        api.Message__c = 'Error occurred while inserting record:: ' + ex;
+                                        
+                                        apiLogList.add(api);
+                                        
+                                        if(apiLogList != null){
+                                            Insert apiLogList;
+                                        }
+                                        //API log create for the site visit End
+                                        
+                                        return r;
+                                    }                            
+                                }   
+                            }  
+                        }
+                    }
+                } 
+            }
+        }
+        return null;
+    }
+    
+    //for lead convertion
+    global static void convertLeads(List < Lead > ll) {
+        for (lead myLead: ll) {            
+            Database.LeadConvert lc = new Database.LeadConvert();
+            lc.setLeadId(myLead.id);
+            LeadStatus convertStatus = [SELECT Id, MasterLabel FROM LeadStatus WHERE IsConverted = true LIMIT 1];
+            lc.setConvertedStatus(convertStatus.MasterLabel);
+            Database.LeadConvertResult lcr = Database.convertLead(lc);            
+        }
+    }
+    
+    global class REST_result {
+        webservice Integer returnCode;
+        webservice String message;
+        webService String recordId;
+    }   
+}
