@@ -549,6 +549,6 @@ trigger trgDemand on Demand__c (after insert, after update, before delete,After 
         
     }*/
     
-    
+    //https://www.diffchecker.com/vu0nfJun/--code comapre
     
 }
