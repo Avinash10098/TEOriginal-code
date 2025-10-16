@@ -93,5 +93,5 @@ trigger trgReceipt on Receipt__c (after update) {
         }
         return quoteApproversMap;
     } 
-       
+   //https://www.diffchecker.com/4PuyEwcT/--codeCompare
 }
