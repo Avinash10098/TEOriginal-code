@@ -1,0 +1,448 @@
+@isTest
+public class TestSaleDeed {
+    @isTest
+    public static void saleDeed(){
+        
+        // account creation 
+        Account objac = new Account();
+        objac.FirstName = 'name';
+        objac.LastName = 'Test';
+        objac.Correspondence_Address__c = 'Delhi';
+        objac.Phone = '1655246165' ;
+        objac.PersonEmail = 'test12322@stetig.in';
+        objac.PersonMobilePhone = '7875225343';
+        objac.Category__c = 'General';
+        insert objac;
+        
+        Land_Owner__c land = new Land_Owner__c();
+        land.Name = 'LandOwner';
+        land.Land_Owner_Name__c = 'LandOwner1';
+        land.Address_for_communication__c = 'Address';
+        land.Photograph_of_Authorised_Signatory__c = 'photo';
+        land.GPA_holder__c = 'Gpa';
+        land.Landowner_Type__c = 'First';
+        land.Same_as_promoter_required__c = true;
+        insert land;
+        
+        Promoter__c promo = new Promoter__c();
+        promo.Name = 'Promotor1';
+        promo.Authorised_Signatory__c = 'ACBDS';
+        promo.PAN__c = 'FCOPG7886G';
+        promo.Photograph__c = 'ABCD';
+        promo.Registered_office__c = 'Pune';
+        insert promo;
+        
+        // Project Creation
+        Project__c objpr = new Project__c();
+        objpr.Project_Code__c = 'T351';
+        objpr.Name = 'Pursuit of a Radical Rhapsody';
+        objpr.Start_Date__c = System.today().addDays(-5);
+        objpr.Project_Stage__c='Launch1';
+        objpr.Address__c = '14013, Fantasy Land, Utopia, Planet Mars, OUTERWORLD CODE -11011';
+        objpr.Project_Property_Type__c = 'Residential';                      
+        objpr.NPV__c = 12;    
+        objpr.Future_NPV__c = 12;
+        objpr.Car_Park_Type_1__c = 'Open';
+        objpr.Charge_Value_1__c = 100000; 
+        objpr.Promoter__c = promo.Id;
+        objpr.City__c = 'abcd';
+        objpr.State__c = 'test';
+        objpr.Land_Owner__c = land.Id;
+        objpr.Schedule_F_Property__c = 'Schdule F';
+        objpr.IDSA_Preamble__c = 'preamble {!Booking__c.Date_of_Agreement_AFS__c}';
+        objpr.IDSA_Preamble_Landowner__c = 'preamble {!Booking__c.Date_of_Agreement_AFS__c}';
+        objpr.Company_Code__c = 37283;
+        objpr.Official_Email_IDs__c = 'abcd@stetig.in';
+        objpr.Is_Landowner_Required_In_AFS__c = true;
+        objpr.Deduction_Amount__c = 100;
+        objpr.CA_Preamble__c = 'preamble {!Booking__c.Date_of_Agreement_AFS__c}';
+        insert objpr;
+        
+        land.Project__c = objpr.id;
+        update land;
+        
+        End_Time_for_Event__c ed = new End_Time_for_Event__c();
+        ed.Name = 'End Time Minutes';
+        ed.End_Minutes__c = 120;
+        insert ed;
+        
+        Authorised_Signatory__c au = new Authorised_Signatory__c();
+        au.Project__c = objpr.id;
+        au.BR_Date_for_Sale_Deed__c = system.today();
+        au.Name = 'test';
+        au.Email_ID__c = 'test@example.com';
+        insert au;
+        
+        // opportunity creation              
+        Opportunity objOpportunity = new Opportunity();
+        objOpportunity.Name = 'Test';
+        objOpportunity.CloseDate = System.today();
+        objOpportunity.AccountId = objac.Id;           
+        objOpportunity.StageName = 'Qualification'; 
+        objOpportunity.Project__c = objpr.Id;
+        objOpportunity.Date_of_Agreement__c = System.today();
+        objOpportunity.Freebies_Selected__c = 'abcd,xyz';
+        insert objOpportunity;
+        
+        Cluster__c ph = new Cluster__c();
+        ph.Name = 'Phase 1';
+        ph.Project__c  = objpr.Id;
+        ph.MAHA_RERA_No__c = '12345';
+        ph.CompanyName_Escrow__c = 'ABCD';
+        ph.CompanyName_Tax__c = 'XYZ';
+        ph.Phase_Land__c = 'Phase Land';
+        ph.Project_Land__c = 'Project Land';
+        ph.Schedule_A_Property__c = 'Schedule A';
+        ph.Schedule_B_Property__c = 'Schedule B';
+        ph.Schedule_C_Property__c = 'Schedule C';
+        ph.Schedule_D_Property__c = 'Schedule D';
+        ph.Schedule_F_Property__c = 'Schedule F';
+        ph.Plan_01_Master_Development__c = 'Plan 01';
+        ph.Plan_02_Residential_Development__c = 'Plan 02';
+        ph.Plan_03_Project__c = 'Plan 03';
+        ph.New_Phase__c = false;
+        ph.Transfer_Fee__c = 100;
+        ph.No_Objection_Letter__c = 'ABCD';
+        ph.Sale_Deed_Schedule_A_Property__c = 'Schedule A Sale Deed';
+        ph.Schedule_B_Property_Sale_Deed__c = 'Schedule B Sale Deed';
+        ph.Schedule_C_Property_Sale_Deed__c = 'Schedule C Sale Deed';
+        ph.Schedule_D_Property_Sale_Deed__c = 'Schedule D Sale Deed';
+        ph.Project_Amenities__c = 'Swimming Pool, Gym';
+        ph.Landowner_Signatory__c = 'John Doe';
+        insert ph;
+        
+        // tower creation 
+        Tower__c t = new Tower__c();
+        t.Name = 'Tower X';
+        t.Project__c = objpr.Id;
+        t.Cluster__c= ph.Id;
+        insert t;
+        
+        TE_Product__c pd = new TE_Product__c();
+        pd.Name = 'C20';
+        pd.Product_Type__c = 'Apartment';
+        insert pd;
+        
+        Project_Product__c ppr = new Project_Product__c();
+        ppr.name = 'ppr';
+        ppr.Project__c = objpr.id;
+        ppr.Product__c = pd.id;
+        ppr.Car_Park_Type_1__c = 'Open';
+        ppr.Car_Park_Count_1__c = 1;
+        ppr.Default_Customisation__c = 'Online';
+        ppr.Default_Specification__c = 'Green';
+        insert ppr;
+        
+        Sub_Product__c sb = new Sub_Product__c();
+        sb.name = 'C20a1';
+        sb.Project__c = objpr.id;
+        sb.Product__c = pd.id;
+        sb.Active__c = true;
+        sb.Status__c = 'Approved';
+        sb.Carpet_Area__c = 1650;
+        sb.Super_Builtup_Area__c = 2000;
+        sb.RERA_Carpet_Area__c = 1650;
+        sb.Saleable_Area__c = 2000;
+        sb.Builtup_Area__c = 1800;
+        insert sb; 
+        
+        Type_Master__c type1 = new Type_Master__c();
+        type1.Project__c = objpr.Id;
+        type1.Tower__c = t.Id;
+        type1.Sub_Product__c = sb.Id;
+        type1.Unit_Plan__c = 'abcd';
+        insert type1;  
+        
+        Land_Owner__c lo = new Land_Owner__c();
+        lo.Project__c = objpr.Id;
+        insert lo;
+        
+        T_C_Category__c cat = new T_C_Category__c();
+        cat.Project__c = objpr.Id;
+        cat.Land_Owner__c = lo.id;
+        insert cat;
+        
+        T_C_Sub_Category__c subcat = new T_C_Sub_Category__c();
+        subcat.Description__c = 'Test Test TestTest Test Test';
+        subcat.T_C_Category__c = cat.id;
+        insert subcat;
+        
+        Unit__c objPU1 = new Unit__c();    
+        objPU1.Name = 'TestFive';      
+        objPU1.Project__c = objpr.Id;
+        objPU1.Unit_status__c='Available';
+        objPU1.Tower__c = t.Id;
+        objPU1.Active_Inactive__c = 'Active';
+        objPU1.Floor__c = 2;
+        objPU1.Product_Type__c = sb.id; 
+        objPU1.Configuration__c = '1 BHK';
+        objPU1.TE_Product__c = pd.id;
+        objPU1.Additional_Land__c = 150;
+        objPU1.Default_Specification_new__c = 'Green';
+        objPU1.Floor_Rise_PSF__c = 250;
+        objPU1.Customization_Charge_PSF__c = 0;
+        objPU1.Additional_Land_PSF__c = 100;
+        objPU1.Premium_1__c = 'View Premium';
+        objPU1.Premium_2__c = 'Ground Level Premium';
+        objPU1.View_Premium_PSF__c = 10;
+        objPU1.Vastu_Premium_PSF__c = 10;
+        objPU1.MBR_Premium_Garden_Orientation_PSF__c= 19;
+        objPU1.Ground_Level_Premium_PSF__c = 10;
+        objPU1.Permitted_Use__c = 'Commercial';
+        objPU1.Parent_Carpet_Area__c = 123;
+        objPU1.Parent_Saleable_Area__c = 234;
+        objPU1.Parent_Unit__c = 'Parent Unit';
+        objPU1.Parent_Unit_Plan__c = 'Unit Plan';
+        objPU1.Unit_Ownership__c = 'TE';
+        objPU1.Type_Master__c = type1.Id;
+        insert objPU1;
+        
+        Unit__c objPU2 = new Unit__c();    
+        objPU2.Name = 'TestSix';      
+        objPU2.Project__c = objpr.Id;
+        objPU2.Unit_status__c='Available';
+        objPU2.Tower__c = t.Id;
+        objPU2.Active_Inactive__c = 'Active';
+        objPU2.Floor__c = 2;
+        objPU2.Product_Type__c = sb.id; 
+        objPU2.Configuration__c = '1 BHK';
+        objPU2.TE_Product__c = pd.id;
+        objPU2.Additional_Land__c = 150;
+        objPU2.Default_Specification_new__c = 'Green';
+        objPU2.Floor_Rise_PSF__c = 250;
+        objPU2.Customization_Charge_PSF__c = 0;
+        objPU2.Additional_Land_PSF__c = 100;
+        objPU2.Premium_1__c = 'View Premium';
+        objPU2.Premium_2__c = 'Ground Level Premium';
+        objPU2.View_Premium_PSF__c = 10;
+        objPU2.Vastu_Premium_PSF__c = 10;
+        objPU2.MBR_Premium_Garden_Orientation_PSF__c= 19;
+        objPU2.Ground_Level_Premium_PSF__c = 10;
+        objPU2.Permitted_Use__c = 'Residential';
+        objPU2.Parent_Carpet_Area__c = 123;
+        objPU2.Parent_Saleable_Area__c = 234;
+        objPU2.Parent_Unit__c = 'Parent Unit';
+        objPU2.Parent_Unit_Plan__c = 'Unit Plan';
+        objPU2.Unit_Ownership__c = 'JD';
+        objPU2.Type_Master__c = type1.Id;
+        objPU2.Land_Owner__c = lo.id;
+        insert objPU2;
+        
+        Quotation__c qController = new Quotation__c();
+        qController.Opportunity__c = objOpportunity.Id;
+        qController.Unit__c = objPU1.Id;
+        qController.Quote_Status__c = 'Valid';
+        qController.Specific_Terms_and_Condition__c = '#Termsheet';
+        qController.Customization_Credit__c = 454687; 
+        qController.Earmarked_Type_1__c = 'Test';
+        qController.Earmarked_Count_1__c = 1;
+        qController.Car_Park_Type_1__c = 'test';
+        qController.Car_Park_Count_1__c = 1;
+        insert qController;
+        
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        pm.Quotation__c = qController.id;
+        pm.Milestone_Type_edit__c = 'Date Linked';
+        pm.Invoice_Date__c = system.today().addDays(5);
+        pm.Invoice_Due_Date__c = system.today().addDays(5);
+        insert pm;
+        
+        Booking__c b = new Booking__c();
+        b.Booking_Date__c = system.today();
+        b.Project__c = objpr.Id;
+        b.Opportunity__c = objOpportunity.Id;
+        b.Unit__c = objPU1.Id;
+        b.Audit_Approval_Date__c = system.today().addMonths(3);
+        b.status__c = 'Processed';
+        b.Quotation__c = qController.Id;
+        b.Primary_Applicant_Email__c = 'abc.abc@abc.com';
+        b.Future_Correspondence_Contact__c = 'First Applicant';
+        b.Specific_Terms_and_Condition__c = '#Booking';
+        b.Customer_Number__c = 535253;
+        b.Date_of_Agreement_AFS__c = system.today();
+        b.Sale_Deed_Date__c = system.today();
+        b.Resale_Value__c = 1234;
+        b.Authorised_Signatory_Sale_Deed__c = au.id;
+        
+        b.Agreement_Value__c = 5000000;
+        b.MOU_Date__c = system.today().addDays(-30);
+        b.Sale_Consideration__c = 5500000;
+        
+        b.Design_Fee_for_IDSA__c = 50000;
+        
+        b.Resale_Doc_Type__c = 'Agreement';
+        b.Resale_Doc_Date__c = system.today().addDays(-60);
+        b.DoA_Date__c = system.today().addDays(-90);
+        insert b;
+        
+        objOpportunity.Booking__c = b.Id;
+        update objOpportunity;
+        
+        objPU1.Booking__c = b.id;
+        update objPU1;
+        
+        Applicant_Details__c a1 = new Applicant_Details__c();
+        a1.Salutation__c = 'Mr.';
+        a1.Name = 'First Man1';
+        a1.Booking__c = b.id;
+        a1.Applicant_Number__c = 'Primary Applicant';
+        a1.Date_of_incorporation__c = System.today();
+        a1.DOB__c = system.today().addYears(-30);
+        a1.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a1.Pincode__c = 444344;
+        a1.Country__c = 'India';
+        a1.State__c = 'Maharashtra';
+        a1.Preferred_address_for_all_correspondence__c = 'Permanent';
+        a1.City__c = 'Nagpur';
+        a1.Mailing_Address__c = 'abccc';
+        a1.Mailing_City__c = 'amravati';
+        a1.Mobile_Number__c = '9090909031';
+        a1.Email_Address__c = 'newman1@justnow3.com';
+        a1.Nationality__c = 'Indian';
+        a1.Type_Of_Applicant__c  = 'Individual Buyer';
+        a1.Subtype_Of_Applicant__c = 'Indian National';
+        a1.Pancard__c = true;
+        a1.Address_Proof__c = true;
+        a1.Address_Proof_Document__c = 'xyz';
+        a1.Address_Proof_Number__c = 'pqr';
+        a1.One_Passport_Size_Color_Photograph__c = true;
+        a1.Other_Details_Remarks__c = 'abcd';
+        a1.Of_Ownership__c = 100;
+        a1.street__c = 'a';
+        a1.Street_2__c = 'b';
+        a1.Street_3__c = 'c';
+        a1.Street_4__c = 'd';
+        a1.Street_5__c = 'e';
+        a1.Father_Husband_s_Name__c = 'Father Name';
+        a1.PancardNo__c = 'ABCDE1234F';
+        a1.CIN_No_1__c = 'CIN123456';
+        a1.Authorised_signatory_or_GPA_holder__c = 'John Smith';
+        a1.Date_of_Board_Resolution__c = system.today().addDays(-15);
+        insert a1;
+        
+        Applicant_Details__c a2 = new Applicant_Details__c();
+        a2.Salutation__c = 'Mrs.';
+        a2.Name = 'Second Woman';
+        a2.Booking__c = b.id;
+        a2.Applicant_Number__c = 'Second Applicant';
+        a2.DOB__c = system.today().addYears(-28);
+        a2.Permanent_Address__c = 'Test Address';
+        a2.Pincode__c = 444344;
+        a2.State__c = 'Maharashtra';
+        a2.City__c = 'Pune';
+        a2.Mobile_Number__c = '9090909032';
+        a2.Email_Address__c = 'second@justnow3.com';
+        a2.Type_Of_Applicant__c  = 'Individual Buyer';
+        a2.Of_Ownership__c = 0;
+        a2.Father_Husband_s_Name__c = 'Husband Name';
+        a2.PancardNo__c = 'BCDEF5678G';
+        a2.Mailing_Address__c = 'Test Mailing';
+        insert a2;
+        
+        Annexure_01__c ann = new Annexure_01__c();
+        ann.Name = 'abcd';
+        ann.Heading_A__c = 'heading A';
+        ann.Heading_B__c = 'Heading B';
+        ann.Heading_C__c = 'Heading C';
+        ann.Heading_D__c = 'Heading D';
+        ann.Phase__c = ph.Id;
+        ann.Heading_A_Name_Sale_Deed__c = 'Sale Deed Heading A';
+        ann.Heading_A_Description_Sale_Deed__c = 'Description A for Sale Deed';
+        ann.Annexure_Description_Sale_Deed__c = 'Annexure Description';
+        insert ann;
+        
+        ph.Annexure_01__c = ann.Id;
+        update ph;
+        
+        Promoter__c pro = new Promoter__c();
+        pro.Name = 'Total Env';
+        pro.PAN__c = 'ABCD0006GB';
+        pro.Registered_office__c = 'TE';
+        pro.Authorised_Signatory__c = 'John';
+        pro.Photograph__c = 'photo';
+        insert pro;
+        
+        b.Promoter__c = pro.Id;
+        update b;
+        
+        
+        Receipt__c rec1 = new Receipt__c();
+        rec1.Booking__c = b.Id;
+        rec1.Credit_Note__c = true;
+        rec1.Sub_Type_Credit_Note__c = 'TDS';
+        rec1.Receipt_Status__c = 'Cleared';
+        rec1.Total_Amount__c = 50000;
+        rec1.TDS_Towards_ID__c = 'False';
+        rec1.Accounting_Document_Number__c = 'ACC123';
+        insert rec1;
+        
+        Test.startTest();
+        
+        
+        PageReference pRef = Page.AFSPage;
+        Test.setCurrentPage(pRef);
+        ApexPages.currentPage().getParameters().put('id', b.Id);
+        saleDeedController c1 = new saleDeedController();
+        
+        
+        PageReference pRef2 = Page.AFSPage;
+        Test.setCurrentPage(pRef2);
+        ApexPages.currentPage().getParameters().put('id', b.Id);
+        ApexPages.currentPage().getParameters().put('isFirstCheckBoxPOARR', 'true');
+        ApexPages.currentPage().getParameters().put('isSecondCheckBoxPOARR', 'true');
+        ApexPages.currentPage().getParameters().put('isthirdCheckBoxPOARR', 'true');
+        ApexPages.currentPage().getParameters().put('isFourthCheckBoxPOARR', 'true');
+        ApexPages.currentPage().getParameters().put('isFifthCheckBoxPOARR', 'true');
+        ApexPages.currentPage().getParameters().put('issixthCheckBoxPOARR', 'true');
+        ApexPages.currentPage().getParameters().put('isSevnthCheckBoxPOARR', 'true');
+        ApexPages.currentPage().getParameters().put('isEightCheckBoxPOARR', 'true');
+        ApexPages.currentPage().getParameters().put('salesDeedDateForPOARRProject', String.valueOf(System.today()));
+        ApexPages.currentPage().getParameters().put('BRDateSecondPOARRProject', String.valueOf(System.today()));
+        ApexPages.currentPage().getParameters().put('tdsAmountFirstPOARR', '100000');
+        ApexPages.currentPage().getParameters().put('salesAgreementDatePOARR', String.valueOf(System.today()));
+        ApexPages.currentPage().getParameters().put('maintenceDepositAmountPOARR', '50000');
+        ApexPages.currentPage().getParameters().put('salesAssignmentDatedPOARR', String.valueOf(System.today()));
+        ApexPages.currentPage().getParameters().put('salesUnderstandingDatedPOARR', String.valueOf(System.today()));
+        ApexPages.currentPage().getParameters().put('AmountreceivedPOARR', '4500000');
+        ApexPages.currentPage().getParameters().put('TDSAmountPOARR', '50000');
+        ApexPages.currentPage().getParameters().put('BalancePayableTDSAmountPOARR', '50000');
+        ApexPages.currentPage().getParameters().put('balanceAmountPOARR', '500000');
+        ApexPages.currentPage().getParameters().put('afterFatherHusband', 'After Father/Husband Text');
+        ApexPages.currentPage().getParameters().put('beforeFatherHusband', 'Before Father/Husband Text');
+        ApexPages.currentPage().getParameters().put('GuidanceValuePOARR', '5000000');
+        ApexPages.currentPage().getParameters().put('TotalSalesConsidarationPOARR', '5500000');
+        ApexPages.currentPage().getParameters().put('DemandDraftNoPOARR', 'DD123456');
+        ApexPages.currentPage().getParameters().put('DemandDraftNoDatePOARR', String.valueOf(System.today()));
+        ApexPages.currentPage().getParameters().put('DemandDraftBankNamePOARR', 'HDFC Bank');
+        ApexPages.currentPage().getParameters().put('stampDutyPercentage', '5');
+        ApexPages.currentPage().getParameters().put('aggregatingAmountPOARR', '275000');
+        ApexPages.currentPage().getParameters().put('ConfirmingPartyInput', 'Confirming Party Details');
+        ApexPages.currentPage().getParameters().put('SalesConsidarationPOARR', '5500000');
+        ApexPages.currentPage().getParameters().put('AgreementValueWithoutTaxPOARR', '5000000');
+        ApexPages.currentPage().getParameters().put('selectedOptionAuthorizedsignatory', 'Abhijit Lahiri');
+        ApexPages.currentPage().getParameters().put('selectedOptionpresentingforregistration', 'Rajath S Patil');
+        
+        saleDeedController c2 = new saleDeedController();
+        
+        
+        PageReference resultPage = c2.directNavigateWithBookingId();
+        
+        
+        PageReference backPage = saleDeedController.backToInputPage();
+        
+        
+        String dateInWords = saleDeedController.convertDateToWords(System.today());
+        
+        
+        String dateInWords2 = saleDeedController.convertDateToWords2(System.today());
+        
+       
+        saleDeedController.appWrapper wrapper = new saleDeedController.appWrapper(
+            'Test Name', 'Mr.', '30', 'Father Name', 'Test Address', 
+            'Test City', 'Test State', 'Individual', 'CIN123', 411001, 
+            'Auth Sig', System.today()
+        );
+        
+        Test.stopTest();
+    }
+}
