@@ -1,0 +1,552 @@
+<apex:page controller="DOAcontroller" docType="html-5.0" renderAs="Pdf" showHeader="true" standardStylesheets="false" sidebar="false" applyHtmlTag="true" applyBodyTag="false">
+    
+    <head>          
+        <style type="text/css" media="print"> 
+            @page {
+            
+            @top-center {
+            content: element(header);
+            }
+            @bottom-left {
+            content: element(footer);
+            }
+            size:4in 4in;
+            margin:20mm 20mm 60mm 20mm;
+            
+            }
+            body{
+            margin:25px;
+            padding:0;
+            font-family: sans-serif;
+            font-size:18px;
+            line-height:1.5;
+            }
+            @page {
+            size: 8.26in 11.69in;
+            margin:8mm;
+            margin-bottom:190px;
+            }
+            
+            
+            .maintable {
+            
+            border-collapse: collapse;
+            margin:0;
+            
+            }
+            
+            .maintable tr td {
+            
+            border:1px solid #DCDCDC;
+            border-collapse: collapse;
+            }
+            .subtable{
+            width:100%;
+            border-collapse: collapse;
+            }
+            .subtable tr td {
+            
+            padding:5px;
+            }
+            
+            .specification{
+            background-color:#303030;   
+            text-align: center !important;
+            border-collapse: collapse;
+            font-size: 20px;
+            color:white;            
+            height:50px;
+            width:70% !important;
+            font-weight: bold;
+            }
+            
+            .speccolor{
+            font-weight: bold;
+            color:white;
+            transform: rotate(90deg) !important;
+            text-transform: uppercase;
+            font-size: 12px;
+            }
+            
+            .category{
+            background-color:#808080;
+            font-weight: bold;
+            color:white;
+            font-size: 12px;
+            padding:5px;
+            cell-padding:10px;
+            }
+            
+            .subcategory{
+            width:10%;
+            text-align:right !important;
+            padding:5px;
+            font-size: 10px;
+            }
+            .testcssAppNames{ 
+            text-align:center !important;
+            padding:2px;
+            font-size: 11px;
+            
+            }
+            
+            .testcss1{ 
+            text-align:center !important;
+            padding:5px;
+            font-size: 11px;
+            
+            }
+            .testcss2{
+            width:40%;
+            text-align:left !important;
+            padding:5px;
+            font-size: 11px;
+            
+            }
+            .testcss3{
+            width:10%;
+            text-align:center !important;
+            padding:5px;
+            font-size: 11px;
+            }
+            .testcss4{ 
+            text-align:right !important;
+            padding:5px;
+            font-size: 11px;
+            }
+            .testcss5{
+            text-align:center !important;
+            vertical-align:bottom !important;
+            padding:5px;
+            font-size: 11px;
+            }
+            .library{
+            font-size:10px;
+            padding:1px;
+            }
+            .specapplicable{
+            
+            }
+            .header{
+            
+            }
+            .footer{
+            display:block;
+            position: running(footer);
+            margin:20px;
+            margin-bottom:0px; 
+            
+            }
+            .termAndCond{
+            text-align:left !important;
+            padding:5px;
+            font-size: 11px;
+            
+            }
+            @page{
+            .rotate{
+            /* Safari */
+            -webkit-transform: rotate(-90deg);
+            
+            /* Firefox */
+            -moz-transform: rotate(-90deg);
+            
+            /* IE */
+            -ms-transform: rotate(-90deg);
+            
+            /* Opera */
+            transform: rotate(-90deg);
+            }
+            }
+            .sfdc_richtext img{
+            width:90px;
+            position:relative;
+            left:120px;
+            }
+            .pagenumber:before {
+            content: counter(page);
+            }
+            .pagecount:before {
+            content: counter(pages);
+            }
+            ol.n {list-style-type: lower-roman;}
+            .checkbox {
+                width:10px;
+                height:10px;
+                border: 1px solid #000;
+                display: inline-block;
+            }
+        </style>
+    </head>
+    <body >
+        <apex:pageMessages ></apex:pageMessages>
+        <apex:outputPanel rendered="{!Error}">
+            <apex:form >
+                <!---------------------------------Header and Footer---------------------------------------------------------------->
+                
+                <div class="footer" style="width:95%;">
+                    <apex:outputPanel >
+                        <table  width="100%" style="border-collapse:collapse">
+                            <tr style="height:90px">
+                                <td width="33.33%" style="font-size:11px;border:1px solid #DCDCDC;text-align:left"><div style="margin-top:65px;padding-bottom:0px">&nbsp;Assignors</div> </td>
+                                <td width="33.33%" style="font-size:11px;border:1px solid #DCDCDC;text-align:center"><div style="margin-top:65px;padding-bottom:0px">Assignees&nbsp;</div> </td>
+                                <td width="33.33%" style="font-size:11px;border:1px solid #DCDCDC;text-align:right"><div style="margin-top:65px;padding-bottom:0px">Promoters&nbsp;</div> </td>
+                            </tr>
+                        </table>
+                        <table  width="100%">
+                            <tr>
+                                <td width="33.33%" style="font-size:11px; text-align:left">Deed of Assignment</td>
+                                <td width="33.33%" style="font-size:11px; text-align:center">{!bkList[0].Unit__r.Name}&nbsp;|&nbsp;{!bkList[0].Project__r.Name}</td>
+                                <td width="33.33%" style="font-size:11px; text-align:right;align:right"><div align="right">Page <b><span class="pagenumber"/></b> of total pages <b><span class="pagecount"/></b></div></td> 
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                </div>
+                <!-------------------------------------------------------First Page------------------------------------------------->
+                <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+                <table style='height:99%;width:690px ;margin-left: auto;margin-right: auto;' cellpadding='7'>
+                    <tr>
+                        <td style='vertical-align:middle;padding-left:0px'>
+                            <div style='background: #7f8786;line-height:60px;color: #FFFFFF;text-align:center;font-size:25px;border:1px solid #7f8786;margin-top: 10px;font-family:SansSerif;' ><b>DEED OF ASSIGNMENT</b></div>
+                            <div style='background: {!bkList[0].Project__r.Color_Code__c};line-height:60px;color: #FFFFFF;text-align:center;font-size:25px;border:1px solid {!bkList[0].Project__r.Color_Code__c};margin-top: 10px;font-family:SansSerif;' ><b>{!bkList[0].Unit__r.Name}&nbsp;|&nbsp;{!bkList[0].Project__r.Name}</b></div>
+                        </td>
+                    </tr>
+                </table>
+                <br/>
+                <tr class="maintable">
+                    <td style = "font-family:SansSerif;"><b>CONTENTS</b></td>
+                </tr>
+                <table width = "100%" class="maintable" border="background-color:#969696;border-collapse: collapse;">    
+                    <tr class="maintable">
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 12px;color:black;font-weight: bold;text-align: left !important; padding:2px;">A.</th>
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 12px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: left !important; padding:2px;">PREAMBLE</th>
+                    </tr>
+                    <tr class="maintable">
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 12px;color:black;font-weight: bold;text-align: left !important; padding:2px;">B.</th>
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 12px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: left !important; padding:2px;">SPECIFIC TERMS OF ASSIGNMENT (SToA)</th>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">1.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Agreement for Sale | Assigned Agreements</td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">2.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Assignees</td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">3.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Transfer Fee</td>
+                    </tr>
+                <!--    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">4.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Special Conditions</td>
+                    </tr>  -->
+                    <tr class="maintable">
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 12px;color:black;font-weight: bold;text-align: left !important; padding:2px;">C.</th>
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 12px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: left !important; padding:2px;">GENERAL TERMS OF ASSIGNMENT (GToA)</th>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">5.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Transfer of rights and Assignment</td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">6.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Assignors’ representations</td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">7.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Assignors’ covenants with Assignees</td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">8.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Assignors’ covenants with Promoters</td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">9.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Assignees’ covenants with Promoters</td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">10.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">Indemnity</td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: center !important; padding:2px;">11.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;color:#4b4b4b;text-align: left !important; padding:2px;">General</td>
+                    </tr>
+                </table>
+                <!------------------------------------------------ First Page End-----------------------------------------------------------> 
+                <div style="margin-top:10px"></div>
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>A</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>PREAMBLE</th>
+                    </tr>
+                </table>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%'>This DEED OF ASSIGNMENT [the <b>DoA</b> or <b>Agreement</b>] is made and executed on this the <b>{!DateinWords}</b> (<b>{!DateFormatted}</b>) (the Effective Date) at <b>{!bkList[0].Project__r.City__c}</b> and is supplementary to the <b>Agreement for Sale</b> and all other ancillary agreements (hereinafter collectively referred to as the AfS) executed between the the <b>Allottees</b> and the <b>Promoters</b> as defined herein.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>BETWEEN</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The <b>Allottees</b> or <b>Purchasers</b> as defined in the AfS, being the <b>Assignors</b> herein, which expression shall unless repugnant to the subject or context thereof, mean and include (a) in case of a company – the company, their legal/authorized representatives, permitted assigns and successors-in-interest; (b) in case of an individual, proprietorship or partnership firm – their respective heirs, individual partners, representatives, administrators, successors, executors and permitted assigns.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>AND</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The <b>Assignees</b> as defined in the Specific Terms of Assignment contained herein, which expression shall unless repugnant to the subject or context thereof, mean and include (a) in case of a company – the company, their legal/authorized representatives, permitted assigns and successors-in-interest; (b) in case of an individual, proprietorship or partnership firm – their respective heirs, individual partners, representatives, administrators, successors, executors and permitted assigns.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>AND</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The <b>Promoters</b> or Developers as defined in the AfS, which expression shall unless repugnant to the subject or context thereof, mean and include the company, its subsidiaries, affiliates, companies/entities under the same management, legal/authorized representatives, assigns and successors-in-interest.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'><b>For the assignment of</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Agreement for Sale for purchase of the residential <b>Unit</b> and undivided interest in land (more fully described in the AfS) in favour of the Assignees.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors, Assignees and Promoters are hereinafter individually referred to as a <b>Party</b> and collectively as the <b>Parties</b>.</p>
+                <tr class="maintable">
+                    <td style = "font-family:SansSerif;"><b>WHEREAS</b></td>
+                </tr>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>0.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors herein agreed to purchase the Unit in the residential Project of the Promoters as per the terms of the AfS and further sold the Unit to the Assignees vide the Agreement for Sale dated&nbsp;<apex:outputField value="{!bkList[0].Agreement_Signing__c}"/>, for a consideration of INR &nbsp;{!amtFormatted}&nbsp;({!NumToWords}).</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>0.02</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Parties are now executing this Agreement for assignment of the Assignors’ rights and obligations under the AfS in favour of the Assignees on the terms and conditions as contained herein.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'><b>NOW THEREFORE</b> in consideration of the mutual promises, covenants, agreements and conditions contained herein the Parties hereto agree as follows:</p>
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>B</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>SPECIFIC TERMS OF ASSIGNMENT (SToA)</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>1</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Agreement for Sale | Assigned Agreements</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>1.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>Agreement for Sale shall be deemed to mean and include, without limitation, reference to the following Agreements and all their Annexures, Schedules, Addenda, Formats, and (if applicable) any other ancillary documents relating to customization executed between the Assignors and Promoters herein for purchase of Unit no.<b>{!bkList[0].Unit__r.Name}</b> and undivided interest in land in the <b>{!bkList[0].Project__r.Name}</b>.</p>
+                
+                <table width = "100%" class="maintable" border="background-color:#969696;border-collapse: collapse;">    
+                    <tr class="maintable">
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 12px;color:black;font-weight: bold;text-align: center !important; padding:2px;">Sr.no.</th>
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 12px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: center !important; padding:2px;">Date</th>
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 12px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: center !important; padding:2px;">Assigned Agreements</th>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;">1.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;"><apex:outputField value="{!bkList[0].Agreement_Signing__c}"/></td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;">&nbsp;Agreement for Sale</td>
+                    </tr>
+                </table>
+                <div style="margin:15px"></div>
+                    <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>1.02</p>
+                    <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>Interior Design option (if any) chosen by Assignors at the time of execution of AfS:</p>
+                
+                <table width = "70%" class="maintable" border="background-color:#969696;border-collapse: collapse;">    
+                    <tr class="maintable" style="display:{!if(bkList[0].Quotation__r.Selected_Customisation__c != 'No Customisation','table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;width:80%">&nbsp;Standard Default Design i.e. no Interior Design</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;width:20%"><div class="checkbox"></div></td>
+                    </tr>
+                    <tr class="maintable" style="display:{!if(bkList[0].Quotation__r.Selected_Customisation__c == 'No Customisation','table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;width:80%">&nbsp;Standard Default Design i.e. no Interior Design</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;width:20%"><apex:image url="{!$Resource.Checkedbox}" width="15" height="15"/></td>
+                    </tr>
+                    <tr class="maintable" style="display:{!if(bkList[0].Quotation__r.Selected_Customisation__c != 'Online','table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;">&nbsp;Standard Interior Design through Online Platform</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;"><div class="checkbox"></div></td>
+                    </tr>
+                    <tr class="maintable" style="display:{!if(bkList[0].Quotation__r.Selected_Customisation__c == 'Online','table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;">&nbsp;Standard Interior Design through Online Platform</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;"><apex:image url="{!$Resource.Checkedbox}" width="15" height="15"/></td>
+                    </tr>
+                    <tr class="maintable" style="display:{!if(bkList[0].Quotation__r.Selected_Customisation__c != 'Personallized','table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;">&nbsp;Personalised Customisation</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;"><div class="checkbox"></div></td>
+                    </tr>
+                    <tr class="maintable" style="display:{!if(bkList[0].Quotation__r.Selected_Customisation__c == 'Personallized','table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;">&nbsp;Personalised Customisation</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;"><apex:image url="{!$Resource.Checkedbox}" width="15" height="15"/></td>
+                    </tr>
+                </table>
+                
+                <div style="margin:15px"></div>
+                    <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>1.03</p>
+                    <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>Interior Design Supplementary Agreement (IDSA) if executed by Assignors:</p>
+                
+                <table width = "70%" class="maintable" border="background-color:#969696;border-collapse: collapse;">    
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;width:80%">&nbsp;To be assigned to Assignees</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;width:20%"><apex:outputPanel rendered="{!bkList[0].ReAssign_IDSA__c != 'Yes'}"><div class="checkbox"></div></apex:outputPanel><apex:outputPanel rendered="{!bkList[0].ReAssign_IDSA__c == 'Yes'}"><apex:image url="{!$Resource.Checkedbox}" width="15" height="15"/></apex:outputPanel></td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;">&nbsp;To be cancelled</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;"><apex:outputPanel rendered="{!bkList[0].ReAssign_IDSA__c != 'No'}"><div class="checkbox"></div></apex:outputPanel><apex:outputPanel rendered="{!bkList[0].ReAssign_IDSA__c == 'No'}"><apex:image url="{!$Resource.Checkedbox}" width="15" height="15"/></apex:outputPanel></td>
+                    </tr>
+                </table>
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>2</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Assignees</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>The particulars of the Assignees herein i.e. new Allottees under the AfS and address for communication with them is as follows:</p>
+                
+                <apex:variable value="{!1}" var="count" />
+                <apex:repeat value="{!appList}" var="aplst" rendered="{!ISNULL(appList) == false && appList.size > 0}">
+                    <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">{!aplst.Sr_No__c}. Particulars of Allottee &nbsp;{!count} <apex:variable value="{!count+1}" var="count" /></b></p>
+                    <apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Name:&nbsp;</b>{!aplst.Name}</p></apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Company Name:&nbsp;</b>{!aplst.Organization_Name__c}</p></apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'Partnership Firm',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Partnership Firm Name:&nbsp;</b>{!aplst.Organization_Name__c}</p></apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'Trust/HUF',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Name:&nbsp;</b>{!aplst.Organization_Name__c}</p></apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">CIN No:&nbsp;</b>{!aplst.CIN_No_1__c}</p></apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Father's/Husband's name:&nbsp;</b>{!aplst.Father_Husband_s_Name__c}</p></apex:outputPanel>
+                    <!--<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised signatory:</b></p>-->
+                    <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">PAN No:&nbsp;</b>{!aplst.PancardNo__c}</p>
+                    <apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of Birth:&nbsp;</b><apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!aplst.DOB__c}" /> </apex:outputText></p></apex:outputPanel>
+                    <!--<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of incorporation.:</b>{!aplst.Date_of_incorporation__c}</p>-->
+                    <apex:outputPanel rendered="{!IF(aplst.City__c == Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Permanent Address:&nbsp;</b>{!aplst.Permanent_Address__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF(aplst.City__c != Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Permanent Address:&nbsp;</b>{!aplst.Permanent_Address__c}, {!aplst.City__c}, {!aplst.State__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Registered Address:&nbsp;</b>{!aplst.Permanent_Address__c}</p></apex:outputPanel>
+                    <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Address for communication(If different from above):&nbsp;</b><apex:outputPanel rendered="{!IF(aplst.Mailing_Address_same_as_PermanentAddress__c == false,true,false)}"><apex:outputPanel rendered="{!IF(aplst.Mailing_City__c == Null,true,false)}">{!aplst.Mailing_Address__c}, {!aplst.Mailing_Country__c}, {!aplst.Mailing_Pincode__c}</apex:outputPanel><apex:outputPanel rendered="{!IF(aplst.Mailing_City__c != Null,true,false)}">{!aplst.Mailing_Address__c}, {!aplst.Mailing_City__c}, {!aplst.Mailing_State__c}, {!aplst.Mailing_Country__c}, {!aplst.Mailing_Pincode__c}</apex:outputPanel></apex:outputPanel></p> 
+                    <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Email-ID:&nbsp;</b>{!aplst.Email_Address__c}</p>
+                    <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Mobile No.:&nbsp;</b>{!aplst.Mobile_Number__c}</p>
+                    <apex:outputPanel rendered="{!IF(aplst.Authorised_signatory_or_GPA_holder__c != Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised signatory or GPA holder(If applicable):&nbsp;</b>{!aplst.Authorised_signatory_or_GPA_holder__c}</p></apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company' || aplst.Subtype_Of_Applicant__c == 'Partnership Firm' || aplst.Subtype_Of_Applicant__c == 'Trust/HUF' ,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of Board Resolution:</b><apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!aplst.Date_of_Board_Resolution__c}" /> </apex:outputText></p></apex:outputPanel>
+                    <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;text-align:left;">Photograph:&nbsp;</b><br/><br/><br/><br/><br/><br/><br/><br/></p>
+                </apex:repeat>
+                
+                <div style="margin:10px"></div>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>3</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Transfer Fee</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>3.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>Transfer fee:</p>
+                
+                <table width = "70%" class="maintable" border="background-color:#969696;border-collapse: collapse;">    
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;width:80%">&nbsp;Applicable</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;width:20%"><apex:outputPanel rendered="{!bkList[0].Transfer_Fee_Amount__c == Null || bkList[0].Transfer_Fee_Amount__c == 0}"><div class="checkbox"></div></apex:outputPanel><apex:outputPanel rendered="{!bkList[0].Transfer_Fee_Amount__c != Null && bkList[0].Transfer_Fee_Amount__c != 0}"><apex:image url="{!$Resource.Checkedbox}" width="15" height="15"/></apex:outputPanel></td>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: left !important; padding:2px;">&nbsp;Not Applicable</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 12px;text-align: center !important; padding:2px;"><apex:outputPanel rendered="{!bkList[0].Transfer_Fee_Amount__c != Null && bkList[0].Transfer_Fee_Amount__c != 0}"><div class="checkbox"></div></apex:outputPanel><apex:outputPanel rendered="{!bkList[0].Transfer_Fee_Amount__c == Null || bkList[0].Transfer_Fee_Amount__c == 0}"><apex:image url="{!$Resource.Checkedbox}" width="15" height="15"/></apex:outputPanel></td>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>3.02</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>The Promoters have received transfer fee along with applicable taxes amount to INR&nbsp;<apex:outputPanel rendered="{!bkList[0].Transfer_Fee_Amount__c == null}">___________</apex:outputPanel><apex:outputPanel rendered="{!bkList[0].Transfer_Fee_Amount__c != null}">{!transferFee}</apex:outputPanel> (<apex:outputPanel rendered="{!bkList[0].Transfer_Fee_Amount__c == null}">___________________________________</apex:outputPanel><apex:outputPanel rendered="{!bkList[0].Transfer_Fee_Amount__c != null}">{!transferFeewords}</apex:outputPanel> only).</p>
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>C</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>GENERAL TERMS OF ASSIGNMENT (GToA)</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>4</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Transfer of rights and Assignment</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>4.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>All the rights of the Assignors under the Agreement for Sale defined under the SToA are hereby assigned to the Assignees and the Assignors shall not have any right under the AfS from the date hereof, i.e. <b>Effective Date</b>. Accordingly, from the Effective Date, the Assignees shall be deemed to have stepped into the shoes of the Assignors in respect of the AfS, which fact is hereby acknowledged and confirmed by all Parties. The Assignees hereby undertake to be bound by the rights and obligations of the Assignors under the AfS.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>4.02</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors have, on this day, handed over to the Assignees, the Original Agreement for Sale executed with the Promoters.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>4.03</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>The Assignees shall be entitled to further assign their rights under this Agreement only with prior written permission of the Promoters.</p>
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>5</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Assignors’ representations</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors have represented as follows:</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>5.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>That the Assignors have not entered into any agreement for sale, transfer, or any other agreement whatsoever with any other person or persons in respect of the Unit defined in the AfS.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>5.02</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>That the Assignors have not suppressed or withheld any information, voluntarily or involuntarily, which would have a bearing on this Assignment or on the Unit in any manner whatsoever.</p>
+                
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>6</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Assignors’ covenants with Assignees</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors covenant with the Assignees as follows:</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>6.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>That the Assignees shall be entitled to all the right, title and interest and shall be bound by all the obligations and conditions under the AfS.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>6.02</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>That the Assignors hereto, will do and execute all reasonable and necessary acts, deeds and things as may be required by the Assignees at the cost of the Assignees, for more fully and perfectly assuring the title of the Unit in favour of the Assignees.</p>
+                
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>7</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Assignors’ covenants with Promoters</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors covenant with the Promoters as follows:</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>7.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors shall have no claim whatsoever over the Unit after entering into this Deed of Assignment.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>7.02</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors shall pay in full all payments due to the Promoters under the AfS up to the Effective Date before signing this Deed of Assignment. Further, the Assignors confirm that they are not entitled to any pending or future payments from the Promoters and/or the Assignees under the AfS.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>7.03</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors have requested the Promoters to register the Unit in favour of the Assignees.</p>
+                
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>8</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Assignors’ covenants with Promoters</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>8.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignees shall comply with all the terms and conditions and be bound by all the obligations under the AfS. It is hereby clearly understood by the Assignees that it shall be the responsibility of the Assignees to ensure that all payments due to the Promoters under the AfS, including payment for any other dues towards customization fee or cost of modifications and upgrades, together with all taxes, duties and fees etc. are cleared in full, without which the Promoters shall not execute the Deed of Sale or handover possession of the Unit to the Assignees. By signing as a Party to this Deed of Assignment, the Promoters do not in any way guarantee that all dues have been cleared in full by the Assignors, nor waive any charges.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>8.02</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignees hereby agree to pay the Stamp Duty and Registration Fee, as well as the Khatha Transfer fee, Property Tax Assessment fee and Professional Fee for the same along with any incidental expenses to the Promoters for the transfer of title of the Unit to their name.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>8.03</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignees have agreed to purchase the Unit from the Assignors after having clearly understood the Interior Design changes signed off by the Assignors and have agreed to purchase the unit on the basis of this design and layout as customized by the Assignors. The Assignees fully understand and have agreed to the condition that no further changes shall be entertained by the Promoters to further customize the unit for the Assignees and in case the Assignees do have any such requirements, the same shall be decided at the discretion of the Promoters only.</p>
+                
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>9</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Assignors’ covenants with Promoters</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>9.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors hereby declare and covenant to the Promoters that they have not done, executed, or performed any act, deed or thing or suffered anything whereby the title/ estate of the Assignees and the Promoters to the Unit may in any way be affected or prejudiced in any manner.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>9.02</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>The Assignors hereby undertake to indemnify the Assignees and the Promoters fully for any loss suffered towards any defect in the transfer / re-assignment of title / estate of the Unit in favour of the Assignees pursuant to this Deed of Assignment.</p>
+                
+                <br/>
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>10</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>General</th>
+                    </tr>
+                </table>
+                <div style="margin:10px"></div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>10.01</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>This Agreement shall be read as part and parcel of the AfS, which shall be in force and binding between the Assignees and the Promoters.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>10.02</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>No change, variation or modification of any of the terms and conditions set forth herein shall be valid unless incorporated as an amendment to the AfS and is signed by the Assignees and the Promoters.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-bottom:0px'>IN WITNESS WHEREOF, the Parties hereto have signed these presents on the day and year above written.</p>
+                <table  width="100%" style="border-collapse:collapse">
+                    <tr style="height:90px">
+                        <td width="50%" style="font-size:11px;border:1px solid #DCDCDC;text-align:left"><div style="margin-top:65px;padding-bottom:0px">&nbsp;Signature<br/>&nbsp;Witness 01 (Name and Address)</div> </td>
+                        <td width="50%" style="font-size:11px;border:1px solid #DCDCDC;text-align:left"><div style="margin-top:65px;padding-bottom:0px">&nbsp;Signature<br/>&nbsp;Witness 01 (Name and Address)</div> </td>
+                    </tr>
+                </table>
+            </apex:form>
+        </apex:outputPanel>  
+    </body>
+</apex:page>
