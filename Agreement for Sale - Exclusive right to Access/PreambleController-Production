@@ -1,0 +1,299 @@
+public class PreambleController {
+    public Id PreId{get;set;}
+    public Id pId{get;set;}
+    public Id unitId{get;set;}
+    public Id uId{get;set;}
+    public Id QuotId{get;set;}
+    public Id oppId{get;set;}
+    public List<Project__c> projectRecord;
+    public List<Opportunity> oppList{get;set;}
+    public List<Unit__c> UnitRecord {get;set;}
+    public List<User> RM {get;set;}
+    public list<Applicant_Details__c> aplist {get;set;}
+    public list<Applicant_Details__c> aplist1 {get;set;}
+    public Booking__c bk {get;set;}
+    public Promoter__c promotor {get;set;}
+    public List<Promoter__c> promotorlist {get;set;}
+    public Land_Owner__c LandOwner{get;set;}
+    public List<Unit__c> ulist {get;set;}
+    public List<Land_Owner__c> land {get;set;}
+    public Project__c prj{get;set;}
+    public opportunity opp{get;set;}
+    Public Boolean isResidential{get;set;} 
+    Public Boolean newPhase {get;set;}
+    Public Boolean Promoter{get;set;} 
+    Public Boolean isCommercial{get;set;}
+    Public Boolean plotarea{get;set;}
+    Public Boolean isvilla{get;set;}
+    Public Boolean exclusivearea{get;set;}
+    Public Boolean additionalarea{get;set;}
+    Public Boolean exclusiveRight{get;set;}    
+    public List<Authorised_Signatory__c> auth {get;set;}
+    public String dte1{get;set;}
+    public List<Booking__c> booklist {get;set;}
+    Public List<String> splitted{get;set;}
+    public Cluster__c phase{get;set;}
+    public decimal excAccessRight {get;set;}
+    
+    Public PreambleController(){
+        //renderProp  = 'pdf';
+        //renderStatus =true;
+        plotarea = false;
+        exclusivearea = false;
+        additionalarea = false;
+        isvilla = false;
+        projectRecord = new List<Project__c>();
+        oppList = new List<opportunity>();
+        UnitRecord = new List<Unit__c>();
+        aplist1 = new List<Applicant_Details__c>();
+        land = new List<Land_Owner__c>();
+        prj = new Project__c();
+        promotorlist = new List<Promoter__c>();
+        auth = new List<Authorised_Signatory__c>();
+        booklist = new List<Booking__c>();
+        splitted = new List<String>();
+        /* if( ApexPages.currentPage().getParameters().get('uId') != null ){
+uId = ApexPages.currentPage().getParameters().get('uId');
+
+}
+system.debug('');
+
+
+if(ApexPages.currentPage().getParameters().get('QId') != null){
+QId = ApexPages.currentPage().getParameters().get('QId');
+}*/
+        system.debug('QId :'+oppId );
+        System.debug('uId :'+uId);
+        
+    }
+    
+    public void getcreateTCPDF(){
+        
+        system.debug('oppId :'+oppId );
+        System.debug('uId :'+uId);
+        
+        
+        if(uId != null  ){
+            ulist = [Select Id,name,Permitted_Use__c ,Parent_Unit__c,Parent_Carpet_Area__c,Parent_Saleable_Area__c,Selected_Specification__c,
+                     Exclusive_Access_Area__c,Villa_Plot_Area_Sub_Product__c,Is_Villa__c,Level__c,Additional_Area__c,
+                     Total_No_Of_Car_Park__c,TE_Product__c,Default_Specification_new__c,Builtup_Area_Sub_Product__c,Carpet_Area_Sub_Product__c,
+                     Outdoor_Area_Sub_Product__c,Floor__c,Unit_Ownership__c,TE_Product__r.Product_Type__c,Project__c,Saleable_Area_Sub_Product__c,
+                     Tower__c,Tower__r.cluster__c,Tower__r.cluster__r.name,Parent_Unit_Outdoor_Area__c,Tower__r.cluster__r.Board_Resolution_Date__c,
+                     Tower__r.cluster__r.New_Phase__c,Additional_Land__c,RERA_Carpet_Area_Sub_Product__c,Unit_Disclaimer__c from Unit__c where Id =:uId ];
+            if(ulist[0].Permitted_Use__c == 'Residential'){
+                isResidential = true;
+                if(ulist[0].Tower__r.cluster__r.New_Phase__c == True){
+                    newPhase = True;
+                        }else{
+                            newPhase = False;
+                        }
+            } else{
+                isCommercial = True;
+            }
+            phase = [Select Id,Name,New_Phase__c,Preamble_Details__c,Preamble_Details_JD_Unit__c,GPA_Holder__c,Authorised_Signatory_of_Promoters__c from Cluster__c where id=: ulist[0].Tower__r.cluster__c];   
+            prj = [SELECT Id, Name, Preamble_Details__c,Land_Owner__c,Promoter__c,Official_Email_IDs__c,POA_Holder__c,Authorised_Signatory_of_Promoters__c FROM Project__c WHERE id=:ulist[0].Project__c];
+            system.debug('prj:'+prj);
+            
+            if(ulist[0].Villa_Plot_Area_Sub_Product__c != null && ulist[0].Villa_Plot_Area_Sub_Product__c != 0 && ulist[0].Is_Villa__c != false ){
+                plotarea = true;
+            }
+            if(ulist[0].Is_Villa__c == true ){
+                isvilla = true;
+            }
+            system.debug('Exclusive_Access_Area__c'+ulist[0].Exclusive_Access_Area__c);
+            if(ulist[0].Exclusive_Access_Area__c != null && ulist[0].Exclusive_Access_Area__c != 0){
+                exclusivearea = true;
+            }
+            
+            if(ulist[0].Additional_Area__c != null && ulist[0].Additional_Area__c != 0){
+                additionalarea = true;
+            }
+            string prjPhaseConcatString = prj.Name +' '+ phase.Name;
+            if((ulist[0].Additional_Land__c != null && ulist[0].Additional_Land__c != 0) || (ulist[0].Villa_Plot_Area_Sub_Product__c != null && ulist[0].Villa_Plot_Area_Sub_Product__c != 0) ){
+                exclusiveRight = true;
+                if(prjPhaseConcatString != 'After the Rain Phase 2c'){
+                    excAccessRight = ulist[0].Is_Villa__c == true ? ulist[0].Additional_Land__c != null ? ulist[0].Additional_Land__c + ulist[0].Villa_Plot_Area_Sub_Product__c : ulist[0].Villa_Plot_Area_Sub_Product__c : ulist[0].Additional_Land__c;
+                }
+                else{
+                    excAccessRight = ulist[0].Additional_Land__c;
+                }
+            }
+            system.debug('plotarea'+plotarea);
+            system.debug('exclusivearea'+exclusivearea);
+            system.debug('additionalarea'+additionalarea);
+            opp = [Select Id,Name,Booking__c,Relationship_Manager__c,Date_of_Agreement__c From opportunity Where id=: oppId];
+            bk = [SELECT  Id,No_of_Earmarked_Parking__c,Unit__c,Unit__r.Tower__r.Cluster__c,Unit__r.Exclusive_Access_Area__c,Unit__r.Villa_Plot_Area_Sub_Product__c,
+                  Date_of_Agreement_AFS__c,Unit__r.Additional_Area__c,
+                  No_of_Additional_Parking__c, Quotation__c, Project__c,Primary_Applicant_Name__c,PrimaryMobileNumber__c,
+                  Primary_Applicant_Email__c,Promoter__c,Authorised_Signatory__c,quotation__r.TotalEarmarkedCarpark__c,
+                  quotation__r.TotalAdditionalCarpark__c FROM Booking__c WHERE id =:opp.Booking__c];
+            
+            RM = [Select Id,Name from User where id=: opp.Relationship_Manager__c];
+            promotorlist = [select Id, name, PAN__c, Registered_office__c, Authorised_Signatory__c, Photograph__c,CIN_NO__c from Promoter__c where id=:prj.Promoter__c];
+            land = [select id , name,Same_as_promoter_required__c, Land_Owner_Name__c,Address_for_communication__c,Father_Husband_s_Name__c,PAN_No__c,
+                    Date_of_Birth__c,Authorised_Signatory_of_Promoters__c,Photograph_of_Authorised_Signatory__c,
+                    GPA_holder__c,Project__c,Landowner_Type__c,Sr_No__c from Land_Owner__c  where Project__c=:prj.id 
+                    and (Phase__c =:  ulist[0].Tower__r.cluster__c OR Phase__c = null) order by Sr_No__c];
+            system.debug('land::'+land);
+            aplist1 = [Select Id, Name,PancardNo__c,Date_of_incorporation__c,DOB__c,Permanent_Address__c,Email_Address__c,Mailing_Address__c,
+                       Type_Of_Applicant__c,Mobile_Number__c,Applicant_Number__c,Sr_No__c,Father_Husband_s_Name__c,CIN_No_1__c,Subtype_Of_Applicant__c,
+                       Date_of_Board_Resolution__c,Organization_Name__c,Mailing_Address_same_as_PermanentAddress__c,Authorised_signatory_or_GPA_holder__c,
+                       City__c,State__c,Country__c,Pincode__c,Mailing_City__c,Mailing_State__c,Mailing_Country__c,Mailing_Pincode__c from Applicant_Details__c where Booking__c=: bk.id order by Sr_No__c asc];
+            auth = [Select Id , Name ,Photograph__c from Authorised_Signatory__c where Id =: bk.Authorised_Signatory__c];
+            system.debug('Aplist'+aplist1);
+            
+        }
+        String splitemail = prj.Official_Email_IDs__c;
+        system.debug('splitemail'+splitemail);
+        splitted = splitemail.split('\\ ');
+        //system.debug('splitted'+splitted[0] + splitted[1] );
+        
+        date dte;
+        dte = aplist1[0].DOB__c ;
+        dte1 = customDateFormat(dte);
+        projectRecord = DocumentGenerationServices.getProjectDetails(prj.id);
+        UnitRecord = DocumentGenerationServices.getUnitDetails(ulist[0].id);
+        aplist = DocumentGenerationServices.getApplicantDetails(oppId);
+        oppList = DocumentGenerationServices.getOpportunityDetails(opp.id);
+        booklist = DocumentGenerationServices.getBookingDetails(bk.Id);
+        system.debug('BookingRecord:'+projectRecord);
+        system.debug('UnitRecord:'+UnitRecord);
+        
+        if(phase.Preamble_Details__c != null && phase.Preamble_Details__c != ''){
+            phase.Preamble_Details__c = findAndReplaceMergeFields(phase.Preamble_Details__c);
+        }
+        if(phase.Preamble_Details_JD_Unit__c != null && phase.Preamble_Details_JD_Unit__c != ''){
+            phase.Preamble_Details_JD_Unit__c = findAndReplaceMergeFields(phase.Preamble_Details_JD_Unit__c);
+        }
+        //system.debug('land::-'+land[0].Same_as_promoter_required__c);
+        if(land[0].Same_as_promoter_required__c==True)
+        {
+            Promoter=True;
+        }
+        
+    }
+    
+    public string findAndReplaceMergeFields(String fieldValue){
+        String replacementString            = fieldValue;
+        pattern p                           = pattern.compile('\\{!(.*?)\\}');
+        Matcher m                           = p.matcher(fieldValue);
+        
+        System.debug('m:' + m);
+        
+        while(m.find()) {
+            System.debug('inside while loop:');
+            List<String> objectAndfield     = new List<String>();
+            String mergeFieldWithoutQuote   = m.group().substring( 2, m.group().length() - 1);
+            System.debug('mergeFieldWithoutQuote:' + mergeFieldWithoutQuote);
+            //objectAndfield                  = mergeFieldWithoutQuote.split('\\.');
+            String replacableString         = replaceMergeField(mergeFieldWithoutQuote);
+            System.debug('replaceable string:' + replacableString);
+            replacableString.removeStart('\'');
+            replacableString.removeEnd('\'');
+            replacementString               = replacementString.replace(m.group(),replacableString);
+            
+        }
+        return replacementString;
+        
+    }
+    
+    public string replaceMergeField(String fieldname){
+        List<String> objectAndfield     = new List<String>();
+        system.debug('fieldname:'+fieldname);
+        //system.debug('Date:'+bookingRecord[0].get(fieldname));
+        if(fieldname != null && fieldname.startsWith('Project')){
+            
+            objectAndfield = fieldname.split('\\.');
+            if(projectRecord.size()>0){
+                if(projectRecord[0].get(objectAndfield[1]) != null){
+                    return String.valueOf(projectRecord[0].get(objectAndfield[1]));  
+                }
+                else{
+                    return '';
+                }
+            }
+        }
+        else if(fieldname != null && fieldname.startsWith('Unit')){
+            objectAndfield = fieldname.split('\\.');
+            if(UnitRecord.size()>0){
+                if(UnitRecord[0].get(objectAndfield[1]) != null){
+                    return String.valueOf(UnitRecord[0].get(objectAndfield[1]));
+                }
+                else{
+                    return '';
+                }
+            }
+            else
+                return '';
+        }
+        else if(fieldname != null && fieldname.startsWith('Opportunity')){
+            objectAndfield = fieldname.split('\\.');
+            if(oppList.size()>0){
+                if(oppList[0].get(objectAndfield[1]) != null){
+                    DateTime dt =  (DateTime)oppList[0].get(objectAndfield[1]);
+                    Date myDate = date.newinstance(dT.year(), dT.month(), dT.day());
+                    string stDate = customDateFormat(myDate);
+                    return stDate;
+                }
+                else{
+                    return '';
+                }
+            }
+            else
+                return '';
+        }
+        else if(fieldname != null && fieldname.startsWith('Booking')){
+            objectAndfield = fieldname.split('\\.');
+            if(booklist.size()>0){
+                if(booklist[0].get(objectAndfield[1]) != null){
+                    DateTime dt =  (DateTime)booklist[0].get(objectAndfield[1]);
+                    Date myDate = date.newinstance(dT.year(), dT.month(), dT.day());
+                    string stDate = customDateFormat(myDate);
+                    return stDate;
+                }
+                else{
+                    return '_____________________';
+                }
+            }
+            else
+                return '';
+        }
+        return '';
+        
+    }
+    
+    public static string customDateFormat(Date dt){
+        system.debug('inside CusomDateFormat Method:: '+dt);
+        string stDate = ''; 
+        if(dt != null){
+            string stMonth = '';
+            string stDay = '';
+            Integer day = dt.Day();
+            Integer month = dt.month();
+            Integer year = dt.year();
+            string stYear = string.valueof(year);
+            if(day == 1 || day == 21 || day == 31){ stDay = day + 'st day of'; }
+            else if(day == 2 || day == 22){ stDay = day + 'nd day of'; }
+            else if(day == 3 || day == 23){ stDay = day + 'rd day of'; }
+            else {stDay = day + 'th day of';}
+            
+            if(month == 1){ stMonth = 'January';}
+            else if(month == 2) { stMonth = 'February'; }
+            else if(month == 3) { stMonth = 'March'; }
+            else if(month == 4) { stMonth = 'April'; }
+            else if(month == 5) { stMonth = 'May'; }
+            else if(month == 6) { stMonth = 'June'; }
+            else if(month == 7) { stMonth = 'July'; }
+            else if(month == 8) { stMonth = 'August'; }
+            else if(month == 9) { stMonth = 'September'; }
+            else if(month == 10) { stMonth = 'October'; }
+            else if(month == 11) { stMonth = 'November'; }
+            else if(month == 12) { stMonth = 'December'; }
+            
+            stDate = stDay + ' ' + stMonth + ' ' + stYear;
+        }
+        return stDate;
+    }
+    
+    
+}
