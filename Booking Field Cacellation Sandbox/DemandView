@@ -1,0 +1,711 @@
+public with sharing class DemandView {
+    public Id previewId {
+        set;
+        get;
+    }
+    public Id forMilestone {
+        set;
+        get;
+    }
+    public Opportunity Customer {
+        get;
+        set;
+    }
+    public Applicant_Details__c applicant {
+        get;
+        set;
+    }
+    public String letterHead {
+        get;
+        set;
+    }
+    public Boolean letterH {
+        get;
+        set;
+    }
+    public String mode {
+        get;
+        set;
+    }
+    public String invoiceNumber {
+        set;
+        get;
+    }
+    public String SAPInvoiceNo {
+        set;
+        get;
+    }
+    public String invoiceDueDate {
+        set;
+        get;
+    }
+    public String invoiceDate {
+        set;
+        get;
+    }
+    public Booking__c Booking {
+        get;
+        set;
+    }
+    public Decimal CV {
+        get;
+        set;
+    }
+    public Decimal TaxOnCV {
+        get;
+        set;
+    }
+    public String CVStr {
+        get;
+        set;
+    }
+    public String TaxOnCVStr {
+        get;
+        set;
+    }
+    public String CVDemandedStr {
+        get;
+        set;
+    }
+    public String CVPaidStr {
+        get;
+        set;
+    }
+    public String CVBalanceStr {
+        get;
+        set;
+    }
+    public List < DemandManagementServices.DemandWrapper > dwList {
+        get;
+        set;
+    }
+	public List < Payment_Milestones__c > pmlst {
+        get;
+        set;
+    }
+    public Decimal sgstGT {
+        get;
+        set;
+    }
+    public Decimal cgstGT {
+        get;
+        set;
+    }
+    public Decimal TDSGT {
+        get;
+        set;
+    }
+    public Decimal AmountGT {
+        get;
+        set;
+    }
+
+    public String sgstGTStr {
+        get;
+        set;
+    }
+    public String cgstGTStr {
+        get;
+        set;
+    }
+    public String TDSGTStr {
+        get;
+        set;
+    }
+    public String AmountGTStr {
+        get;
+        set;
+    }
+
+    public Decimal totalTaxDue {
+        get;
+        set;
+    }
+    public String totalTaxDueStr {
+        get;
+        set;
+    }
+    public Decimal totalInstallmentPayable {
+        get;
+        set;
+    }
+    public String totalInstallmentPayableStr {
+        get;
+        set;
+    }
+    public Decimal TotalDue {
+        get;
+        set;
+    }
+    public String TotalDueStr {
+        get;
+        set;
+    }
+
+    public String CRMName {
+        get;
+        set;
+    }
+    public String CRMEmail {
+        get;
+        set;
+    }
+    public String CRMMobile {
+        get;
+        set;
+    }
+
+    public String strDemandInvId {
+        get;
+        set;
+    }
+    
+    public Demand__c demand {
+        get;
+        set;
+    }
+    
+    public Attachment AT {
+        get;
+        set;
+    }
+    public string bookingDate{
+        get;
+        set;
+    }
+    public string RMName{get;set;}
+    public string RMEmail{get;set;}
+    public string RMMobile{get;set;}
+    public string RMPhone{get;set;}
+    public string leglEntyNameFlatCost{get;set;}
+    public string leglEntyNameGST{get;set;}
+    public string leglEntyForFlatCost{get;set;}
+    public string leglEntyForGST{get;set;}
+    public string isTds{get;set;}
+    public String CVTaxPaidStr {
+        get;
+        set;
+    }
+    public Boolean registPending {
+        get;
+        set;
+    }
+    public Boolean payNotesClause1 {
+        get;
+        set;
+    }
+    public String CustomerPrimaryName  {get; set;}
+    /*public Legal_Entity__c leObj{
+        get;
+        set;
+    }*/
+    public List < DemandManagementServices.DemandWrapper > dwPreviousDuesList {
+        get;
+        set;
+    }
+    Public string totalAmtInWords{get;set;}
+    Public string TDSDue{get;set;}
+    Public string TDSReceived{get;set;}
+    Public string TDSOutstanding{get;set;}
+    Public string GSTPercentage{get;set;}
+    Public String strPaymentMID{get;set;}
+    public List<Payment_Milestones__c> lstPaymentM {get; set;}
+    Public String TaxAccount{get; set;}
+    Public String TaxBankName{get; set;}
+    Public String TaxAccountNo{get; set;}
+    Public String TaxIFSC{get; set;}
+    Public String EscrowAccount{get; set;}
+    Public String EscrowBankName{get; set;}
+    Public String EscrowAccountNo{get; set;}
+    Public String EscrowIFSC{get; set;}
+    public String NoToWord  {get; set;}
+    public String NoToWordUnit  {get; set;}
+    public String TotalAmount  {get; set;}  
+    public string todaysDate {get;set;}
+    public Decimal Tds {get;set;}
+    public String TaxPayment {get;set;}
+    public String Consideration {get;set;}
+    public String Tds1 {get;set;}
+    public String Tds2 {get;set;}
+    public Decimal land {get;set;}
+    public Decimal construction {get;set;}
+    public Decimal constructiongst {get;set;}
+    public Decimal totalconstruction {get;set;}
+    public String landf {get;set;}
+    public String constructionf {get;set;}
+    public String maintainencef {get;set;}
+    public String gstformat {get;set;}
+    public String totalconstructionf {get;set;}
+    public String consgstlegacy {get;set;}
+    public String totalgstlegacy {get;set;}
+    public String totalamtlegacy {get;set;}
+    public String totalamtgstlegacy {get;set;}
+    public String Notowordlegacystr {get;set;}
+    public Decimal Notowordlegacy {get;set;}
+    public Boolean islegacy {get;set;}
+    public String maintainencegst {get;set;} 
+    public String maintainencegstamt {get;set;}
+    public String TaxPaymentlegacy {get;set;}
+    public String Considerationlegacy {get;set;}
+    public Boolean landl {get;set;}
+    public Boolean constl {get;set;}
+    public Boolean maintainencel {get;set;}
+    public Boolean UnitTax {get;set;}
+    public string UnitTaxStr{get;set;}
+    public string UnitAmtStr{get;set;}
+    
+    Public Decimal UnitTaxD;
+    public string UnitConsTotal{get;set;}
+    public string UnitTaxPayment{get;set;}
+    public string UnitConsiPayment{get;set;}
+    public Boolean zeroTaxRender{get;set;}
+    public demandView() {
+        letterH = false;
+        dwList = new List < DemandManagementServices.DemandWrapper > ();
+        sgstGT = 0;
+        cgstGT = 0;
+        TDSGT = 0;
+        AmountGT = 0;
+        TotalDue = 0;
+        TotalTaxDue = 0;
+        totalInstallmentPayable = 0;
+        invoiceDueDate = '';
+        invoiceNumber = '';
+        SAPInvoiceNo = '';
+        bookingDate = '';
+        RMName = '';
+        RMEmail = '';
+        RMMobile = '';
+        RMPhone = '';
+        leglEntyForFlatCost = '';
+        leglEntyForGST = '';
+        leglEntyNameFlatCost = '';
+        leglEntyNameGST = '';
+        isTds = 'none';
+        registPending = false;
+        islegacy = false;
+        TDSDue = '';
+        TDSReceived = '';
+        TDSOutstanding = '';
+        dwPreviousDuesList = new List < DemandManagementServices.DemandWrapper > ();
+        //totalAmtInWords = '';
+        GSTPercentage = '6%';
+        TaxAccount='';
+        TaxBankName='';
+        TaxAccountNo='';
+        TaxIFSC='';
+        EscrowAccount='';
+        EscrowBankName='';
+        EscrowAccountNo='';
+        EscrowIFSC='';
+        TotalAmount='0';
+        todaysDate = dateFormat(system.today());
+        Consideration='0';
+        Tds=0;
+        TaxPayment='0';
+		maintainencef='';
+        totalamtgstlegacy = '';
+        totalgstlegacy = '';
+        totalamtlegacy = '';
+        pmlst = new List < Payment_Milestones__c > ();
+        consgstlegacy = '';
+        Notowordlegacystr = '';
+        Notowordlegacy = 0;
+        maintainencegst = '';
+        maintainencegstamt = '';
+        TaxPaymentlegacy = '';
+        Considerationlegacy = '';
+        maintainencel = false;
+        constl = false;
+        landl = false;
+        UnitTax = false;
+        UnitTaxStr = '';
+        UnitAmtStr = '';
+        UnitTaxD = 0;
+        UnitConsTotal = '';
+        zeroTaxRender = false;
+        if (ApexPages.currentPage().getParameters().containsKey('previewId'))
+            previewId = (Id) ApexPages.currentPage().getParameters().get('previewId');
+        if (ApexPages.currentPage().getParameters().containsKey('forMilestone'))
+            forMilestone = (Id) ApexPages.currentPage().getParameters().get('forMilestone');
+        if (ApexPages.currentPage().getParameters().containsKey('mode'))
+            mode = ApexPages.currentPage().getParameters().get('mode');
+        if (ApexPages.currentPage().getParameters().containsKey('invoiceDueDate'))
+            invoiceDueDate = ApexPages.currentPage().getParameters().get('invoiceDueDate');
+        if (ApexPages.currentPage().getParameters().containsKey('invoiceNumber'))
+            SAPInvoiceNo = ApexPages.currentPage().getParameters().get('invoiceNumber');
+        
+        
+        if (ApexPages.currentPage().getParameters().containsKey('letterHead')) {
+            letterHead = ApexPages.currentPage().getParameters().get('letterHead');
+            if (letterHead == '1') {
+                letterH = true;
+            }
+        }
+
+        if (previewid != null) {
+            Customer = [Select Id, Unit__c, Unit__r.Name, Unit__r.Tower__r.Name, Unit__r.Tower__r.Cluster__r.Name,Unit__r.Booking__c,
+                        Unit__r.Project__r.Name, Unit__r.Project__r.Project_Logo__c, Unit__r.Configuration__c, Name,Project__c,Unit__r.Permitted_Use__c,
+                        Relationship_Manager__c,Primary_Name__c,Primary_pancard__c,Primary_Phone__c,Primary_Email__c,Permanent_Address__c,
+                        Mailing_Address__c,Registration_Status__c,unit__r.Tax_Rate_Basic__c,Unit__r.Tower__c,
+                        Unit__r.Tower__r.Cluster__r.Bank_Account_No_Escrow__c,
+                        Unit__r.Tower__r.Cluster__r.Bank_Name_Escrow__c,
+                        Unit__r.Tower__r.Cluster__r.IFSC_Code_Escrow__c,
+                        Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c,
+                        Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c,
+                        Unit__r.Tower__r.Cluster__r.Bank_Account_No_Tax__c,
+                        Unit__r.Tower__r.Cluster__r.Bank_Name_Tax__c,
+                        Unit__r.Tower__r.Cluster__r.IFSC_Code_Tax__c,
+                        Unit__r.Project__r.Promoter__r.Name,
+                        Unit__r.Project__r.Promoter__r.Registered_office__c,
+                        Unit__r.Project__r.Promoter__r.CIN_NO__c,
+                        Unit__r.Project__r.Promoter__r.GSTIN__c,
+                        Unit__r.Project__r.Promoter__r.PAN__c
+
+                        from Opportunity where Unit__c =: previewId 
+                        and StageName = 'Booking Confirmed' 
+                        and S_Active__c = true 
+                        and Unit__r.Unit_Status__c = 'Sold'
+                       ];
+            system.debug('Customer : '+ Customer.Id);
+            applicant = [Select Id, Name, GSTIN__c From Applicant_Details__c WHERE Opportunity__c =: Customer.Id AND Applicant_Number__c = 'Primary Applicant'];
+            //***************************************************************************************************************************************************************************************
+            List<Applicant_Details__c> applist = new List<Applicant_Details__c>();
+            applist = [Select id,name,Email_Address__c,Salutation__c from Applicant_Details__c where Opportunity__c =: Customer.id order by Sr_No__c asc];
+            String nameofapplicant;
+            List<String> applicantName = new List<String>();
+            string andSepratedList;
+            for(Applicant_Details__c  adce : applist)
+            {
+                nameofapplicant = adce.Name;
+                applicantName.add(nameofapplicant);
+                
+            }
+            andSepratedList='';
+            for(String str : applicantName)
+            {
+                andSepratedList += str + ', ' ;
+            }
+            system.debug('Applicant length' +andSepratedList.length() + 'Applicant' +andSepratedList);
+            andSepratedList = andSepratedList.subString(0,andSepratedList.length()-2);
+            system.debug('andSepratedList::'+andSepratedList);
+            CustomerPrimaryName  = andSepratedList;
+            //******************************************************************************************************************************************************************************************
+            if(Customer.Registration_Status__c != null && (Customer.Registration_Status__c == 'Registration Pending' || Customer.Registration_Status__c == 'WIP')){
+                registPending = true;
+            }
+            
+            //leObj = InventoryCostServices.getLegalEntityDetails(Customer.Unit__c,Customer.Project__c,Customer.Unit__r.Tower__c);
+            //system.debug('legal entity::: '+leObj);
+            /*if(leObj != null){
+                    leglEntyNameGST = leObj.Account_Name_Service_Tax__c;
+                    
+                    leglEntyNameFlatCost = leObj.Account_Name_Flat_Cost__c;
+                    
+                    leglEntyForFlatCost =  'Account Number : ' + leObj.Account_Number_Flat_Cost__c + '\n IFSC Code : ' + leObj.IFSC_Code_Flat_Cost__c +
+                                     '\n Bank Name : ' + leObj.Bank_Name_Flat_Cost__c + '\n Address : ' + leObj.RDS_Address1__c;
+                    leglEntyForGST =  'Account Number : ' + leObj.Account_Number_Service_tax__c + '\n IFSC Code : ' + leObj.IFSC_Code_Service_Tax__c +
+                                     '\n Bank Name : ' + leObj.Bank_Name_Service_tax__c + + '\n Address : ' + leObj.RDS_Address2__c;
+            
+            }*/
+            
+            if(string.isNotBlank(customer.unit__r.Tax_Rate_Basic__c)){
+                if(customer.unit__r.Tax_Rate_Basic__c == 'GST 8%'){
+                    GSTPercentage = '4%';
+                } 
+            }
+             if(string.isNotBlank(customer.unit__r.Tax_Rate_Basic__c)){
+                if(customer.unit__r.Tax_Rate_Basic__c == 'GST 5%'){
+                    UnitTax = true;
+                } 
+            }
+            if(string.isNotBlank(customer.unit__r.Tax_Rate_Basic__c)){
+                if(customer.unit__r.Tax_Rate_Basic__c == 'GST 0%'){
+                    UnitTax = true;
+                    zeroTaxRender = true;
+                } 
+            }
+            /*if(lstPaymentM!=null && !lstPaymentM.isEmpty())
+            {
+                
+                TaxAccount = lstPaymentM[0].Quotation__r.Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c;
+                TaxBankName = lstPaymentM[0].Quotation__r.Unit__r.Tower__r.Cluster__r.Bank_Name_Tax__c;
+                TaxAccountNo =  lstPaymentM[0]. Quotation__r.Unit__r.Tower__r.Cluster__r.Bank_Account_No_Tax__c;
+                TaxIFSC =  lstPaymentM[0].Quotation__r.Unit__r.Tower__r.Cluster__r.IFSC_Code_Tax__c;   
+                EscrowAccount = lstPaymentM[0].Quotation__r.Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c;   
+                EscrowBankName = lstPaymentM[0].Quotation__r.Unit__r.Tower__r.Cluster__r.Bank_Name_Escrow__c; 
+                EscrowAccountNo = lstPaymentM[0].Quotation__r.Unit__r.Tower__r.Cluster__r.Bank_Account_No_Escrow__c;    
+                EscrowIFSC = lstPaymentM[0].Quotation__r.Unit__r.Tower__r.Cluster__r.IFSC_Code_Escrow__c;
+                
+            }*/
+            
+            if(Customer !=null )
+            {
+                
+                TaxAccount = Customer.Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c;
+                TaxBankName = Customer.Unit__r.Tower__r.Cluster__r.Bank_Name_Tax__c;
+                TaxAccountNo =  Customer.Unit__r.Tower__r.Cluster__r.Bank_Account_No_Tax__c;
+                TaxIFSC =  Customer.Unit__r.Tower__r.Cluster__r.IFSC_Code_Tax__c;   
+                EscrowAccount = Customer.Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c;   
+                EscrowBankName = Customer.Unit__r.Tower__r.Cluster__r.Bank_Name_Escrow__c; 
+                EscrowAccountNo = Customer.Unit__r.Tower__r.Cluster__r.Bank_Account_No_Escrow__c;    
+                EscrowIFSC = Customer.Unit__r.Tower__r.Cluster__r.IFSC_Code_Escrow__c;
+                
+            }
+            
+            List < User > u = [Select Name, Phone, MobilePhone, Title, Email from User where Id =: Customer.Relationship_Manager__c];
+            if (u != null && u.size() == 1) {
+                CRMName = u[0].Title + u[0].Name;
+                CRMEmail = u[0].Email;
+                CRMMobile = u[0].MobilePhone;
+            }
+            system.debug(Customer.Unit__r.Tower__r.Name + ':' +
+                Customer.Unit__r.Project__r.Name + ':' +
+                Customer.Name + ':' +
+                Customer.Unit__r.Name + ':' + forMilestone );
+            
+            
+            Map < Id, List < DemandManagementServices.DemandWrapper >> customerDemandWrapperMap  = new Map < Id, List < DemandManagementServices.DemandWrapper >>();
+            customerDemandWrapperMap = DemandManagementServices.searchSpecificDemands(Customer.Unit__r.Tower__r.Name,
+                Customer.Unit__r.Project__r.Name,
+                Customer.Name,
+                Customer.Unit__r.Name,
+                null, null, null, forMilestone,null);    
+			  system.debug(customerDemandWrapperMap);          
+           
+             dwList = customerDemandWrapperMap.get(previewId);
+            system.debug('Dwlist:' +dwList);
+            system.debug('preview id' +previewId);
+            for (DemandManagementServices.DemandWrapper d1: dwList) {
+                System.debug('dwList in demandView:' + d1);
+                sgstGT += d1.ptw.overallTax1D;
+                system.debug('sgstGT::: '+sgstGT);
+                cgstGT += d1.ptw.overallTax2D;
+                TDSGT += d1.ptw.overallTDSD;
+                AmountGT += d1.ptw.overallAmtD;
+                invoiceDate = d1.pm.Invoice_Date__c.format();
+            }
+            UnitTaxStr = InventoryCostServices.InFormat(sgstGT.setscale(0,RoundingMode.HALF_UP));
+            UnitTaxD = sgstGT.setscale(0,RoundingMode.HALF_UP);
+            UnitAmtStr = InventoryCostServices.InFormat((AmountGT + (sgstGT.setscale(0,RoundingMode.HALF_UP)) + (sgstGT.setscale(0,RoundingMode.HALF_UP))).setscale(0,RoundingMode.HALF_UP));
+            sgstGTStr = InventoryCostServices.InFormat(sgstGT);
+            cgstGTStr = InventoryCostServices.InFormat(cgstGT);
+            TDSGTStr = InventoryCostServices.InFormat(TDSGT);
+            system.debug('TDSGTStr::: '+TDSGTStr);
+            system.debug('SGST::: '+sgstGT);
+            system.debug('CGST::: '+cgstGT);
+            AmountGTStr = InventoryCostServices.InFormat(AmountGT);
+            NoToWord = S_NumberToWord.convertNumbertoWords((AmountGT + sgstGT + cgstGT).setscale(0,RoundingMode.HALF_UP));
+            NoToWordUnit = S_NumberToWord.convertNumbertoWords((AmountGT + (sgstGT.setscale(0,RoundingMode.HALF_UP)) + (sgstGT.setscale(0,RoundingMode.HALF_UP))).setscale(0,RoundingMode.HALF_UP));
+            TotalAmount = InventoryCostServices.InFormat((AmountGT + sgstGT + cgstGT).setscale(0,RoundingMode.HALF_UP));
+            Tds = ( AmountGT / 100  ).setscale(0,RoundingMode.HALF_UP);
+            Tds2 = InventoryCostServices.InFormat(Tds);
+            TaxPayment = InventoryCostServices.InFormat(sgstGT + cgstGT);
+            Consideration = InventoryCostServices.InFormat( AmountGT - Tds  );
+            ////////////// Added by Vikas for previous Dues  //////////////////////
+            dwPreviousDuesList = DemandManagementServices.getAllPreviousDemand(Customer.Unit__c);
+             
+			
+            Booking__c Booking = [Select Id, Quotation__C, Quotation__r.Name,
+                Quotation__r.Total_Agreement_Value_Bucket__c,Booking_Date__c,
+                Quotation__r.SGST_on_Total_Agreement_Value_Bucket__c,OwnerId,
+                Quotation__r.CGST_on_Total_Agreement_Value_Bucket__c,
+                Quotation__r.Towards_Land__c,
+                Quotation__r.Towards_Consideration__c
+                from Booking__c where Opportunity__c =: Customer.Id and Unit__c =: Customer.Unit__c
+            ];
+            
+ 			land = AmountGT * 1/3;
+          //  land = land.setscale(0,RoundingMode.HALF_UP);
+            landf = InventoryCostServices.INFormat(land);
+            construction = AmountGT * 2/3;
+			constructionf = InventoryCostServices.INFormat((construction).setscale(0,RoundingMode.HALF_UP));
+            UnitConsTotal = InventoryCostServices.INFormat((construction + UnitTaxD + UnitTaxD).setscale(0,RoundingMode.HALF_UP));
+            constructiongst = construction * 0.09 ;
+            constructiongst = math.abs((constructiongst).setscale(0,RoundingMode.HALF_UP));
+            system.debug('constructiongst' +constructiongst);
+            system.debug('LAND' +constructiongst);
+            system.debug('Construction' +constructiongst);
+            totalconstruction = construction.setscale(0,RoundingMode.HALF_UP);
+            totalconstruction = totalconstruction + constructiongst + constructiongst;
+            gstformat =  InventoryCostServices.INFormat(constructiongst);
+            totalconstructionf = InventoryCostServices.INFormatR(totalconstruction);
+         //   TotalAmount = InventoryCostServices.InFormat(land + totalconstruction);
+         //   TaxPayment = InventoryCostServices.InFormat(constructiongst + constructiongst);
+            UnitTaxPayment = InventoryCostServices.InFormat(UnitTaxD + UnitTaxD);
+            UnitConsiPayment = InventoryCostServices.InFormat(((AmountGT).setscale(0,RoundingMode.HALF_UP)) - Tds);
+         //   Consideration = InventoryCostServices.InFormat( ((AmountGT).setscale(0,RoundingMode.HALF_UP)) - Tds  );
+            if (Booking != null) {
+                CV = Booking.Quotation__r.Total_Agreement_Value_Bucket__c;
+                decimal tdsdueAmt = 0;
+                if(CV > 5000000){
+                    //   isTds = 'table-data';
+                    //   TDSDue = InventoryCostServices.InFormat((CV * 1)/100);
+                    //   tdsdueAmt = ((CV * 1)/100).setscale(0,RoundingMode.HALF_UP);
+                    decimal totalwithoutTax = AmountGT - Tds;
+                    AmountGTStr = InventoryCostServices.InFormat(totalwithoutTax);
+                    isTds = 'table-data';
+                    TDSDue = InventoryCostServices.InFormat((CV * 1)/100);
+                    tdsdueAmt = ((CV * 1)/100).setscale(0,RoundingMode.HALF_UP);
+                    payNotesClause1 = True;
+                }else{
+                    TDSDue = InventoryCostServices.InFormat(0);
+                    payNotesClause1 = false;
+                    Tds2 = InventoryCostServices.InFormat(0);
+                }
+                TaxOnCV = Booking.Quotation__r.SGST_on_Total_Agreement_Value_Bucket__c + Booking.Quotation__r.CGST_on_Total_Agreement_Value_Bucket__c;
+                CVStr = InventoryCostServices.InFormat(CV);
+                TaxOnCVStr = InventoryCostServices.InFormat(TaxOnCV);
+                bookingDate = Booking.Booking_Date__c.format();
+                
+                User rmDetails = GetUser(Booking.OwnerId);
+                if(rmDetails != null){
+                        RMName = rmDetails.Name;
+                        RMEmail = rmDetails.Email;
+                        RMMobile = rmDetails.MobilePhone;
+                        RMPhone = rmDetails.Phone;
+                }
+                List <receipt__c> TDSReceipt = new List <receipt__c>(); 
+                decimal tdsrecAmt = 0;
+                TDSReceipt = [select id,name,Booking__c,Project__c,Mode__c,Total_Amount__c from receipt__c where Mode__c = 'TDS' and Booking__c =: Booking.id and Opportunity__c =: Customer.id];
+                if(TDSReceipt != null && !TDSReceipt.isEmpty()){
+                    for(Receipt__c rec : TDSReceipt){
+                        tdsrecAmt += rec.Total_Amount__c; 
+                    }
+                }
+                TDSReceived = InventoryCostServices.InFormat(tdsrecAmt);
+                tdsrecAmt = tdsrecAmt.setscale(0,RoundingMode.HALF_UP);
+                TDSOutstanding = InventoryCostServices.InFormat(tdsdueAmt - tdsrecAmt);
+                
+            }
+            Map < String, Decimal > currentOutstandingsMap = DemandManagementServices.getCurrentOutstanding(Customer.Id, Customer.Unit__c);
+            if (currentOutstandingsMap != null && !currentOutstandingsMap.isEmpty() && currentOutstandingsMap.size() > 0) {
+                CVDemandedStr = InventoryCostServices.InFormat(currentOutstandingsMap.get('CV Demanded'));
+                CVPaidStr = InventoryCostServices.InFormat(currentOutstandingsMap.get('CV Paid'));
+                CVBalanceStr = InventoryCostServices.InFormat(currentOutstandingsMap.get('CV Balance'));
+                CVTaxPaidStr = InventoryCostServices.InFormat(currentOutstandingsMap.get('CV Tax Paid'));
+            }
+            totalTaxDue = sgstGT + cgstGT;
+            totalTaxDueStr = InventoryCostServices.InFormat(totalTaxDue);
+            system.debug('totalTaxDueStr:: '+totalTaxDueStr);
+            system.debug('AmountGT:: '+AmountGT);
+            system.debug('CV Balance:: '+currentOutstandingsMap.get('CV Balance'));
+            if(CV > 5000000){
+                totalInstallmentPayable = currentOutstandingsMap.get('CV Balance') + AmountGT - TDSGT;
+            }else{
+                totalInstallmentPayable = currentOutstandingsMap.get('CV Balance') + AmountGT;
+            }
+            totalInstallmentPayableStr = InventoryCostServices.InFormat(totalInstallmentPayable);
+            TotalDue = totalTaxDue + totalInstallmentPayable;
+            TotalDueStr = InventoryCostServices.InFormat(TotalDue);
+            //system.debug('TotalDue::: '+TotalDue);
+            Decimal amttoWord = TotalDue.setscale(0,RoundingMode.HALF_UP);
+            totalAmtInWords = S_NumberToWord.convertNumbertoWords(amttoWord);
+        }
+        pmlst = [Select id,name,Is_Legacy_Data__c,Towards_Land_Legacy__c,Towards_Construction_Legacy__c,Towards_Maintainence_Fund_legacy__c,
+                CGST__c,SGST__c from Payment_Milestones__c where id=:forMilestone];
+        for(Payment_Milestones__c pm : pmlst){
+            if(pm.Is_Legacy_Data__c == true){
+                islegacy = true; 
+                landf = InventoryCostServices.INFormat(pm.Towards_Land_Legacy__c);
+                constructionf = InventoryCostServices.INFormat(pm.Towards_Construction_Legacy__c);
+                consgstlegacy = InventoryCostServices.INFormat((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP));
+                totalconstructionf = InventoryCostServices.INFormat(pm.Towards_Construction_Legacy__c + ((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)*2) );
+                maintainencef = InventoryCostServices.INFormat(pm.Towards_Maintainence_Fund_legacy__c);
+                maintainencegst = InventoryCostServices.INFormat((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP));
+                maintainencegstamt = InventoryCostServices.INFormat(pm.Towards_Maintainence_Fund_legacy__c + ((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP))*2 );
+                totalamtlegacy = InventoryCostServices.INFormat(pm.Towards_Land_Legacy__c + pm.Towards_Construction_Legacy__c + pm.Towards_Maintainence_Fund_legacy__c);
+                totalgstlegacy = InventoryCostServices.INFormat(((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)) + ((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)) );
+                totalamtgstlegacy = InventoryCostServices.INFormat((pm.Towards_Maintainence_Fund_legacy__c + ((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP))*2) + (pm.Towards_Construction_Legacy__c + ((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)*2)) 
+                                                                  + (pm.Towards_Land_Legacy__c));
+                Notowordlegacy = ((pm.Towards_Land_Legacy__c + pm.Towards_Construction_Legacy__c + pm.Towards_Maintainence_Fund_legacy__c) + (((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)) + ((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP))) 
+                                                                  + (((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)) + ((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)))).setscale(0,RoundingMode.HALF_UP);
+                system.debug('Notowordlegacy::'+Notowordlegacy);
+                Notowordlegacystr = S_NumberToWord.convertNumbertoWords(Notowordlegacy);
+                TaxPaymentlegacy = InventoryCostServices.INFormat((((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)) + ((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)))
+                                                                 + (((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)) + ((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP))));
+                Considerationlegacy = InventoryCostServices.INFormat(((((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)) + ((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)))
+                                                                 + (((pm.Towards_Construction_Legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)) + ((pm.Towards_Maintainence_Fund_legacy__c * 0.09).setscale(0,RoundingMode.HALF_UP)))) - Tds);
+                if(pm.Towards_Land_Legacy__c !=0){
+                    landl = true;
+                   } 
+                if (pm.Towards_Construction_Legacy__c !=0){
+                     constl = true;       
+                   }
+                if(pm.Towards_Maintainence_Fund_legacy__c !=0){
+                     maintainencel = true;
+                   }
+            }
+        }
+    }
+    
+    public User GetUser(id uId){
+        User uObj = new User();
+        if(uId != null){
+               uObj = [select id,Name,Email,MobilePhone,Phone from User where id =: uId];
+        }
+        
+        return uObj;
+    }
+    
+    public static string dateFormat(Date dt)
+    {
+        system.debug('inside CusomDateFormat Method:: '+dt);
+        string stDate = '';
+        if(dt != Null){
+            string stMonth = '';
+            string stDay = '';
+            Integer day = dt.Day();
+            Integer month = dt.month();
+            Integer year = dt.year();
+            string stYear = string.valueof(year);
+            
+            stDay = day+'-';
+            
+            if(month == 1){ stMonth = 'Jan';}
+            else if(month == 2) { stMonth = 'Feb'; }
+            else if(month == 3) { stMonth = 'Mar'; }
+            else if(month == 4) { stMonth = 'Apr'; }
+            else if(month == 5) { stMonth = 'May'; }
+            else if(month == 6) { stMonth = 'Jun'; }
+            else if(month == 7) { stMonth = 'Jul'; }
+            else if(month == 8) { stMonth = 'Aug'; }
+            else if(month == 9) { stMonth = 'Sep'; }
+            else if(month == 10) { stMonth = 'Oct'; }
+            else if(month == 11) { stMonth = 'Nov'; }
+            else if(month == 12) { stMonth = 'Dec'; }
+            
+            stDate = stDay + '' + stMonth + '-' + stYear; 
+            
+        }
+        return stDate;
+    }
+    
+  /*  public static Legal_Entity__c getLegalEntityDetails(Id unitId, Id pId) {
+        Legal_Entity__c le = new Legal_Entity__c();
+        Id leId = null;
+        List<Unit__c> pu = [Select Id, Name, Legal_Entity__r.Id from Unit__c where Id = : unitId];
+        if(pu != null && pu.size() > 0) {
+            leId =pu[0].Legal_Entity__r.Id; 
+        }
+        
+        if(leId == null) {
+            List<Project__c> p = [Select Id, Name, RDS_Company_Code__r.Id from Project__c where Id = : pId];
+            if(p != null && p.size() > 0)
+                leId = p[0].RDS_Company_Code__r.Id;
+        }
+        System.debug('ledId:' + leId);
+        if(leId != null) {
+            le = [Select Name,Account_Name_Flat_Cost__c, Account_Number_Flat_Cost__c, Bank_Name_Flat_Cost__c, 
+                                        IFSC_Code_Flat_Cost__c, MICR_Code_Flat_Cost__c,RDS_PAN_No__c,
+                                        Account_Name_Service_Tax__c,Account_Number_Service_tax__c, Bank_Name_Service_tax__c, 
+                                        IFSC_Code_Service_Tax__c, MICR_Code_Service_Tax__c, RDS_Service_Tax_No__c,
+                                        RDS_Address1__c,RDS_Address2__c, RDS_City__c, RDS_Pin_Code__c, CIN__c
+                                        FROM Legal_Entity__c where Id = : leId];
+        }
+        return le;
+    }*/
+    
+    
+    
+}
