@@ -1,0 +1,580 @@
+@isTest
+private  Class TestReceiptupdated {
+
+     
+      @isTest
+    private static void receiptApportion() {
+    
+      Map<String, Id> recordMap = TestDataFactory.createMasterProject('Test Project');
+      PageReference pRef = Page.CreateQuote;
+      Test.setCurrentPage(pRef);
+      ApexPages.currentPage().getParameters().put('oppId',recordMap.get('OPPORTUNITY'));
+      ApexPages.currentPage().getParameters().put('Id',recordMap.get('UNIT'));
+     
+      
+        
+      //CreateQuote qController = new CreateQuote();
+      //qController.startQuote();
+     //qController.selectedPlan = recordMap.get('PLAN');
+      //qController.planSelect();
+      //qController.saveQuote();
+      
+      
+      Id oppId  =   recordMap.get('OPPORTUNITY');
+      Id unitId = recordMap.get('UNIT');
+      Id projectId = recordMap.get('PROJECT');
+      Quotation__c qController = new Quotation__c();
+        qController.Opportunity__c = oppId;
+        qController.Unit__c = unitId;
+        qController.Quote_Status__c = 'Valid';
+        insert qController;
+        Quotation__c q = [Select Id, Name from Quotation__c];
+        Id pmId = TestDataFactory.createPaymentMilestone(q.id,recordMap.get('BASIC'),recordMap.get('UTILITY'));
+         
+          
+        
+    
+        
+        Booking__c b = new Booking__c();
+        b.Booking_Date__c = system.today();
+        b.Project__c = projectId;
+        b.Opportunity__c = oppId;
+        b.Unit__c = unitId;
+        b.Signed_Termsheet_Date__c = system.today();
+        b.status__c = 'Processed';
+        b.Quotation__c = q.Id;
+        b.Primary_Applicant_Email__c = 'abc.abc@abc.com';
+        b.Future_Correspondence_Contact__c = 'First Applicant';
+        insert b;
+        
+        Test.startTest();
+        
+        Receipt__c r1 = new Receipt__c();
+        r1.Cheque_DD_Amount_Rs__c = 2000000;
+        r1.Cheque_DD__c = '908888';
+        r1.Booking__c = b.id;
+        r1.Cheque_DD_Date__c = system.today();
+        r1.Project__c = projectId;
+        r1.Project_Unit__c = unitId;
+        r1.Opportunity__c = oppId;
+        r1.CheckReceipt__c = true;
+        r1.Token_Amount_Receipt__c = true;
+        r1.Physically_Cheque_Received__c = true;
+        r1.Approval_Status__c = 'Approved';
+        r1.Receipt_Date__c = system.today();
+        r1.DraweeBank__c = 'Axis Bank';
+        r1.Total_Amount__c = 2000000;
+        r1.Amount_Rs__c = 2000000;
+        r1.Amount_Advanced__c = 0;
+        r1.mode__c = 'Cheque';
+        r1.Currency__c = 'Indian Rupee';
+        insert r1;
+        
+        Receipt__c r2 = new Receipt__c();
+        r2.Cheque_DD_Amount_Rs__c = 8401;
+        r2.Cheque_DD__c = '908880';
+        r2.Booking__c = b.id;
+        r2.Cheque_DD_Date__c = system.today();
+        r2.Project__c = projectId;
+        r2.Project_Unit__c = unitId;
+        r2.Opportunity__c = oppId;
+        r2.CheckReceipt__c = true;
+        r2.Physically_Cheque_Received__c = true;
+        r2.Approval_Status__c = 'Approved';
+        r2.Receipt_Date__c = system.today();
+        r2.DraweeBank__c = 'CITI';
+        r2.Total_Amount__c = 8401;
+        r2.Amount_Rs__c = 8401;
+        r2.Amount_Advanced__c = 0;
+        r2.mode__c = 'Cheque';
+        r2.Currency__c = 'Indian Rupee';
+        insert r2;
+        
+        
+        Applicant_Details__c a1 = new Applicant_Details__c();
+        a1.Name = 'Third Man1';
+        a1.Applicant_Number__c = 'Primary Applicant';
+        a1.DOB__c = system.today();
+        a1.Booking__c = b.id;
+        a1.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a1.Pincode__c = 444444;
+        a1.Country__c = 'India';
+        a1.City__c = 'Nagpur';
+        a1.Mailing_Country__c= null;
+        a1.Mailing_Pincode__c= null;
+        a1.Mobile_Number__c = '909090903';
+        a1.Email_Address__c = 'newman@justnow3.com';
+        a1.Nationality__c = 'Indian';
+        a1.Type_Of_Applicant__c  = 'Individual Buyer';
+        a1.Subtype_Of_Applicant__c = 'Indian National';
+        a1.Pancard__c = true;
+        a1.Address_Proof__c = true;
+        a1.Address_Proof_Document__c = 'xyz';
+        a1.Address_Proof_Number__c = 'pqr';
+        a1.One_Passport_Size_Color_Photograph__c = true;
+        insert a1;
+                
+        q.Booking__c = b.Id;
+        update q;
+        
+        Unit__c u = [Select Id, Name, Unit_Status__c from Unit__c where Id = :unitId];
+        u.Unit_Status__c = 'Sold';
+        u.Customers__c = oppId;
+        u.Booking__c = b.Id;
+        update u;
+        Opportunity o = [Select Id, Name, S_Active__c, StageName from Opportunity where id =:oppId];
+        o.StageName = 'Booking confirmed';
+        o.S_Active__c = true;
+        o.unit__c = unitId;
+        o.Booking__C = b.id;
+        update o;
+        
+        
+        
+        system.debug('Check:'+o.StageName+u.Unit_Status__c+o.S_Active__c);
+        List<Payment_Milestones__c> pmList = [select id,name from Payment_Milestones__c];
+        system.debug('size PM:: '+pmList.size());
+        PageReference SendDemand = Page.SendDemand;
+        Test.setCurrentPage(SendDemand);
+        Demands d = new Demands();
+        
+        ApexPages.currentPage().getParameters().put('towerName','Tower X');
+        ApexPages.currentPage().getParameters().put('projectName','Test Project');
+        d.getCustomersTowerWise();
+        d.sUnit = u.Name;
+        d.narrowResults();
+        d.Customername = o.Name;
+        d.quickSearch();
+        system.debug('UnitId:'+unitId);
+        //d.raiseGroupDemand();
+        DemandManagementServices.raiseGroupDemandNew(unitId, null);
+        //DemandManagementServices.raiseGroupDemandNew(unitId, null);
+        /*PageReference SendDemand = Page.SendDemand;
+        Test.setCurrentPage(SendDemand);
+        Demands d = new Demands();
+        Test.startTest();
+        ApexPages.currentPage().getParameters().put('towerName','Tower X');
+        ApexPages.currentPage().getParameters().put('projectName','Test Project');
+        d.getCustomersTowerWise();
+        d.sUnit = u.Name;
+        d.narrowResults();
+        d.Customername = o.Name;
+        d.quickSearch();
+        d.groupDemandPreviewId = u.Id;
+        d.raiseGroupDemand();*/
+        List<Demand__c> dList = [Select Id,Total_Amount_Balance__c,Debit_Balance__c from demand__c where Unit__c =: u.id];
+        //dLis.Debit_Balance__c
+        
+        //System.assertEquals(4, dList.size());
+        system.debug('DemandList:'+dlist);
+        PageReference recMod = Page.ReceiptModule;
+        Test.setCurrentPage(recMod);
+        ApexPages.currentPage().getParameters().put('id',r1.id);
+        ReceiptModule recM = new ReceiptModule(); 
+        for(String og : recM.outstandingChargesMap.keySet()) {
+                for(PaymentManagementServices.DemandFieldLocationWrapper dl : recM.outstandingChargesMap.get(og)) {
+                       dl.rd.put(dl.fieldNametoBePaid, (Decimal) dl.d.get(dl.fieldNameO) );
+                       dl.rd.put(dl.fieldNametoBePaidT, (Decimal) dl.d.get(dl.fieldNameOT) );
+                    }
+        } 
+        
+        recM.advanceReceipt();    
+        recM.saveReceipt(); 
+        recM.rmw.r.Amount_Rs__c = 140;
+        recM.rmw.r.Amount_Rs__c = 160;
+        recM.advanceReceipt();
+        recM.autoAdjustReceipt();
+        PageReference lPage = Page.S_PrintLedger;
+        Test.setCurrentPage(lPage);
+        ApexPages.currentPage().getParameters().put('id', oppId);
+        S_PrintLedgerController lprint = new S_PrintLedgerController();
+        //paymentmanagement has a get on account money with oppId List
+        List<Id> oppIdList = new list<Id>();
+        oppIdList.add(oppId);
+        PaymentManagementServices.getOnAccountMoney(oppIdList);
+        List<Receipt_Details__c> rdList = [select id from Receipt_Details__c];
+        system.debug('rdList::: '+rdList);
+        //delete rdList[0];
+        //undelete rdList[0];
+        Test.stopTest();   
+    }
+
+    @isTest
+    private static void createReceipt(){
+        
+        Map<String, Id> recordMap = TestDataFactory.createMasterProject('Test Project');
+        PageReference pRef = Page.CreateQuote;
+        Test.setCurrentPage(pRef);
+        ApexPages.currentPage().getParameters().put('oppId',recordMap.get('OPPORTUNITY'));
+        ApexPages.currentPage().getParameters().put('Id',recordMap.get('UNIT'));
+                
+        //CreateQuote qController = new CreateQuote();
+        //qController.startQuote();
+        //qController.selectedPlan = recordMap.get('PLAN');
+        //qController.planSelect();
+        //qController.saveQuote();
+        
+        Id oppId  =   recordMap.get('OPPORTUNITY');
+        Id unitId = recordMap.get('UNIT');
+        Id projectId = recordMap.get('PROJECT');
+        Quotation__c qController = new Quotation__c();
+        qController.Opportunity__c = oppId;
+        qController.Unit__c = unitId;
+        qController.Quote_Status__c = 'Valid';
+        insert qController;
+        Quotation__c q = [Select Id, Name from Quotation__c];
+        Tax_Slab__c taxS = new Tax_Slab__C();
+        taxS.From_Date__c = System.today().addDays(-10);
+        taxS.To_Date__c = System.today().addDays(10);
+        taxS.Tax_Name__c = 'GST 12%';
+        taxS.Tax1_Name__c = 'CGST';
+        taxS.Tax1_Code__c = 'CGST';
+        taxS.Tax1_Percentage__c = 9.00;
+        taxS.Taxable1_Percentage__c = 66.66667;
+        taxS.Tax_Rate__c = 'GST 12%';
+        taxS.Tax2_Name__c = 'SGST';
+        taxS.Tax2_Code__c = 'SGST';
+        taxS.Tax2_Percentage__c = 9.00;
+        taxS.Taxable2_Percentage__c = 66.66667;
+        taxS.SAP_code__c = 'H3';
+        insert taxS;
+        
+        
+        Booking__c b = new Booking__c();
+        b.Booking_Date__c = system.today();
+        b.Project__c = projectId;
+        b.Opportunity__c = oppId;
+        b.Unit__c = unitId;
+        b.Signed_Termsheet_Date__c = system.today();
+        b.status__c = 'Processed';
+        b.Quotation__c = q.Id;
+        b.Primary_Applicant_Email__c = 'abc.abc@abc.com';
+        b.Future_Correspondence_Contact__c = 'First Applicant';
+        insert b;
+        
+        
+        
+        Receipt__c r1 = new Receipt__c();
+        r1.Cheque_DD_Amount_Rs__c = 200000;
+        r1.Cheque_DD__c = '964823';
+        r1.Booking__c = b.id;
+        r1.Cheque_DD_Date__c = system.today();
+        r1.Project__c = projectId;
+        r1.Project_Unit__c = unitId;
+        r1.Opportunity__c = oppId;
+        r1.CheckReceipt__c = true;
+        r1.Token_Amount_Receipt__c = true;
+        r1.Physically_Cheque_Received__c = true;
+        r1.Approval_Status__c = 'Approved';
+        r1.Receipt_Date__c = system.today();
+        r1.DraweeBank__c = 'Axis Bank';
+        r1.Total_Amount__c = 200000;
+        r1.Amount_Rs__c = 200000;
+        r1.Amount_Advanced__c = 0;
+        r1.mode__c = 'Cheque';
+        r1.Currency__c = 'Indian Rupee';
+        insert r1;
+        
+        Receipt__c r2 = new Receipt__c();
+        r2.Cheque_DD_Amount_Rs__c = 8400;
+        r2.Cheque_DD__c = '945286';
+        r2.Booking__c = b.id;
+        r2.Cheque_DD_Date__c = system.today();
+        r2.Project__c = projectId;
+        r2.Project_Unit__c = unitId;
+        r2.Opportunity__c = oppId;
+        r2.CheckReceipt__c = true;
+        r2.Physically_Cheque_Received__c = true;
+        r2.Approval_Status__c = 'Approved';
+        r2.Receipt_Date__c = system.today();
+        r2.DraweeBank__c = 'CITI';
+        r2.Total_Amount__c = 8400;
+        r2.Amount_Rs__c = 8400;
+        r2.Amount_Advanced__c = 0;
+        r2.mode__c = 'Cheque';
+        r2.Currency__c = 'Indian Rupee';
+        insert r2;
+        
+        b.Receipts__c = r1.Id;
+        update b;
+        
+        Applicant_Details__c a1 = new Applicant_Details__c();
+        a1.Name = 'Third Man1';
+        a1.Applicant_Number__c = 'Third Applicant';
+        a1.DOB__c = system.today();
+        a1.Booking__c = b.id;
+        a1.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a1.Pincode__c = 444444;
+        a1.Country__c = 'India';
+        a1.City__c = 'Nagpur';
+        a1.Mailing_Country__c= null;
+        a1.Mailing_Pincode__c= null;
+        a1.Mobile_Number__c = '909090903';
+        a1.Email_Address__c = 'newman@justnow3.com';
+        a1.Nationality__c = 'Indian';
+        a1.Type_Of_Applicant__c  = 'Individual Buyer';
+        a1.Subtype_Of_Applicant__c = 'Indian National';
+        a1.Pancard__c = true;
+        a1.Address_Proof__c = true;
+        a1.Address_Proof_Document__c = 'xyz';
+        a1.Address_Proof_Number__c = 'pqr';
+        a1.One_Passport_Size_Color_Photograph__c = true;
+        insert a1;
+        
+        Applicant_Details__c a2 = new Applicant_Details__c();
+        a2.Name = 'Third Man1';
+        a2.Applicant_Number__c = 'Primary Applicant';
+        a2.DOB__c = system.today();
+        a2.Booking__c = b.id;
+        a2.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a2.Pincode__c = 444444;
+        a2.Country__c = 'India';
+        a2.City__c = 'Nagpur';
+        a2.Mailing_Country__c= null;
+        a2.Mailing_Pincode__c= null;
+        a2.Mobile_Number__c = '909090903';
+        a2.Email_Address__c = 'newman@justnow3.com';
+        a2.Nationality__c = 'Indian';
+        a2.Type_Of_Applicant__c  = 'Individual Buyer';
+        a2.Subtype_Of_Applicant__c = 'Indian National';
+        a2.Pancard__c = true;
+        a2.Address_Proof__c = true;
+        a2.Address_Proof_Document__c = 'xyz';
+        a2.Address_Proof_Number__c = 'pqr';
+        a2.One_Passport_Size_Color_Photograph__c = true;
+        insert a2;
+        
+        q.Booking__c = b.Id;
+        update q;
+        
+        Unit__c u = [Select Id, Name, Unit_Status__c from Unit__c where Id = :unitId];
+        u.Unit_Status__c = 'Sold';
+        u.Customers__c = oppId;
+        u.Booking__c = b.Id;
+        update u;
+        Opportunity o = [Select Id, Name, S_Active__c, StageName from Opportunity where id =:oppId];
+        o.StageName = 'Booking confirmed';
+        o.S_Active__c = true;
+        o.unit__c = unitId;
+        update o;
+        
+        Payment_Milestones__c pm = new Payment_Milestones__c();
+        pm.Quotation__c = q.Id;
+        pm.Milestone_Type_edit__c = 'Date Linked';
+        pm.Invoice_Date__c = system.today().addDays(5);
+        pm.Invoice_Due_Date__c = system.today().addDays(5); 
+        insert pm;
+        
+        
+        PageReference SendDemand = Page.SendDemand;
+        Test.setCurrentPage(SendDemand);
+        Demands d = new Demands();
+        Test.startTest();
+        ApexPages.currentPage().getParameters().put('towerName','Tower X');
+        ApexPages.currentPage().getParameters().put('projectName','Test Project');
+        d.getCustomersTowerWise();
+        d.Beginning();
+        d.Next();
+        d.Previous();
+        d.End();
+        d.Beginning();
+        d.groupDemandPreviewId = u.Id;
+        d.singleDemandPreviewId = q.Id;
+        DemandView dView = new DemandView();
+        d.raisePerMilestoneDemand();
+        // d.CustomerWrapperMap.get(unitId).groupSelect = true;
+        d.raiseMultipleDemands();
+  
+        List<Demand__c> dList = [Select Id,Total_Amount_Balance__c,Debit_Balance__c from demand__c where Unit__c =: u.id];
+      
+        system.debug('DemandList:'+dlist);
+        
+       PageReference recMod = Page.ReceiptModule;
+        Test.setCurrentPage(recMod);
+        ApexPages.currentPage().getParameters().put('id',r1.id);
+        ReceiptModule recM = new ReceiptModule(); 
+        for(String og : recM.outstandingChargesMap.keySet()) {
+                for(PaymentManagementServices.DemandFieldLocationWrapper dl : recM.outstandingChargesMap.get(og)) {
+                       dl.rd.put(dl.fieldNametoBePaid, (Decimal) dl.d.get(dl.fieldNameO) );
+                       dl.rd.put(dl.fieldNametoBePaidT, (Decimal) dl.d.get(dl.fieldNameOT) );
+                    }
+        } 
+        
+        recM.advanceReceipt();    
+        recM.saveReceipt(); 
+        
+        recM.rmw.r.Amount_Rs__c = 140;
+        recM.rmw.r.Amount_Rs__c = 160;
+        recM.advanceReceipt();
+        recM.autoAdjustReceipt();
+        PageReference lPage = Page.S_PrintLedger;
+        Test.setCurrentPage(lPage);
+        ApexPages.currentPage().getParameters().put('id', oppId);
+        S_PrintLedgerController lprint = new S_PrintLedgerController();
+        //paymentmanagement has a get on account money with oppId List
+        List<Id> oppIdList = new list<Id>();
+        oppIdList.add(oppId);
+        PaymentManagementServices.getOnAccountMoney(oppIdList);
+        List<Receipt_Details__c> rdList = [select id from Receipt_Details__c];
+        system.debug('rdList::: '+rdList);
+        //delete rdList[0];
+        //undelete rdList[0];
+        
+        Test.stopTest();
+        
+        ReceiptModule.hack();
+    }
+      @isTest
+    private static void chequecancel() {
+    test.startTest();
+      Map<String, Id> recordMap = TestDataFactory.createMasterProject('Test Project');
+      PageReference pRef = Page.CreateQuote;
+      Test.setCurrentPage(pRef);
+      ApexPages.currentPage().getParameters().put('oppId',recordMap.get('OPPORTUNITY'));
+      ApexPages.currentPage().getParameters().put('Id',recordMap.get('UNIT'));
+     
+      //CreateQuote qController = new CreateQuote();
+      //qController.startQuote();
+     //qController.selectedPlan = recordMap.get('PLAN');
+      //qController.planSelect();
+      //qController.saveQuote();
+      
+      
+      Id oppId  =   recordMap.get('OPPORTUNITY');
+      Id unitId = recordMap.get('UNIT');
+      Id projectId = recordMap.get('PROJECT');
+      Quotation__c qController = new Quotation__c();
+        qController.Opportunity__c = oppId;
+        qController.Unit__c = unitId;
+        qController.Quote_Status__c = 'Valid';
+        insert qController;
+        Quotation__c q = [Select Id, Name from Quotation__c];
+        Id pmId = TestDataFactory.createPaymentMilestone(q.id,recordMap.get('BASIC'),recordMap.get('UTILITY'));
+         
+          
+        
+    
+        
+        Booking__c b = new Booking__c();
+        b.Booking_Date__c = system.today();
+        b.Project__c = projectId;
+        b.Opportunity__c = oppId;
+        b.Unit__c = unitId;
+        b.Signed_Termsheet_Date__c = system.today();
+        b.status__c = 'Processed';
+        b.Quotation__c = q.Id;
+        b.Primary_Applicant_Email__c = 'abc.abc@abc.com';
+        b.Future_Correspondence_Contact__c = 'First Applicant';
+        insert b;
+        
+        Receipt__c r1 = new Receipt__c();
+        r1.Cheque_DD_Amount_Rs__c = 2000000;
+        r1.Cheque_DD__c = '908888';
+        r1.Booking__c = b.id;
+        r1.Cheque_DD_Date__c = system.today();
+        r1.Project__c = projectId;
+        r1.Project_Unit__c = unitId;
+        r1.Opportunity__c = oppId;
+        r1.CheckReceipt__c = true;
+        r1.Token_Amount_Receipt__c = true;
+        r1.Physically_Cheque_Received__c = true;
+        r1.Approval_Status__c = 'Approved';
+        r1.Receipt_Date__c = system.today();
+        r1.DraweeBank__c = 'Axis Bank';
+        r1.Total_Amount__c = 2000000;
+        r1.Amount_Rs__c = 2000000;
+        r1.Amount_Advanced__c = 0;
+        r1.mode__c = 'Cheque';
+        r1.Currency__c = 'Indian Rupee';
+        r1.Reason_for_rejection_new__c = 'Accepted';
+        r1.Banking__c = 'Payment Successful';
+        r1.Receipt_Status__c = '';
+        insert r1;
+        
+        Team__c team = new Team__c(
+        Project__c = projectId,
+        Name = 'Note Approver Team',
+        //User__c = cm1,
+        Team_Type__c = 'Note Approver Team'
+        );
+        insert team;
+        Team_Members__c  tMem1 = new Team_Members__c (
+            Team__c = team.Id,
+            User_Active__c = true,
+            user__c = userInfo.getUserId(),
+            Counter__c = 1
+           // Last_Assignment__c =  system.now().addDays(-2)       
+        );  //// DateTime.parse('07/11/2020 09:28 PM')
+        insert tMem1;
+        
+        Receipt__c r2 = new Receipt__c();
+        r2.Cheque_DD_Amount_Rs__c = 8401;
+        r2.Cheque_DD__c = '908880';
+        r2.Booking__c = b.id;
+        r2.Cheque_DD_Date__c = system.today();
+        r2.Project__c = projectId;
+        r2.Project_Unit__c = unitId;
+        r2.Opportunity__c = oppId;
+        r2.CheckReceipt__c = true;
+        r2.Physically_Cheque_Received__c = true;
+        r2.Approval_Status__c = 'Approved';
+        r2.Receipt_Date__c = system.today();
+        r2.DraweeBank__c = 'CITI';
+        r2.Total_Amount__c = 8401;
+        r2.Amount_Rs__c = 8401;
+        r2.Amount_Advanced__c = 0;
+        r2.mode__c = 'Cheque';
+        r2.Currency__c = 'Indian Rupee';
+        insert r2;
+        
+        
+        r1.Receipt_Status__c = 'Dishonored';
+        update r1;
+        
+          
+        Applicant_Details__c a1 = new Applicant_Details__c();
+        a1.Name = 'Third Man1';
+        a1.Applicant_Number__c = 'Primary Applicant';
+        a1.DOB__c = system.today();
+        a1.Booking__c = b.id;
+        a1.Permanent_Address__c = 'Pike Street, New World, 45000';
+        a1.Pincode__c = 444444;
+        a1.Country__c = 'India';
+        a1.City__c = 'Nagpur';
+        a1.Mailing_Country__c= null;
+        a1.Mailing_Pincode__c= null;
+        a1.Mobile_Number__c = '909090903';
+        a1.Email_Address__c = 'newman@justnow3.com';
+        a1.Nationality__c = 'Indian';
+        a1.Type_Of_Applicant__c  = 'Individual Buyer';
+        a1.Subtype_Of_Applicant__c = 'Indian National';
+        a1.Pancard__c = true;
+        a1.Address_Proof__c = true;
+        a1.Address_Proof_Document__c = 'xyz';
+        a1.Address_Proof_Number__c = 'pqr';
+        a1.One_Passport_Size_Color_Photograph__c = true;
+        insert a1;
+                
+        q.Booking__c = b.Id;
+        update q;
+        
+        Unit__c u = [Select Id, Name, Unit_Status__c from Unit__c where Id = :unitId];
+        u.Unit_Status__c = 'Sold';
+        u.Customers__c = oppId;
+        u.Booking__c = b.Id;
+        update u;
+        Opportunity o = [Select Id, Name, S_Active__c, StageName from Opportunity where id =:oppId];
+        o.StageName = 'Booking confirmed';
+        o.S_Active__c = true;
+        o.unit__c = unitId;
+        o.Booking__C = b.id;
+        update o;
+        test.stopTest();
+        
+        
+        
+        
+       
+    }
+    
+}
