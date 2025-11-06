@@ -1,0 +1,621 @@
+/**
+ * TesttrgBooking - test Class 
+*/
+trigger trgBooking on Booking__c (after insert, after update, before update) { 
+    
+    List<Quotation__c> quotationList = new List<Quotation__c>();
+    List<Booking__c> bookingList = new List<Booking__c>();
+    List<Unit__c> unitList = new List<Unit__c>();
+    set<id> bookset = new set<id>();
+    map<id, id> bookmap = new map<id,id>();
+    map<id, id> unitmap = new map<id,id>();
+    set<id> projSetIds = new set<id>();
+    set<Id> towerSetIds = new Set<Id>(); //// Added by Neha on 7/3/19
+    
+    Map<id, Booking__c> bMap = new Map<id, Booking__c>();
+    
+    if(Trigger.isInsert) {
+        If(Trigger.isAfter) {
+            for(Booking__c b : Trigger.new){
+                system.debug('INSIDE FOR INSERT::');
+                if(b.Quotation__c != null ){
+                    bookmap.put(b.Quotation__c, b.id);
+                    system.debug('BOOKMAP**'+bookmap);
+                }
+                /*if(b.Is_Tranferred__c == true){
+                    TransferByPass(b.Id);
+                }*/
+            }
+            
+            /////////////////////// Below code added by vikas for updating Milestone's Date basis on booking date  //////////          
+            //// Added by Neha on 18/3/19   
+            if(!bookmap.isEmpty()){
+                List<Booking__c> bokList = [SELECT Quotation__c, Booking_Date__c, Project__c, Tower__c, Stage_of_Booking__c, 
+                                            Unit__r.Tower__c FROM Booking__c WHERE Id IN :bookmap.values()]; 
+                if(!bokList.isEmpty()){
+                    for(Booking__c b: bokList){
+                        if(b.Booking_Date__c != null && b.Project__c != null && b.Unit__r.Tower__c != null){ ///  && b.Stage_of_Booking__c != null && b.Stage_of_Booking__c == 'Booked' // Tower, Stage of Booking Added by Neha on 7/3/19  
+                            bMap.put(b.Quotation__c, b);
+                            projSetIds.add(b.Project__c);
+                            towerSetIds.add(b.Unit__r.Tower__c); //// Added by Neha on 7/3/19
+                        } 
+                    }                
+                }  
+            } 
+            ///// Updating Booking on Quotation            
+            if(!bookmap.isEmpty()){
+                quotationList = [select id, Name, Opportunity__c,Booking__c,Unit__c from Quotation__c where Id in : bookmap.keySet()];
+                for(Quotation__c q : quotationList){
+                    if(bookmap.containsKey(q.id)){
+                        system.debug('INSIDE IF INSERT**');
+                        q.Booking__c = bookmap.get(q.id);
+                    }
+                    update q;
+                }
+            }
+            
+            /////////////////////// Below code added by vikas for updating Milestone's Date basis on booking date  //////////
+            if(bMap != null && !projSetIds.isEmpty() && !towerSetIds.isEmpty()){
+             //   updateMilestonesDueDate(bMap, projSetIds, towerSetIds); // towerSetIds Added by Neha on 7/3/19  // Commented on 27/02/2025 to disable date update on PM
+            }
+        }
+    }
+    
+  
+    /////// After Update    
+    if(Trigger.isUpdate){
+        if(Trigger.isAfter){
+            set<id> projSetIdsNew = new set<id>();
+            Set<Id> towerSetIdsNew = new Set<Id>();
+            Map<Id, Id> bookmapNew = new Map<Id,Id>();            
+            Map<Id, Booking__c> bMapNew = new Map<Id, Booking__c>();
+          //  List<Booking__c> bList = new List<Booking__c>();
+            //   Set <Id> bOwnerSet = new Set<Id>();// Added by Neha on 8/4/19
+            //   Id ownerId;
+            
+            for(Booking__c b : Trigger.new){
+              
+                if(b.Quotation__c != null){
+                    bookmapNew.put(b.Quotation__c, b.Id); 
+                }
+                ////// Added by Neha on 7/3/19 for changing booking owner
+                /*     if(b.New_Booking_Owner__c != null && (trigger.oldMap.get(b.Id).OwnerId != trigger.newMap.get(b.Id).New_Booking_Owner__c) && trigger.newMap.get(b.Id).Is_Owner_Changed__c == true){               
+bOwnerSet.add(b.Id);                                         
+}*/             
+            }
+            //// Added by Neha on 18/3/19     
+            if(bookmapNew != null){
+                List<Booking__c> bokListNew = [SELECT Quotation__c, Booking_Date__c, Project__c, Tower__c, Stage_of_Booking__c, Unit__r.Tower__c FROM Booking__c WHERE Id IN :bookmapNew.values()]; 
+                if(!bokListNew.isEmpty()){
+                    for(Booking__c b: bokListNew){ 
+                        if(b.Quotation__c != null && b.Project__c != null && b.Booking_Date__c != null && b.Unit__r.Tower__c != null && b.Stage_of_Booking__c != null && b.Stage_of_Booking__c == 'Booked'){ // Tower, Stage of Booking Added by Neha on 7/3/19
+                            if(trigger.oldMap.get(b.id).Booking_Date__c != trigger.newMap.get(b.id).Booking_Date__c){
+                                projSetIdsNew.add(b.Project__c); 
+                                towerSetIdsNew.add(b.Unit__r.Tower__c); /// Added by Neha on 7/3/19  
+                                bMapNew.put(b.Quotation__c, b);                      
+                            }
+                        }
+                    }            
+                }
+            }  
+            
+            if(bMapNew != null && !bMapNew.isEmpty() && !projSetIdsNew.isEmpty() && !towerSetIdsNew.isEmpty()){
+             //   updateMilestonesDueDate(bMapNew, projSetIdsNew, towerSetIdsNew);  // Commented on 27/02/2025 to disable date update on PM
+            }
+           
+        }
+    }
+    
+  
+    //////////////////////////// Below method added by vikas on dated 10/01/2018
+    /////////////////////  Below method used for Updating milestone's Due date basis on Booking Date   
+     // Commented on 27/02/2025 to disable date update on PM
+ /*   public void updateMilestonesDueDate(Map<id, Booking__c> bkMap, set<id> pIds, set<Id> twrIds){
+        
+        List<Payment_Milestones__c> pmList = new List<Payment_Milestones__c>();
+        List<Payment_Milestones__c> pmListForUpdate = new List<Payment_Milestones__c>();
+        
+        Map<id, Map<string, Project_Construction_Stages__c>> pstageMap = new Map<id, map<string, Project_Construction_Stages__c>>();
+        
+        if(!pIds.isEmpty() && !twrIds.isEmpty()){
+            List<Project_Construction_Stages__c> psList = [Select Id, Name, Planned_date_of_completion__c, Actual_date_of_completion__c from Project_Construction_Stages__c 
+                                                           where Project__r.Id IN : pIds AND Tower__r.Id IN: twrIds]; // Tower Added by Neha on 7/3/19
+            for(id twr : twrIds){
+                Map<string, Project_Construction_Stages__c> pMap = new Map<string, Project_Construction_Stages__c>();
+                for(Project_Construction_Stages__c p : psList) {
+                    pMap.put(p.id, p);
+                }
+                pstageMap.put(twr, pMap); // Project changed to Tower by Neha on 7/3/19
+            }    
+        } 
+        
+        if(bkMap != null){
+            pmList = [Select id, name, Milestone_Type_edit__c, Milestone_Name__c,Number_Of_Days__c, Time_Period__c, Milestone_Due_Date__c, 
+                      Quotation__c,Project_Construction_Stages__c, Is_Combination_Milestone__c 
+                      from Payment_Milestones__c 
+                      where Quotation__c IN: bkMap.keyset() AND is_demand_raised__c = false]; // is_demand_raised__c added by Neha on 23/5/19
+            
+            if(!pmList.isEmpty()){               
+                for(id key : bkMap.keyset()){
+                    DateTime dtm = bkMap.get(key).Booking_Date__c;
+                    Date dt = date.newinstance(dtm.year(), dtm.month(), dtm.day());
+                    for(Payment_Milestones__c pm : pmList){
+                        
+                        if(pm.Quotation__c == key){
+                            if(String.isNotBlank(pm.Milestone_Type_edit__c) && pm.Milestone_Type_edit__c.equals('Date Linked')) {
+                                Date milestoneDueDate = null;
+                                Date completionDate = null;  
+                                //Boolean IsMilestoneAchieved = False;
+                                
+                                if(pm.Number_Of_Days__c != null && pm.Time_Period__c == 'Days') {
+                                    milestoneDueDate = dt.addDays(Integer.valueOf(pm.Number_Of_Days__c));
+                                } else if(pm.Number_Of_Days__c != null && pm.Time_Period__c == 'Months'){
+                                    milestoneDueDate = dt.addDays(Integer.valueOf(pm.Number_Of_Days__c)*30); // Added by Neha on 15/2/19
+                                }
+                                System.debug('milestoneDueDate:::: ' + milestoneDueDate); // Neha                                                      
+                                if(pm.Is_Combination_Milestone__c == true){
+                                    Map<string, Project_Construction_Stages__c> psMap = pstageMap.get(bkMap.get(key).Unit__r.Tower__c); // Project changed to Tower by Neha on 7/3/19
+                                    System.debug('psMap:: ' + psMap);
+                                    Project_Construction_Stages__c pStage = psMap.get(pm.Project_Construction_Stages__c);
+                                    // milestone is not achieved
+                                    if(pStage.Actual_date_of_completion__c != null && pStage.Actual_date_of_completion__c > milestoneDueDate){
+                                        completionDate = pStage.Actual_date_of_completion__c;
+                                    }
+                                    else if(pStage.Actual_date_of_completion__c != null && pStage.Actual_date_of_completion__c <= milestoneDueDate) {
+                                        // if milestone is already achieved, then we can raise the demands for CLP only after flat is registrated. Registration is required only post 10% demand is generated.
+                                        // 10% is collected within the first 30 days. Hence setting the dates for CLP as 45 day from date of booking
+                                        completionDate = milestoneDueDate; 
+                                        pm.Milestone_Complete_At_Booking__c = true;
+                                        pm.Demand_Raised__c = true;
+                                    }
+                                    else if(pStage.Planned_date_of_completion__c != null && pStage.Planned_date_of_completion__c > milestoneDueDate){
+                                        completionDate = pStage.Planned_date_of_completion__c;
+                                    }
+                                    else if(pStage.Planned_date_of_completion__c != null && pStage.Planned_date_of_completion__c <= milestoneDueDate){
+                                        completionDate = milestoneDueDate;
+                                    }else{
+                                        completionDate = milestoneDueDate;
+                                    }
+                                    
+                                    pm.Milestone_Due_Date__c = completionDate;                                                                                                                                                                    
+                                }else{
+                                    pm.Milestone_Due_Date__c = milestoneDueDate;
+                                }
+                            }    
+                            else if(String.isNotBlank(pm.Milestone_Type_edit__c) && pm.Milestone_Type_edit__c.equals('Construction Linked')) {    
+                                //system.debug('pm is:: '+pm);
+                                Date completionDate = null;
+                                Boolean IsMilestoneAchieved = False;
+                                Map<string, Project_Construction_Stages__c> psMap = pstageMap.get(bkMap.get(key).Unit__r.Tower__c); // Project changed to  Tower by Neha on 7/3/19
+                                Project_Construction_Stages__c  pStage = psMap.get(pm.Project_Construction_Stages__c);
+                                //system.debug('pstage:: '+pStage);
+                                // milestone is not achieved
+                                if(pStage.Actual_date_of_completion__c != null && pStage.Actual_date_of_completion__c > dt)
+                                    completionDate = pStage.Actual_date_of_completion__c;
+                                else if(pStage.Actual_date_of_completion__c != null && pStage.Actual_date_of_completion__c <= dt) {
+                                    // if milestone is already achieved, then we can raise the demands for CLP only after flat is registrated. Registration is required only post 10% demand is generated.
+                                    // 10% is collected within the first 30 days. Hence setting the dates for CLP as 45 day from date of booking
+                                    completionDate = dt;
+                                    IsMilestoneAchieved = True;
+                                }
+                                else if(pStage.Planned_date_of_completion__c != null && pStage.Planned_date_of_completion__c > dt)
+                                    completionDate = pStage.Planned_date_of_completion__c;
+                                else if(pStage.Planned_date_of_completion__c != null && pStage.Planned_date_of_completion__c <= dt)
+                                    completionDate = dt;
+                                // this may not right, but ideally the code shouldnt come in here if the data is set correctly. 
+                                if (completionDate == null)
+                                    completionDate = dt.addDays(365);
+                                if(pm.Number_Of_Days__c != null && pm.Time_Period__c == 'Days'){
+                                    pm.Milestone_Due_Date__c = completionDate.addDays(Integer.valueOf(pm.Number_Of_Days__c));
+                                } else if(pm.Number_Of_Days__c != null && pm.Time_Period__c == 'Months') {
+                                    pm.Milestone_Due_Date__c = completionDate.addDays(Integer.valueOf(pm.Number_Of_Days__c)*30); // Added by Neha on 15/2/19
+                                } 
+                                //setting the demand due flag if the milestone is already acheived at the time of generating the quotation
+                                if(IsMilestoneAchieved) {
+                                    pm.Demand_Raised__c = True;
+                                    pm.Milestone_Complete_at_booking__c = True;
+                                }
+                                else
+                                    pm.Demand_Raised__c = False;
+                                
+                            }
+                            pmListForUpdate.add(pm); 
+                        }
+                    }
+                }
+            }
+        }
+        if(!pmListForUpdate.isEmpty()){
+            update pmListForUpdate;
+        }
+    }*/
+    
+    /////////////////Below method added by Vikas for booking cancellation on dated 04-09-18
+   /* public void bookingCancellation(List<Booking__c> bList){ 
+     // we will process booking cancellation one record per trigger not bulkfied.
+        List<unit__c> uList = new List<Unit__c>();
+        List<unit__c> uListForUpdate = new List<Unit__c>();
+        set<id> uIds = new set<id>();
+        set<id> oppIds = new set<id>();
+        set<id> dIds = new set<id>();
+        
+        Tax_Slab__c ts = new Tax_Slab__c();
+        ts = [select id,name,Tax_Name__c,Tax1_Name__c,Tax1_Code__c,Tax1_Percentage__c,Taxable1_Percentage__c,Tax1_Percentage_on_100__c,Charge_Type__c,Tax2_Name__c,
+              Tax2_Code__c,Tax2_Percentage__c,Taxable2_Percentage__c,Tax2_Percentage_on_100__c from Tax_Slab__c where Charge_Type__c = 'Cancellation'];
+        
+        
+        
+        
+        List<System_Log__c> sloglist = new List<System_Log__c>();
+        for(Booking__c b : bList){
+            if(b.unit__c != null)
+                uIds.add(b.Unit__c);
+            if(b.Opportunity__c != null)
+                oppIds.add(b.Opportunity__c); 
+                
+          ////////////////// Create debit note if cancellation charges available
+            if(b.Cancellation_Charges__c != null && b.Cancellation_Charges__c > 0){
+                Demand__c d = new Demand__c();
+                d.Unit__c = b.Unit__c;
+                d.Project__c = b.project__c;
+                d.Booking__c  = b.id;
+                d.Quotation__c = b.Quotation__c;
+                d.Invoice_Date__c = system.today();
+                d.Due_Date__c = system.today().addDays(15);
+                d.Debit_Demanded__c = b.Cancellation_Charges__c;
+                d.debit_sgst__c = (b.Cancellation_Charges__c * ts.Tax1_Percentage_on_100__c/100);
+                d.debit_cgst__c = (b.Cancellation_Charges__c * ts.Tax2_Percentage_on_100__c/100); 
+                d.Debit_Type__c = 'Cancellation';
+                d.Remarks__c = 'Created Debit note for the cancellation charges.';
+                d.Debit_Paid__c = b.Cancellation_Charges__c;
+                d.Debit_Tax_Paid__c = d.debit_sgst__c + d.debit_cgst__c; 
+        ////    d.Don_t_Generate_Sequence_No__c = true;
+                insert d;
+             ///   dIds.add(d.id);
+            }
+             System_Log__c sLogs = new System_Log__c();
+             sLogs.Action__c = 'Booking Cancellation';
+             sLogs.Booking__c = b.id;
+             sLogs.Opportunity__c = b.Opportunity__c;
+             sLogs.Object_Name__c = 'Booking';
+             sLogs.Record_Id__c = b.id;
+             sLogs.Remarks__c = 'Booking cancelled';
+             sloglist.add(sLogs); 
+        }
+        if(!sloglist.isEmpty()){
+            insert sloglist;
+        }
+       //////////////////// Update opportunity as Inactive
+        List<Opportunity> oppList = new List<Opportunity>();
+        List<opportunity> oppListForUpdate = new List<Opportunity>();
+        oppList = [select id,name,StageName,Primary_Email__c,S_Reason_for_closed_lost__c,S_Active__c,Reason_For_Cancellation_D__c,Reason_For_Cancellation__c,Booking__c,Booking__r.Reason_For_Cancellation_D__c,
+                 Booking__r.Reason_For_Cancellation__c,Unit__c,Status__c, Project__c  
+                 from opportunity where id IN: oppIds];
+         //create a credit note to offset the entire demand amount
+        if(bList[0].TotalAmountDemanded__c > 0 && bList[0].Reverse_Demand__c) {
+            decimal creditAmount = bList[0].TotalAmountDemanded__c;
+            //if(bList[0].Reverse_GST__c) {
+            creditAmount += bList[0].TotalTaxDemanded__c;
+            //}
+            Receipt__C cn = new Receipt__C();
+            cn.Mode__c = 'Credit Note';
+            cn.Total_Amount__c = creditAmount;
+            cn.Amount_Rs__c = creditAmount;
+            cn.Receipt_Status__c = 'Cleared';
+            cn.Physically_Cheque_Received__c  = true;
+            cn.Banking__c = 'Payment Successful';
+            cn.Reason_for_rejection_new__c  = 'Accepted';
+            cn.Booking__c = bList[0].Id;
+            cn.Opportunity__c = oppList[0].Id;
+            cn.Project__c = oppList[0].Project__c;
+            cn.Project_Unit__c = oppList[0].Unit__c;
+            //cn.Don_t_Generate_Sequence_No__c = true;
+            if (oppList[0].Primary_Email__c != null && oppList[0].Primary_Email__c != '' && String.isBlank(cn.Opportunity_Email_Id__c) )
+                    cn.Opportunity_Email_Id__c = oppList[0].Primary_Email__c;
+            insert cn;
+            // create receipt details, generally we create receipt details while apportioning money. But here this credit note is 
+            // a common one to offset all demands and taxes, so they wont have any demand lookup
+            if(cn.id != null) {
+                Receipt_Details__c rd = new Receipt_Details__c();
+                rd.Receipts__c = cn.id;
+                rd.Transaction_Date__c = system.today();   
+                rd.Charge1Name__c = 'Consideration Value';
+                rd.Charge_1_Amount_Apportioned__c = bList[0].TotalAmountDemanded__c;
+                rd.Total_Amount_Apportined__c = bList[0].TotalAmountDemanded__c;
+                rd.Charges_Apportioned__c = bList[0].TotalAmountDemanded__c;
+               // if(bList[0].Reverse_GST__c)
+                rd.Charge_1_Tax_Apportioned__c = bList[0].TotalTaxDemanded__c;
+                rd.Total_Tax_Apportioned__c = bList[0].TotalTaxDemanded__c;
+                rd.Taxes_Apportioned__c = bList[0].TotalTaxDemanded__c;
+                insert rd;
+                
+            }  
+        }
+        
+        ////////////////// update Unit status
+        uList = [select id,name,Unit_Status__c,Customers__c,Booking__c from Unit__c where id IN: uIds];      
+        if(!uList.isEmpty()){
+            for(Unit__c u : uList){
+                u.Unit_Status__c = 'Vacant';
+                u.Booking__c = null;
+                u.Customers__c = null;
+                uListForUpdate.add(u); 
+            }
+        }
+        if(!uListForUpdate.isEmpty()){
+            update uListForUpdate;
+        }  
+        
+        
+        if(!oppList.isEmpty()){
+            for(opportunity op : oppList){
+                op.S_Active__c = false;
+                op.Reason_For_Cancellation_D__c = op.Booking__r.Reason_For_Cancellation_D__c;
+                op.Reason_For_Cancellation__c = op.Booking__r.Reason_For_Cancellation__c; 
+                op.StageName = 'Cancelled';
+                op.Unit__c = null;
+                op.Status__c = 'Inactive';
+                oppListForUpdate.add(op); 
+            }
+        }
+        if(!oppListForUpdate.isEmpty()){
+            update oppListForUpdate; 
+        }
+               
+                               
+        
+    }*/
+    
+    if(Trigger.isUpdate && Trigger.isAfter){
+        for(Booking__c b : Trigger.new){
+            if(trigger.oldMap.get(b.id).Status__c != trigger.newMap.get(b.id).Status__c && b.Status__c == 'Processed' && trigger.oldMap.get(b.id).Status__c != 'Cancellation In Progress' && trigger.oldMap.get(b.id).Status__c != 'Cancellation Initiated'){
+                TEPiSalesOrderSAP.SalesOrder(b.id);
+            }
+        }
+    }
+    
+    //////////////////////////////////Updated by Aniket for customization on 24/12/21////////////////////////////////////////
+    if(Trigger.isUpdate && Trigger.isAfter){
+        for(Booking__c b : Trigger.new){
+            if(trigger.oldMap.get(b.id).IDSA_Signed_Date__c != trigger.newMap.get(b.id).IDSA_Signed_Date__c){
+                UpdateCustomizationMilestoneDate(b.id);
+            }
+        }
+    }
+  
+    
+    public void UpdateCustomizationMilestoneDate(Id BookId){
+        List<Booking__c> bookList = new List<Booking__c>();
+        List<Customization_New__c> cusList = new List<Customization_New__c>();
+        List<Customization_Payment_Milestones__c> CPMList = new List<Customization_Payment_Milestones__c>();
+        List<Customization_Payment_Milestones__c> CPMListupdate = new List<Customization_Payment_Milestones__c>();
+        bookList = [select id,Name,IDSA_Signed_Date__c from Booking__c where id =: BookId];
+        system.debug('BOOKLIST::'+bookList);
+        cusList = [select id,Name,Status__c,IsCanceled__c from Customization_New__c where Booking__c =:BookId and Status__c = 'Active'];
+        system.debug('CUSLIST::'+cusList);
+        CPMList = [Select id,Name,Customization__c,Milestone_type__c,Number_of_days_months__c,Milestone_Date_Calculation__c,Due_Date__c
+                   from Customization_Payment_Milestones__c where Customization__c =: cusList[0].id and Milestone_type__c = 'Time Linked' and is_Previosly_Raised_Milestone__c = false ];
+        system.debug('CPMLIST::'+CPMList);
+        
+        
+            for(Customization_Payment_Milestones__c cpm: CPMList){
+            
+            if(cpm.Milestone_type__c == 'Time Linked'){
+                if(cpm.Milestone_Date_Calculation__c == 'Days'){
+                    datetime dt = bookList[0].IDSA_Signed_Date__c;
+                    date DueDate = date.newinstance(dt.year(), dt.month(), dt.day());
+                    cpm.Due_Date__c = DueDate.addDays(integer.valueOf(cpm.Number_of_days_months__c));
+                    CPMListupdate.add(cpm);
+                }
+                else if(cpm.Milestone_Date_Calculation__c == 'Months'){
+                    datetime dt = bookList[0].IDSA_Signed_Date__c;
+                    date DueDate = date.newinstance(dt.year(), dt.month(), dt.day());
+                    cpm.Due_Date__c = DueDate.addDays(integer.valueOf(cpm.Number_of_days_months__c * 30));
+                    CPMListupdate.add(cpm);
+                }
+            }
+        }
+        update CPMListupdate;
+        
+        
+    }
+    
+    /////Added by Aniket For Booking Cancellation(updating Unit and Quotation Status ) //////////////
+    if(Trigger.isUpdate && Trigger.isAfter){
+        for(Booking__c b : Trigger.new){
+            if(trigger.oldMap.get(b.id).is_Invoice_Receipt_Transferred__c != trigger.newMap.get(b.id).is_Invoice_Receipt_Transferred__c && b.is_Invoice_Receipt_Transferred__c == true ){
+                updateunitquotationstatus(b.id);
+            }
+        }
+    }
+    
+    if(Trigger.isUpdate && Trigger.isAfter){
+        for(Booking__c b : Trigger.new){
+            if(trigger.oldMap.get(b.id).Status__c != trigger.newMap.get(b.id).Status__c && b.Status__c == 'Cancelled' && b.Reason_For_Cancellation_D__c != 'Cancellation & Transfer' ){
+                cancellation(b.id);
+            }
+        }
+    }
+    
+    public void updateunitquotationstatus(Id Bookid){
+        Booking__c bk = [Select id , name ,Unit_ID__c, Unit__c,Quotation__c,Opportunity__c from Booking__c where id =: Bookid];
+        Opportunity opp = [select id , name , Unit__c,Old_Booking__c,StageName from Opportunity where id=: bk.Opportunity__c ];
+        Booking__c oldbk = [Select id , name ,Unit_ID__c, Unit__c,Quotation__c,Opportunity__c from Booking__c where id =: opp.Old_Booking__c];
+        system.debug('oldbk::'+oldbk);
+        Opportunity oldopp = [select id , name , Unit__c,Old_Booking__c,StageName from Opportunity where id=: oldbk.Opportunity__c ];
+        Unit__c u = [Select id , Name ,Unit_Status__c,Customers__c,Booking__c from unit__c where id =: oldbk.Unit__c];
+        system.debug('u::'+u);
+        Quotation__c quot = [Select id , name ,Quote_Status__c,Unit__c from quotation__c where id=: oldbk.Quotation__c];
+        
+        
+        oldbk.Unit__c = null;
+        u.Unit_Status__c = 'Available';
+        u.Customers__c = null;
+        u.Booking__c = null;
+        quot.Quote_Status__c = 'Cancelled';
+        //quot.Unit__c = null;
+        oldopp.Unit__c = null;
+        oldopp.StageName = 'Cancelled';
+        oldbk.Cancelled_Unit__c = u.Name;
+        oldbk.Unit_ID__c = u.id;
+        if(oldbk != null){
+             update oldbk;
+             update u;
+             update quot;
+            if(!test.isRunningTest()){
+             update oldopp;
+            }
+        }
+    }
+    
+     public void cancellation(Id Bookid){
+        Booking__c bk = [Select id , name ,Unit__r.Name,Unit__r.Unit_Status__c,Unit_ID__c, Unit__c,Quotation__c,Opportunity__c from Booking__c where id =: Bookid];
+        Unit__c u = [Select id , Name ,Unit_Status__c,Customers__c,Booking__c from unit__c where id =: bk.Unit__c];
+        Quotation__c quot = [Select id , name ,Quote_Status__c,Unit__c from quotation__c where id=: bk.Quotation__c];
+        Opportunity opp = [select id , name , Unit__c,Old_Booking__c,StageName from Opportunity where id=: bk.Opportunity__c ];
+        
+        bk.Unit__c = null;
+        u.Unit_Status__c = 'Available';
+        u.Customers__c = null;
+        u.Booking__c = null;
+        quot.Quote_Status__c = 'Cancelled';
+        //quot.Unit__c = null;
+        opp.Unit__c = null;
+        opp.StageName = 'Cancelled';
+        bk.Cancelled_Unit__c = u.Name;
+        bk.Unit_ID__c = u.id;
+        if(bk != null){
+             update bk;
+             update u;
+             update quot;
+             update opp;
+            
+        }
+    }
+    /*public void TransferByPass(Id Bookid){
+        Booking__c bk = [Select id , name ,Unit_ID__c,OwnerId,Sales_Managers__c,Relationship_Manager__c, Unit__c,Quotation__c,Opportunity__c,Status__c from Booking__c where id =: Bookid];
+        Opportunity opp = [select id , name , Unit__c,Physical_document_received__c,Old_Booking__c,StageName,Relationship_Manager__c from Opportunity where id=: bk.Opportunity__c ];
+        Unit__c u = [Select id , Name ,Unit_Status__c,Customers__c,Booking__c from unit__c where id =: bk.Unit__c];
+        opp.StageName = 'Booking confirmed';
+        bk.Sales_Managers__c = bk.OwnerId;
+        if(bk.Relationship_Manager__c != null){
+            opp.Relationship_Manager__c = bk.Relationship_Manager__c;
+            bk.OwnerId = bk.Relationship_Manager__c;
+        }
+        opp.Physical_document_received__c = true;
+        bk.Status__c = 'Processed';
+        u.Unit_Status__c = 'Booked';
+        if(bk != null){
+            update bk;
+            update opp;
+            update u;
+            List<Applicant_Details__c> listApplicants= [Select Id, Name from Applicant_Details__c where booking__c =: bk.Id];
+            if (listApplicants.size() > 0) {
+                for(Applicant_Details__c a : listApplicants) {
+                    a.ownerId = bk.Relationship_Manager__c;
+                }
+                update listApplicants;
+            }
+        }
+        
+        
+    }*/
+    /************Added by Saishree to enable customer cummunity user ***********/
+        if(Trigger.isUpdate && Trigger.isAfter){
+            System.debug('Inside after trigger');
+            Set<Id> userId = new Set<Id>();
+             
+            for(user u:[select Id, profileid,profile.name from user where profile.name = 'Design Manager']){
+                userId.add(u.id);
+            }
+            set<Id> projectId = new set<Id>();
+            for(Project__c p :[Select Id from Project__c where Name = 'In That Quiet Earth' or Name = 'The Magic Faraway Tree' or Name = 'Pursuit of a Radical Rhapsody' or Name = 'Songs from the Wood' or Name = 'After the Rain' 
+                               or Name = 'The Meadow Dance' or Name = 'Learning to Fly' or Name = 'Down by the Water']){
+                projectId.add(p.id);
+            } 
+        //   Id DMprofileId=[Select Id,Name from Profile where Name = 'Design Managers'].Id;
+        //    System.debug('DMprofileId ::::'+DMprofileId);
+        
+            for(Booking__c b1 : Trigger.new){
+                if(b1.Is_Community_Portal_User_Created__c == False){
+                    System.debug('Inside forloop');
+                    System.debug('b1.Relationship_Manager__c ::'+b1.Relationship_Manager__c);
+                    
+                    if(trigger.oldMap.get(b1.id).Relationship_Manager__c != trigger.newMap.get(b1.id).Relationship_Manager__c && b1.Relationship_Manager__c != Null && userId.contains(b1.Relationship_Manager__c)){
+                        System.debug('Inside if 1st::::');
+                        
+                        if(projectId.contains(b1.Project__c)){
+                            System.debug('Inside if 2nd::::');
+                            if(!System.isFuture()){
+                               EnableCommunityUser.EnableCustomerCommunityUser(b1.id);   
+                            }
+                        }
+                    }
+                }
+                
+            } 
+        } 
+    
+    /*************ended***********/
+    //------------------------------------------------------------------------------------------------------------------------------------
+    if(Trigger.IsAfter && Trigger.IsInsert){
+        Set<Id> bookSet = new Set<Id>();
+        for(Booking__c b : Trigger.new){
+            bookSet.add(b.id);
+        }
+        if (!checkRecursion.bookTriggerFired && bookSet != null) {
+            checkRecursion.bookTriggerFired = true;
+            System.enqueueJob(new LaunchCustReEnqBatchQueueable(bookSet, 'Booking Created'));
+        }
+    }
+    /**   Added by Guru Mohan for updation of  Contact Management date updates
+         * This trigger handler manages Contact Management date updates when Bookings are created or modified.
+         * It ensures the Contact_Management__c.Member_Since__c and Last_Visit__c fields stay synchronized
+         * with the earliest Booking/Restaurant Visit dates and most recent visit dates respectively.
+         *
+         * Key Functionality:
+         * 1. Processes only AFTER insert/update operations (no before triggers)
+         * 2. For NEW bookings: Captures all Contact references to update their dates
+         * 3. For UPDATED bookings: Only processes if either:
+         *    - The Contact reference changed, or
+         *    - The Signed Termsheet Date changed
+         * 4. Handles contact reference changes by processing both old and new contacts
+         * 5. Uses bulk-safe patterns to handle any number of records
+         * 6. Delegates actual date calculation to the ContactDateHandler class
+         */
+         if(Trigger.isAfter) {
+            Set<Id> contactIds = new Set<Id>();
+            
+            if(Trigger.isInsert) {
+                for(Booking__c b : Trigger.new) {
+                    if(b.Contact_Management__c != null) {
+                        contactIds.add(b.Contact_Management__c);
+                    }
+                }
+            }
+            else if(Trigger.isUpdate) {
+                // On update - only process if:1. Contact reference changed OR 2. Signed Termsheet Date changed (may affect Member_Since__c)
+                for(Booking__c b : Trigger.new) {
+                    Booking__c oldBooking = Trigger.oldMap.get(b.Id);
+                    
+                    // Check if this booking has a contact AND either:// - The contact reference changed, OR // - The signed termsheet date changed
+                    if(b.Contact_Management__c != null && 
+                       (oldBooking.Contact_Management__c != b.Contact_Management__c ||
+                        oldBooking.Signed_Termsheet_Date__c != b.Signed_Termsheet_Date__c)) {
+                        
+                        contactIds.add(b.Contact_Management__c);
+                        
+                        // If contact was changed, also add the old contact ID(since its dates may need recalculation after losing this booking)
+                        if(oldBooking.Contact_Management__c != null && oldBooking.Contact_Management__c != b.Contact_Management__c) {
+                            contactIds.add(oldBooking.Contact_Management__c);
+                        }
+                    }
+                }
+            }
+            
+            // Only call the handler if we found contacts needing updates
+            if(!contactIds.isEmpty()) {
+                ContactManagementDateUpdates.updateContactDates(contactIds);
+            }
+        }
+}
