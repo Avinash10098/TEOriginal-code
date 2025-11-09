@@ -1,0 +1,182 @@
+//Test Class : TestRaiseDemandCustomization
+public class showCustomizationDemandPreview {
+    public Id previewId;
+    
+    public Customization_Payment_Milestones__c CPM {
+        set;
+        get;
+    }
+    
+    public Booking__c Booking {
+        set;
+        get;
+    }
+    
+    public String todaysDate {
+        set;
+        get;
+    }
+    
+    public String NoToWord {
+        set;
+        get;
+    }
+    public String Taxvalue {
+        set;
+        get;
+    }
+    public String TaxPayment {
+        set;
+        get;
+    }
+    public String invoiceNumber {
+        set;
+        get;
+    }
+    public String ConsiderationPrint {
+        set;
+        get;
+    }
+    public List<Applicant_Details__c>  appList{
+        set;
+        get;
+    }
+    public String CustomerPrimaryName  {get; set;}
+    public Applicant_Details__c applicant {get;set;}
+    public Decimal CV {
+        get;
+        set;
+    }
+    public String onePercent  {get; set;}
+    public string grandTotalPayableStr{get;set;}
+
+    
+    public showCustomizationDemandPreview(){
+        
+        previewId = ApexPages.currentPage().getParameters().get('cpmId');
+        invoiceNumber = ApexPages.currentPage().getParameters().get('invoiceNumber');
+        system.debug('previewId::'+previewId);
+        
+        if(previewId != null) {
+        	
+            CPM = [select id,Name,Milestone_Name__c,Amount__c,CGST__c,SGST__c,Total_Rs__c,Booking__c from Customization_Payment_Milestones__c where id =: previewId];
+            
+            String cpmId = CPM.Id;
+            system.debug('cpm Id is '+ CPM.Id);
+            
+            Booking = [Select id,Name,Unit__c,Project__c,Primary_Applicant_Name__c,Unit__r.Project__r.Promoter__r.Name,
+                      Unit__r.Project__r.Promoter__r.Registered_office__c,Unit__r.Project__r.Promoter__r.CIN_NO__c,
+                      Unit__r.Project__r.Promoter__r.GSTIN__c,Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c,
+                      Unit__r.Tower__r.Cluster__r.Bank_Name_Tax__c, Unit__r.Tower__r.Cluster__r.Bank_Account_No_Tax__c,
+                      Unit__r.Tower__r.Cluster__r.IFSC_Code_Tax__c, Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c,
+                      Unit__r.Tower__r.Cluster__r.Bank_Name_Escrow__c, Unit__r.Tower__r.Cluster__r.Bank_Account_No_Escrow__c,
+                      Unit__r.Tower__r.Cluster__r.IFSC_Code_Escrow__c,Unit__r.Project__r.Promoter__r.PAN__c,
+                      Unit__r.Project__r.Project_Logo__c,Unit__r.Name,Unit__r.Project__r.Name,Quotation__r.Total_Agreement_Value_Bucket__c,
+                      Unit__r.Project__r.State__c,Unit__r.Project__r.State_Region_Code__c
+                      from Booking__c where id =: CPM.Booking__c];
+            
+            system.debug('CPM::'+CPM);
+            system.debug('BOOKING:::'+Booking);
+            
+            appList = [Select id,GSTIN__c, Mailing_Address__c,GST_State_Code__c,Mailing_Address_Full__c from Applicant_Details__c where Booking__c =:Booking.id];
+            if(!appList.isEmpty()){
+                applicant = appList[0];
+            }
+            
+            List<Demand__c> DemandList = [select Id , SAP_Posting_Date__c from Demand__c  where Customization_Payment_Milestones__c  =: cpmId  and SAP_Posting_Date__c  != null];
+            if(DemandList.size() > 0){
+                todaysDate = dateFormat(DemandList[0].SAP_Posting_Date__c);
+            }else{
+                todaysDate = dateFormat(system.today());
+            }
+            
+            Integer TotalRs = Integer.valueOf(CPM.Total_Rs__c);
+            NoToWord = S_NumberToWord.convertNumbertoWords(TotalRs);
+            Decimal ConsiderationTDS = (CPM.Amount__c/100);
+            system.debug('ConsiderationTDS::'+ConsiderationTDS);
+            Decimal Consideration = CPM.Amount__c- ConsiderationTDS;  
+            ConsiderationPrint = InventoryCostServices.InFormat(Consideration);
+            //Taxvalue = InventoryCostServices.InFormat(ConsiderationTDS);
+            system.debug('Taxvalue::'+Taxvalue);
+            TaxPayment = InventoryCostServices.InFormat(CPM.CGST__c + CPM.SGST__c);
+            
+            //******************************************************************************************************************************************************
+            List<Applicant_Details__c> applist = new List<Applicant_Details__c>();
+            applist = [Select id,name,Email_Address__c,Salutation__c from Applicant_Details__c where Booking__c =:Booking.id order by Sr_No__c asc];
+            String nameofapplicant;
+            List<String> applicantName = new List<String>();
+            string andSepratedList;
+            for(Applicant_Details__c  adce : applist)
+            {
+                nameofapplicant = adce.Name;
+                applicantName.add(nameofapplicant);
+                
+            }
+            andSepratedList='';
+            for(String str : applicantName)
+            {
+                andSepratedList += str + ', ' ;
+            }
+            system.debug('Applicant length' +andSepratedList.length() + 'Applicant' +andSepratedList);
+            andSepratedList = andSepratedList.subString(0,andSepratedList.length()-2);
+            system.debug('andSepratedList::'+andSepratedList);
+            CustomerPrimaryName  = andSepratedList;
+            //******************************************************************************************************************************************************
+        
+           grandTotalPayableStr = InventoryCostServices.INFormat(CPM.Amount__c+CPM.CGST__c + CPM.SGST__c);
+            
+            if(Booking != null){
+               CV = Booking.Quotation__r.Total_Agreement_Value_Bucket__c;
+            //    CV = 50001;
+                if(CV >  5000000){
+                    Taxvalue = InventoryCostServices.InFormat(ConsiderationTDS);
+                    onePercent = '1% TDS';
+                }else{
+                    Taxvalue = '-';
+                    onePercent = '-';
+                }
+            }
+    	}
+        
+        
+
+    }
+    
+    
+    
+    
+    public static string dateFormat(Date dt)
+    {
+        system.debug('inside CusomDateFormat Method:: '+dt);
+        string stDate = '';
+        if(dt != Null){
+            string stMonth = '';
+            string stDay = '';
+            Integer day = dt.Day();
+            Integer month = dt.month();
+            Integer year = dt.year();
+            string stYear = string.valueof(year);
+            
+            stDay = day+'-';
+            
+            if(month == 1){ stMonth = 'Jan';}
+            else if(month == 2) { stMonth = 'Feb'; }
+            else if(month == 3) { stMonth = 'Mar'; }
+            else if(month == 4) { stMonth = 'Apr'; }
+            else if(month == 5) { stMonth = 'May'; }
+            else if(month == 6) { stMonth = 'Jun'; }
+            else if(month == 7) { stMonth = 'Jul'; }
+            else if(month == 8) { stMonth = 'Aug'; }
+            else if(month == 9) { stMonth = 'Sep'; }
+            else if(month == 10) { stMonth = 'Oct'; }
+            else if(month == 11) { stMonth = 'Nov'; }
+            else if(month == 12) { stMonth = 'Dec'; }
+            
+            stDate = stDay + '' + stMonth + '-' + stYear; 
+            
+        }
+        return stDate;
+    }
+    
+    
+}
