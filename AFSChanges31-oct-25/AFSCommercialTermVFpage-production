@@ -1,0 +1,341 @@
+<apex:component Controller="AFSCommercialTermController" access="global" allowDML="true" >
+    <apex:attribute name="QuotId" type="Id" description="Book Id" access="global" assignTo="{!QId}"/>
+    <apex:attribute name="unitOwner" type="String" description="Unit Owner" access="global"/>
+    <head>          
+        <style type="text/css" media="print">
+            @page {
+                
+                @top-center {
+                content: element(header);
+                }
+                
+                size:4in 4in;
+                margin:20mm 20mm 60mm 20mm;
+                
+                }
+                body{
+                margin:0;
+                padding:0;
+                font-family: SansSerif;
+                font-size:18px;
+                line-height:1.5;
+                }
+                @page {
+                size: 8.87in 10.0in;
+                margin:12mm;
+                margin-bottom:190px;
+                }
+                
+                table {
+        		page-break-inside: auto;
+      			}
+                
+                tr{
+                page-break-inside: avoid;
+        		page-break-after: auto;
+                }
+            	.testcss1{ 
+            	text-align:center !important;
+            	padding:5px;
+            	font-size: 11px;
+            	}
+            	.testcss2{
+            	width:40%;
+            	text-align:left !important;
+            	padding:5px;
+            	font-size: 11px;
+            
+            	}
+                
+                .maintable {
+                    
+            	border-collapse: collapse;
+            	margin:0;
+            
+            	}
+            
+            	.maintable tr td {
+            
+            	border:1px solid #D3D3D3 !important;
+            	border-collapse: collapse;
+            	}
+               	p.a {
+  			   	white-space: nowrap;
+				}
+        </style>
+    </head>
+    
+    <body>{!CreatePayment}
+        <div style='page-break-after: always;'></div>
+        <apex:outputPanel rendered="{!isResidential}">
+        <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>5</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;'>Commercial Terms</th>
+                </tr>
+        </table>
+        <div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin: 0px;margin-bottom: 0px;' class="SuHeadStyle">5.01&nbsp;&nbsp;<b>Consideration</b></p>
+                <apex:outputPanel rendered="{!NOT(NewPhase) && unitOwner != 'JD'}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Promoters have agreed to sell and the Allottees have agreed to purchase the Unit, for a total sale consideration of INR &nbsp;{!strConsiderationValue}. This Consideration amount is inclusive of Utilities, Amenities, Car Park charges, location premiums and all other charges payable towards the Unit and exclusive of all taxes, stamp duty and registration charges. This consideration amount is payable in accordance with the Payment Schedule specified in Clause 5.03.</p>
+            	</apex:outputPanel>
+                <apex:outputPanel rendered="{!NOT(NewPhase) && unitOwner == 'JD'}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Landowners have agreed to sell and the Allottees have agreed to purchase the Unit, for a total sale consideration of INR &nbsp;{!strTotalAmtwithtax}. This Consideration amount is inclusive of applicable GST of 18% against the amounts payable to the Developers, Utilities, Amenities, Car Park charges, location premiums and all other charges payable towards the Unit and exclusive of stamp duty and registration charges. This consideration amount is payable in accordance with the Payment Schedule specified in Clause 5.03.</p>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!NewPhase && unitOwner != 'JD'}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Promoters have agreed to sell and the Allottees have agreed to purchase the Unit, for a Sale Consideration of <b>INR&nbsp;{!strConsiderationValue}</b>. <b>[“Consideration”]</b> This Consideration is inclusive of Utilities, Amenities, Car Park charges, location premiums and all other charges payable towards the Unit and exclusive of Taxes (consisting of tax paid or payable by the Promoter by way of Goods and Service Tax (GST), or any other similar taxes (which may be levied, in connection with the construction of the Project payable by the Promoter, by whatever name called),stamp duty and registration charges. This Consideration is payable in accordance with the payment schedule specified in Clause 5.03. The Consideration includes recovery of price of land, construction of Unit, the Common Areas, IDC, EDC , cost of providing electric wiring, electrical connectivity to the Unit, lift, water line and plumbing, and includes cost for providing all other facilities, amenities and specifications.</p>
+           	 	</apex:outputPanel> 
+                <apex:outputPanel rendered="{!NewPhase && unitOwner == 'JD'}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Landowners have agreed to sell and the Allottees have agreed to purchase the Unit, for a total sale consideration of INR &nbsp;{!strTotalAmtwithtax}. This Consideration amount is inclusive of applicable GST of 18% against the amounts payable to the Developers, Utilities, Amenities, Car Park charges, location premiums and all other charges payable towards the Unit and exclusive of stamp duty and registration charges. This consideration amount is payable in accordance with the Payment Schedule specified in Clause 5.03.</p>
+                </apex:outputPanel> 
+            
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>Interior Design option:</p>
+            	
+                
+                    <apex:outputPanel rendered="{!Onlinecheck}">
+                    <table style='width: 40%;border-collapse:collapse;' >
+                    <tr>
+                        <td style='width: 38%;border:1px solid #D3D3D3;font-size:10pt;font-family:SansSerif;color:#4b4b4b;'>eDesign</td>
+                        <td style='width: 2%;border:1px solid #D3D3D3;font-size:10pt;text-align:center;'><apex:image url="{!$Resource.right1}" width="25" height="25"/></td>
+                    </tr>
+                     </table>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!Onlinecheck == false}">
+                    <table style='width: 40%;border-collapse:collapse;' >
+                    <tr>
+                        <td style='width:38%;border:1px solid #D3D3D3;font-size:10pt;font-family:SansSerif;color:#4b4b4b;'>eDesign</td>
+                        <td style='width: 2%;border:1px solid #D3D3D3;font-size:10pt;text-align:center;'><apex:image url="{!$Resource.wrong1}" width="25" height="25"/></td>
+                    </tr>
+                        </table>    
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!Personalizecheck}">
+                        <table style='width: 40%;border-collapse:collapse;' >
+                    <tr>
+                        <td style='width: 38%;border:1px solid #D3D3D3;font-size:10pt;font-family:SansSerif;color:#4b4b4b;'>Personalized Interior Design</td>
+                        <td style='width: 2%;border:1px solid #D3D3D3;font-size:10pt;text-align:center;'><apex:image url="{!$Resource.right1}" width="25" height="25"/></td>
+                    </tr>
+                        </table>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!Personalizecheck == false}">
+                        <table style='width: 40%;border-collapse:collapse;' >
+                     <tr>
+                        <td style='width: 38%;border:1px solid #D3D3D3;font-size:10pt;font-family:SansSerif;color:#4b4b4b;'>Personalized Interior Design</td>
+                        <td style='width: 2%;border:1px solid #D3D3D3;font-size:10pt;text-align:center;'><apex:image url="{!$Resource.wrong1}" width="25" height="25"/></td>
+                    </tr>
+                        </table>
+            	</apex:outputPanel>
+                 
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>In case none of the options above are selected at the time of execution of the AfS, the Unit shall be completed with standard default specifications and design, without any changes whatsoever.</p>
+                
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin: 0px;margin-bottom: 0px;' class="SuHeadStyle">5.02&nbsp;&nbsp;<b>Virtual Completion</b></p>
+            	<apex:outputPanel rendered="{!NOT(NewPhase)}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Parties have agreed that the Unit shall be brought to a stage of Virtual Completion and possession shall be given on or before &nbsp;<apex:outputText value="{!Virtualcompdate}" />. This Virtual Completion Date is for completion of the Unit with standard default specifications and design without any changes whatsoever. In case the Allottees choose to modify the specifications of the Unit or opt for Interior Design, the Virtual Completion Date will be revised as per the Agreement for Sale.</p>
+            	</apex:outputPanel>
+                <apex:outputPanel rendered="{!NewPhase}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Parties have agreed that the Unit and the Common Areas and amenities shall be brought to a stage of Virtual Completion and possession shall be given on or before &nbsp;<apex:outputText value="{!Virtualcompdate}" />. This Virtual Completion Date is for completion of the Unit after receipt of Occupation Certificate/Partial Occupation Certificate with standard default specifications and design without any changes whatsoever. In case the Allottees choose to proceed with the Interior Design of their Unit, the Virtual Completion Date will be revised as per the terms of the Agreement for Sale.</p>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!ulist[0].Unit_Ownership__c == 'JD'}"><div style="page-break-after: always;"></div></apex:outputPanel>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin: 0px;margin-bottom: 0px;' class="SuHeadStyle">5.03&nbsp;&nbsp;<b>Payment Schedule</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Payment Schedule shall be as shown in the table below:</p> 
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!isCommercial}">
+        <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>5</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;'>Commercial Terms</th>
+                </tr>
+        </table>
+        <div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin: 0px;margin-bottom: 0px;' class="SuHeadStyle">5.01&nbsp;&nbsp;<b>Consideration</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Promoters have agreed to sell and the Allottees have agreed to purchase Saleable Area in the Unit, for a total sale consideration of INR. {!strTotalAmtwithtax}. ("Sale Consideration")  The Sale Consideration amount is inclusive of Utilities, Amenities, location premiums, taxes (consisting of tax paid or payable by the Promoter by way of Goods and Service Tax (GST), or any other similar taxes (which may be levied, in connection with the construction of the Project payable by the Promoter, by whatever name called) and all other charges payable towards the Saleable Area in the Unit and exclusive of all taxes, stamp duty and registration charges. The Sale Consideration amount is payable in accordance with the payment schedule specified in Clause 5.03. The Sale Consideration includes recovery of price of land, construction of Unit, the Common Areas, IDC, EDC, applicable taxes, cost of providing electric wiring, electrical connectivity to the Unit, lift, water line and plumbing, finishing and includes cost for providing all other facilities, amenities and specifications.</p>
+
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin: 0px;margin-bottom: 0px;' class="SuHeadStyle">5.02&nbsp;&nbsp;<b>Virtual Completion</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Parties have agreed that the Unit and the Common Areas and amenities shall be brought to a stage of completion and the possession shall be given upon obtaining the Occupancy Certificate/Partial Occupancy Certificate from the Competent Authority (‘<b style="color:black;">Occupancy Certificate</b>’) on or before&nbsp;<apex:outputText value="{!Virtualcompdate}" />. This Virtual Completion Date is for completion of the Unit.</p>
+               
+                
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin: 0px;margin-bottom: 0px;' class="SuHeadStyle">5.03&nbsp;&nbsp;<b>Payment Schedule</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;'>The Payment Schedule shall be as shown in the table below:</p>
+            </div>
+        </apex:outputPanel>
+        <!------------------------------------------------------------------Residential------------------------------------------------------------------->
+        <table style="width:100%;border-collapse:collapse;margin-top:5px;font-size:12pt;display: {!IF(isResidential == true, 'table', 'none')}" cellpadding='2'>
+                <tr style="display: {!IF(NewPhase == false, 'table-row', 'none')}">
+                    <th style='font-size:10pt;border:1px solid #D3D3D3;width:30px;font-family:SansSerif;color:#4b4b4b;'></th>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3;text-align:left;width:auto;font-family:SansSerif;color:black;'>Payment Schedule</th>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'>Date</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'>Consideration</td>
+                </tr>
+                <tr style="display: {!IF(NewPhase == true, 'table-row', 'none')}">
+                    <th style='font-size:10pt;border:1px solid #D3D3D3;width:30px;font-family:SansSerif;color:#4b4b4b;'></th>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3;text-align:left;width:auto;font-family:SansSerif;color:black;'>Payment Schedule</th>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'>Date</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'>Consideration</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'>Tax</td>
+                   <!-- <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'>Consideration with Tax</td> -->
+                </tr>
+                <tr style="display: {!IF(NewPhase == false, 'table-row', 'none')}">
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><b style='color:black;'>{!strConsiderationValue}</b></th>
+                </tr>
+             	<tr style="display: {!IF(NewPhase == true, 'table-row', 'none')}">
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><b style='color:black;'>{!strConsiderationValue}</b></td>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><b style='color:black;'>{!stradditionoftax}</b></th>
+                 <!--   <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><b style='color:black;'>{!strTotalAmtwithtax}</b></td>  -->
+                </tr>
+            	<!----------------------Raised Milestone----------------------------------->
+                <apex:variable value="{!1}" rendered="{!see}" var="count" >
+                    <tr style="display: {!IF(NewPhase == true, 'table-row', 'none')}"  class="maintable">
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!count}</td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>Special Installment</td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{0,date,dd-MMM-yyyy}" ><apex:param value="{!book.Booking_Date__c}"/></apex:outputText> </td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!amountraisedstr}"></apex:outputText> </td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'>{!taxraisedstr}</td>
+                    </tr>
+                    <tr style="display: {!IF(NewPhase == false, 'table-row', 'none')}"  class="maintable">
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!count}</td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>Special Installment</td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{0,date,dd-MMM-yyyy}" ><apex:param value="{!book.Booking_Date__c}"/></apex:outputText> </td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!amountraisedstr}"></apex:outputText> </td>
+                    </tr>
+                </apex:variable>
+               <!--------------------------------------------------------------------------------------->
+            
+            <apex:repeat value="{!pmwList}" var="avcharge" rendered="{!ISNULL(pmwList) == false && pmwList.size > 0 }">
+            	<tr style="display: {!IF(NewPhase == false, 'table-row', 'none')}">
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!avcharge.srno+b}</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!avcharge.milestoneName}</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'><apex:outputText rendered="{!avcharge.Datetoprint}" value="{!avcharge.mdate}"  /></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!avcharge.amount}"></apex:outputText></td>
+                </tr>
+                <tr style="display: {!IF(NewPhase == true, 'table-row', 'none')}">
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!avcharge.srno+b}</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!avcharge.milestoneName}</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'><apex:outputText rendered="{!avcharge.Datetoprint}" value="{!avcharge.mdate}"  /></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!avcharge.amount}"></apex:outputText></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!avcharge.tax}"></apex:outputText></td>
+                  <!--  <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!avcharge.grandtotal}"></apex:outputText></td> -->
+                </tr>
+            </apex:repeat>
+            
+                
+            </table>
+        <!------------------------------------------------------------------Commercial------------------------------------------------------------------->
+         	<table style="width:90%;border-collapse:collapse;margin-top:5px;font-size:12pt;display: {!IF(isCommercial == true, 'table', 'none')}" cellpadding='2'>
+                <tr style="display: {!IF(NewPhase == false, 'table-row', 'none')}">
+                    <th style='font-size:10pt;border:1px solid #D3D3D3;width:30px;font-family:SansSerif;color:#4b4b4b;'></th>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3;text-align:left;width:150px;font-family:SansSerif;color:black;'><b>Payment Schedule</b></th>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'><b>Date</b></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'><b>Consideration</b></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'><b>Tax</b></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'><b>Total Consideration</b></td>
+                </tr>
+                <tr style="display: {!IF(NewPhase == true, 'table-row', 'none')}">
+                    <th style='font-size:10pt;border:1px solid #D3D3D3;width:30px;font-family:SansSerif;color:#4b4b4b;'></th>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3;text-align:left;width:auto;font-family:SansSerif;color:black;'><b>Payment Schedule</b></th>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'><b>Date</b></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'><b>Consideration</b></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;text-align:center;width:100px;font-family:SansSerif;color:black;'><b>Tax</b>	</td>
+                </tr>
+                <tr style="display: {!IF(NewPhase == false, 'table-row', 'none')}">
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><b style='color:black;'>{!strConsiderationValue}</b></th>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><b style='color:black;'>{!stradditionoftax}</b></th>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><b style='color:black;'>{!strTotalAmtwithtax}</b></th>
+                </tr>
+             	<tr style="display: {!IF(NewPhase == true, 'table-row', 'none')}">
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><b style='color:black;'>{!strConsiderationValue}</b></td>
+                    <th style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><b style='color:black;'>{!stradditionoftax}</b></th>
+                </tr>
+            	<!----------------------Raised Milestone----------------------------------->
+               <apex:variable value="{!1}" rendered="{!see}" var="count" >
+                <tr  class="maintable">
+                     <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!count}</td>
+                     <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>Special Installment</td>
+                     <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{0,date,dd-MMM-yyyy}" ><apex:param value="{!book.Booking_Date__c}"/></apex:outputText> </td>
+                     <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!amountraised}"></apex:outputText> </td>
+                   <!--  <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'>{!taxraised}</td> -->
+               </tr>
+            </apex:variable>
+                <apex:variable value="{!1}" rendered="{!see}" var="count" >
+                    <tr style="display: {!IF(NewPhase == true, 'table-row', 'none')}"  class="maintable">
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!count}</td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>Special Installment</td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{0,date,dd-MMM-yyyy}" ><apex:param value="{!book.Booking_Date__c}"/></apex:outputText> </td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!amountraisedstr}"></apex:outputText> </td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'>{!taxraisedstr}</td>
+                    </tr>
+                    <tr style="display: {!IF(NewPhase == false, 'table-row', 'none')}"  class="maintable">
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!count}</td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>Special Installment</td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{0,date,dd-MMM-yyyy}" ><apex:param value="{!book.Booking_Date__c}"/></apex:outputText> </td>
+                        <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!amountraisedstr}"></apex:outputText> </td>
+                    </tr>
+                </apex:variable>
+               <!--------------------------------------------------------------------------------------->
+            
+            <apex:repeat value="{!pmwList}" var="avcharge" rendered="{!ISNULL(pmwList) == false && pmwList.size > 0 }">
+            	<tr style="display: {!IF(NewPhase == false, 'table-row', 'none')}">
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!avcharge.srno+b}</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!avcharge.milestoneName}</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'><apex:outputText rendered="{!avcharge.Datetoprint}" value="{!avcharge.mdate}"  /></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!avcharge.amount}"></apex:outputText></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!avcharge.tax}"></apex:outputText></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!avcharge.grandtotal}"></apex:outputText></td>
+                </tr>
+                <tr style="display: {!IF(NewPhase == true, 'table-row', 'none')}">
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!avcharge.srno+b}</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'>{!avcharge.milestoneName}</td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;'><apex:outputText rendered="{!avcharge.Datetoprint}" value="{!avcharge.mdate}"  /></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!avcharge.amount}"></apex:outputText></td>
+                    <td style='font-size:10pt;border:1px solid #D3D3D3; text-align:right;font-family:SansSerif;color:#4b4b4b;'><apex:outputText value="{!avcharge.tax}"></apex:outputText></td>
+                    
+                </tr>
+            </apex:repeat>
+            
+                
+            </table>
+            
+            <div style="page-break-after:always;"></div>
+        
+        <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-size:10pt;font-family:SansSerif;'>6</th>
+                    <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-size:10pt;font-family:SansSerif;'>Special Conditions</th>
+                </tr>
+            </table>
+        
+ 		<!--<apex:outputPanel rendered="{!spec3}">
+            <apex:repeat value="{!splitted}" var="split">
+                <apex:OutputText style="font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;"  >{!split}</apex:OutputText> <br/>
+        </apex:repeat></apex:outputPanel>
+        
+        <apex:outputPanel rendered="{!spec2}">
+            <apex:repeat value="{!splitted2}" var="split2">
+                <apex:outputText style="font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;" >{!split2}</apex:outputText> <br/>
+        </apex:repeat></apex:outputPanel>
+        
+		<apex:outputPanel rendered="{!spec1}">
+            <apex:repeat value="{!splitted3}" var="split3">
+            <apex:outputText style="font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;" >{!split3}</apex:outputText>
+       </apex:repeat> </apex:outputPanel> 
+-->
+        <apex:variable value="{!1}" var="count" />
+        <apex:outputPanel rendered="{!spec1}">
+            <apex:repeat value="{!totalsplit}" var="tsplit1">
+              <p style="font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;">
+                   <apex:outputText >6.{!count}&nbsp;{!tsplit1}<br/></apex:outputText><apex:variable value="{!count+1}" var="count" />
+                </p>  
+            </apex:repeat>
+		</apex:outputPanel>
+        <p style="font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;"><apex:outputPanel rendered="{!spec2}">NA.</apex:outputPanel></p>
+        <p style="font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 0px;"><apex:outputPanel rendered="{!customizationcredit}">6.{!count}&nbsp;An Interior Upgrade Credit of INR {!Customizationcreditstr} ({!Customizationcreditnotoword}) may be availed against the Interior Upgrade of the Unit as per the terms of the Credit Note issued.</apex:outputPanel></p>
+        
+  
+    </body>
+    
+</apex:component>
