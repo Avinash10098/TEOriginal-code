@@ -1,0 +1,314 @@
+<apex:component Controller="AFSContentTableController" access="global" allowDML="true" >
+    <apex:attribute name="BookId" type="Id" description="Booking Id" access="global" assignTo="{!bId}"/>
+    <html>
+        <head>
+           <style type="text/css" media="print">
+                @page {
+                
+                @top-center {
+                content: element(header);
+                }
+                
+                size:4in 4in;
+                margin:20mm 20mm 60mm 20mm;
+                
+                }
+                body{
+                margin:0;
+                padding:0;
+                font-family: SansSerif;
+                font-size:18px;
+                line-height:1.5;
+                }
+                @page {
+                size: 8.87in 10.0in;
+                margin:12mm;
+                margin-bottom:190px;
+                }
+                
+                table {
+        		page-break-inside: auto;
+      			}
+                
+                tr{
+                page-break-inside: avoid;
+        		page-break-after: auto;
+                }
+                
+                .maintable {
+                border:1px solid #6E6E6E;       
+                border-collapse: collapse;
+                margin:0;
+                
+                }
+                .maintable tr td {
+                
+                border:1px solid #6E6E6E;
+                border-collapse: collapse;
+                }
+               p.a {
+  			   white-space: nowrap;
+				}
+            </style>   
+        </head>
+        <body>{!projectdetails}
+            
+            <table style='width:100%;border-collapse: collapse;' cellpadding='5'>
+            <tr>
+                <th style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;background-color:#000000;color:#ffffff;margin-bottom:2px'>Annexure 01-TITLE</th>
+            </tr>
+        </table>
+            <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                                <apex:outputPanel rendered="{!ann.Annexure_Description__c != '' && Unt.Unit_Ownership__c != 'JD'}">
+                                   <!-- <div style="page-break-after:always;" ></div>-->
+                                    <apex:outputField value="{!ann.Annexure_Description__c}" />
+                                </apex:outputPanel>
+                				<apex:outputPanel rendered="{!ann.Annexure_Description_Landowner__c != '' && Unt.Unit_Ownership__c == 'JD'}">
+                                    <apex:outputField value="{!ann.Annexure_Description_Landowner__c}" />
+                                </apex:outputPanel>
+                                   
+            </div>
+            <apex:outputPanel rendered="{!ann.Heading_A_Name__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                    <tr style="display:{!IF(Unt.Unit_Ownership__c != 'JD' && ann.Heading_A_Name__c != Null,'table-row','none')}">
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>A</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_A_Name__c}</th>
+                    </tr>
+                </table>
+                
+                <!--  <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'  >
+<tr>
+<th style='border:1px solid #D3D3D3;background-color:#333;font-size:10pt;color:white;width:30px;text-align:center;'>1</th>
+<th style='border:1px solid #D3D3D3;background-color:#EEEEEE;font-size:10pt;text-align: left;'>{!ann.Sub_Heading_1__c}</th>
+</tr>
+</table> -->
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c != 'JD'}" value="{!ann.Heading_A__c}" />  
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_A_Name_Landowner__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                    <tr style="display:{!IF(Unt.Unit_Ownership__c == 'JD' && ann.Heading_A_Name_Landowner__c != Null,'table-row','none')}">
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>A</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_A_Name_Landowner__c}</th>
+                    </tr>
+                </table>
+                
+                <!--  <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'  >
+<tr>
+<th style='border:1px solid #D3D3D3;background-color:#333;font-size:10pt;color:white;width:30px;text-align:center;'>1</th>
+<th style='border:1px solid #D3D3D3;background-color:#EEEEEE;font-size:10pt;text-align: left;'>{!ann.Sub_Heading_1__c}</th>
+</tr>
+</table> -->
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c == 'JD'}" value="{!ann.Heading_A_Description_Landowner__c}" />
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_B_Name__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                    <tr style="display:{!IF(Unt.Unit_Ownership__c != 'JD' && ann.Heading_B_Name__c != Null,'table-row','none')}">
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>B</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_B_Name__c}</th>
+                    </tr>
+                </table>
+                <br/>
+                
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c != 'JD'}" value="{!ann.Heading_B__c}" />   
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_B_Name_Landowner__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                    <tr style="display:{!IF(Unt.Unit_Ownership__c == 'JD' && ann.Heading_B_Name_Landowner__c != Null,'table-row','none')}">
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>B</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_B_Name_Landowner__c}</th>
+                    </tr>
+                </table>
+                <br/>
+                
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c == 'JD'}" value="{!ann.Heading_B_Description_Landowner__c}" />  
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_C_Name__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                    <tr style="display:{!IF(Unt.Unit_Ownership__c != 'JD' && ann.Heading_C_Name__c != Null,'table-row','none')}">
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>C</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_C_Name__c}</th>
+                    </tr>
+                </table>
+                <br/>
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c != 'JD'}" value="{!ann.Heading_C__c}" />    
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_C_Name_Landowner__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                    <tr style="display:{!IF(Unt.Unit_Ownership__c == 'JD' && ann.Heading_C_Name_Landowner__c != Null,'table-row','none')}">
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>C</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_C_Name_Landowner__c}</th>
+                    </tr>
+                </table>
+                <br/>
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c == 'JD'}" value="{!ann.Heading_C_Description_Landowner__c}" />
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_D_Name__c != ''}">
+            <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr style="display:{!IF(Unt.Unit_Ownership__c != 'JD' && ann.Heading_D_Name__c != Null,'table-row','none')}">
+                    <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>D</th>
+                    <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_D_Name__c}</th>
+                </tr>
+            </table>
+            <br/>
+            <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                                
+                                   <!-- <div style="page-break-after:always;" ></div>-->
+                                   <apex:outputField rendered="{!Unt.Unit_Ownership__c != 'JD'}" value="{!ann.Heading_D__c}" /> 
+
+            </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_D_Name_Landowner__c != ''}">
+            <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr style="display:{!IF(Unt.Unit_Ownership__c == 'JD' && ann.Heading_D_Name_Landowner__c != Null,'table-row','none')}">
+                    <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>D</th>
+                    <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_D_Name_Landowner__c}</th>
+                </tr>
+            </table>
+            <br/>
+            <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                                
+                                   <!-- <div style="page-break-after:always;" ></div>-->
+                                   <apex:outputField rendered="{!Unt.Unit_Ownership__c == 'JD'}" value="{!ann.Heading_D_Description_Landowner__c}" />
+
+                                  
+            </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_E_Name__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                    <tr  style="display:{!IF(Unt.Unit_Ownership__c != 'JD' && ann.Heading_E_Name__c != Null,'table-row','none')}">
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>E</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_E_Name__c}</th>
+                    </tr>
+                </table>
+                <br/>
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c != 'JD'}"  value="{!ann.Heading_E_Description__c}" /> 
+                    
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_E_Name_Landowner__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                    <tr  style="display:{!IF(Unt.Unit_Ownership__c == 'JD' && ann.Heading_E_Name_Landowner__c != Null ,'table-row','none')}">
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>E</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_E_Name_Landowner__c}</th>
+                    </tr>
+                </table>
+                <br/>
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c == 'JD'}"  value="{!ann.Heading_E_Description_Landowner__c}" /> 
+                    
+                    
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_F_Name__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:-15px;' cellpadding='5'>
+                    <tr>
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>F</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_F_Name__c}</th>
+                    </tr>
+                </table>
+                <br/>
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c != 'JD'}"  value="{!ann.Heading_F_Description__c}" />
+                    <div style='page-break-after: always;'></div>
+                    
+                    
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!ann.Heading_F_Name_Landowner__c != ''}">
+                <table style='width: 100%;border-collapse: collapse;margin-top:-15px;' cellpadding='5'>
+                    <tr>
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>F</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>{!ann.Heading_F_Name_Landowner__c}</th>
+                    </tr>
+                </table>
+                <br/>
+                <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                    
+                    <!-- <div style="page-break-after:always;" ></div>-->
+                    <apex:outputField rendered="{!Unt.Unit_Ownership__c == 'JD'}"  value="{!ann.Heading_F_Description_Landowner__c}" /> 
+                    <div style='page-break-after: always;'></div>
+                    
+                    
+                </div>
+            </apex:outputPanel>
+        <!--    <div style='page-break-after: always;'></div> -->
+      <!---------------------------------------------------------------------------------------------------->      
+            <apex:outputPanel rendered="{!IF((prj.State__c == 'Maharashtra'),true,false)}"> 
+         <!--   <div style="{!IF((prj.Name == 'Songs From The Wood'),'display:block','display:none')}"> -->
+            <c:AFSPuneProject bookingId="{!bk.id}" />
+         <!--   </div> -->
+            </apex:outputPanel> 
+     <!------------------------------------------------------------------------------------------------------>       
+            
+            <div style="{!IF((prj.State__c == 'Maharashtra'), 'display:none', 'display:block')}"> 
+            <div style='page-break-before: always;'>    
+        <table style='width:100%;border-collapse: collapse;' cellpadding='7'>
+            <tr>
+                <th style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;background-color:#000000;color:#ffffff;margin-bottom:2px'>Annexure 02 - Approvals</th>
+            </tr>
+        </table>
+        <div>
+            <p style='font-size:10pt;text-align:justify;margin-bottom:0px;margin-top:2px'>The list of approvals for the Project are as follows:</p>
+            <table style='width:100%;border-collapse: collapse;font-size:10pt;margin-top:0px' cellpadding='2'>
+                <tbody>
+                    <tr style="color:Black;">
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>S.no.</th>
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>Approval</th>
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>Authority</th>
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>Approval no.</th>
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>Date</th>
+                    </tr>
+                    <apex:repeat value="{!approval}" var="appro" rendered="{!ISNULL(approval) == false && approval.size > 0}">
+                    <tr style="color:#4b4b4b;">
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;'>{!appro.Sr_No__c}</td>
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;'>{!appro.Name}</td>
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;'>{!appro.Authority__c}</td>
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;'>{!appro.Approval_No__c}</td>
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;' ><apex:outputText value="{0, date, dd-MM-yyyy}"> <apex:param value="{!appro.Date__c}" /> </apex:outputText></td>
+                    </tr>
+                    </apex:repeat>
+					</tbody>
+              </table>
+             </div>
+            </div>
+           </div>
+        </body>
+    </html>
+</apex:component>
