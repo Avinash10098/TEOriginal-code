@@ -1,0 +1,391 @@
+// Test Class ----------> TestcustReEnq4EnqBatch
+public without sharing class custReEnq4EnqBatch implements Database.Batchable<SObject>, Database.Stateful {
+    private Set<Id> recordsToProcess;
+    private String methodType;
+    private Set<Id> enqWithExistingCust = new Set<Id>();
+    private List<Customer_Re_enquiry_Journey__c> custReEnq2InsertUpdate = new List<Customer_Re_enquiry_Journey__c>();
+    Public Map<Id,String> enqSvMap = new Map<Id,String>();
+    Public Map<Id,Booking__c> enqBookMap = new Map<Id,Booking__c>();
+    public Map<Id,Opportunity> enqIdOppMap = new Map<Id,Opportunity>();
+    public Map<Id,Lead> convertedleadMap = new Map<Id,Lead>();
+    public Map<Id,Opportunity> convertedleadOppMap = new Map<Id,Opportunity>();
+    public Map<Id,Customer_Registration__c> oppSiteVisitMap = new Map<Id,Customer_Registration__c>();
+    public Map<Id, Lead> leadMapForPresales = new Map<Id, Lead>();
+    
+    // New set only for Opportunity IDs to update revisit details and count
+    public Set<Id> revisitOppIds = new Set<Id>();
+
+    public custReEnq4EnqBatch(Set<Id> records, String methodType) {
+        system.debug('records :'+records);
+        system.debug('Inside Constructor custReEnq4EnqBatch');
+        this.recordsToProcess = records;
+        this.methodType = methodType;
+       
+    }
+
+    public Database.QueryLocator start(Database.BatchableContext context) {
+        system.debug('recordsToProcess :'+recordsToProcess);
+        if (methodType == 'New Re-Enquiry') {
+            //currently this method is not in use
+            system.debug('Inside Start : New Re-Enquiry');
+            List<Customer_Re_enquiry_Journey__c> existingCustJourney = [
+                SELECT Id, Enquiry_Details__c 
+                FROM Customer_Re_enquiry_Journey__c 
+                WHERE Enquiry_Details__c IN :recordsToProcess
+            ];
+
+            system.debug(existingCustJourney);
+            
+            for(Customer_Re_enquiry_Journey__c cust : existingCustJourney){
+                enqWithExistingCust.add(cust.Enquiry_Details__c);
+            }
+            
+            return Database.getQueryLocator(
+                'SELECT Id, Name, Lead__c, Account__c, Opportunity__c, Result__c,Enquiry_Source__c,Enquiry_Sub_Source__c,Project_Name_Text__c ' +
+                'FROM Enquiry_Details__c WHERE Id NOT IN :enqWithExistingCust AND Id IN :recordsToProcess AND CreatedDate = TODAY AND (Result__c = \'EXISTING ACCOUNT\' OR Result__c = \'EXISTING LEAD\')'
+            );
+        }
+        else if(methodType == 'Lead Converted'){
+            system.debug('Inside Start : Lead Converted');
+            Set<Id> leadIdSet = new Set<Id>();
+            Set<Id> oppIdSet = new Set<Id>();
+            List<Lead> leadList = [select Id, Name, IsConverted, ConvertedAccountId, ConvertedOpportunityId from Lead
+                                             where Id IN :recordsToProcess];
+            for(Lead l : leadList){
+                leadIdSet.add(l.id);
+                oppIdSet.add(l.ConvertedOpportunityId);
+                convertedleadMap.put(l.id,l);
+            }
+            convertedleadOppMap = new Map<Id,Opportunity>([Select id,Enquiry_Details__c,LeadSource,Name,StageName from Opportunity where Id IN :oppIdSet]); 
+            return Database.getQueryLocator([
+                SELECT Id, Lead_Conversion_Date__c,Lead_Id_Str__c
+                FROM Customer_Re_enquiry_Journey__c 
+                WHERE Lead_Id_Str__c IN : leadIdSet
+            ]);
+        }
+        else if(methodType == 'Opportunity Created'){
+            system.debug('Inside Start : Opportunity Created');
+            Set<Id> enqId = new Set<Id>();
+           // enqIdOppMap = new Map<Id,Opportunity>();
+            List<Opportunity> oppList = [Select id,Enquiry_Details__c,LeadSource,Name,StageName from Opportunity where Id IN: recordsToProcess];
+            for(Opportunity opp : oppList){
+                enqId.add(opp.Enquiry_Details__c);
+                //enqIdOppMap.put(opp.Enquiry_Details__c,opp);
+            }
+            
+            Map<Id,Enquiry_Details__c> enqMap = new Map<Id,Enquiry_Details__c>([SELECT Id, Name, Lead__c, Account__c, Opportunity__c, Result__c,Enquiry_Source__c,
+                                                                                Enquiry_Sub_Source__c,Project_Name_Text__c FROM Enquiry_Details__c 
+                                                                                where Id IN: enqId and Create_New_Opportunity__c = True]);
+            system.debug('enqMap :'+enqMap);
+            return Database.getQueryLocator([
+                SELECT Id, Lead_Conversion_Date__c,Opportunity_Created_Date__c,Enquiry_Details__c , Account__c   
+                FROM Customer_Re_enquiry_Journey__c 
+                WHERE Enquiry_Details__c IN :enqMap.keySet()
+            ]);
+        }
+        else if(methodType == 'Site Visit Created'){
+            system.debug('Inside Start : Site Visit Created');
+            Map<Id,Customer_Registration__c> svMap = new Map<Id,Customer_Registration__c>([Select Id,Name,opportunity__c,opportunity__r.Enquiry_Details__c from Customer_Registration__c 
+                                                                                           where Id IN : recordsToProcess ]);
+            Set<Id> oppIdSet = new Set<Id>();
+           // Set<Id> enqIdSet = new Set<Id>();
+            for(Customer_Registration__c sv : svMap.values()){
+                oppIdSet.add(sv.opportunity__c);
+             //   enqIdSet.add(sv.opportunity__r.Enquiry_Details__c);
+                enqSvMap.put(sv.opportunity__r.Enquiry_Details__c,sv.Name);
+                oppSiteVisitMap.put(sv.opportunity__c,sv);
+                
+                // used separately to update opportunity site and revisit details
+                revisitOppIds.add(sv.Opportunity__c);
+            }
+             System.debug('revisitOppIds populated: ' + revisitOppIds);
+            
+           /* Map<Id,Enquiry_Details__c> enqMap = new Map<Id,Enquiry_Details__c>([SELECT Id, Name, Lead__c, Account__c, Opportunity__c, Result__c,Enquiry_Source__c,
+                                                                                Enquiry_Sub_Source__c,Project_Name_Text__c FROM Enquiry_Details__c 
+                                                                                where Id IN: enqIdSet and Create_New_Opportunity__c = True]); */
+            
+            
+            return Database.getQueryLocator([
+                SELECT Id, Lead_Conversion_Date__c,Date_Of_Site_Visit__c,Customer_Registration_Name__c,Enquiry_Details__c,opportunity__c 
+                FROM Customer_Re_enquiry_Journey__c 
+                WHERE opportunity__c IN :oppIdSet
+            ]);
+        }
+        else if(methodType == 'Booking Created'){
+            system.debug('Inside Start : Booking Created');
+            Map<Id,Booking__c> bookMap = new Map<Id,Booking__c>([Select Id,Name,Status__c,Source_of_Booking__c,opportunity__c,opportunity__r.Enquiry_Details__c
+                                                                 from Booking__c where Id IN : recordsToProcess ]);
+        
+            Set<Id> enqIdSet = new Set<Id>();
+            for(Booking__c b : bookMap.values()){
+                enqIdSet.add(b.opportunity__r.Enquiry_Details__c);
+                enqBookMap.put(b.opportunity__r.Enquiry_Details__c,b);
+            }
+            
+            Map<Id,Enquiry_Details__c> enqMap = new Map<Id,Enquiry_Details__c>([SELECT Id, Name, Lead__c, Account__c, Opportunity__c, Result__c,Enquiry_Source__c,
+                                                                                Enquiry_Sub_Source__c,Project_Name_Text__c FROM Enquiry_Details__c 
+                                                                                where Id IN: enqIdSet and Create_New_Opportunity__c = True]);
+            
+            system.debug('enqMap :'+enqMap);
+            return Database.getQueryLocator([
+                SELECT Id, Lead_Conversion_Date__c,Date_Of_Site_Visit__c,Customer_Registration_Name__c,Enquiry_Details__c 
+                FROM Customer_Re_enquiry_Journey__c 
+                WHERE Enquiry_Details__c IN :enqMap.keySet()
+            ]);
+        }else if (methodType == 'Lead Presales Call Update') {
+            system.debug('Lead Presales Call Update Inside');
+           
+            List<Lead>leadMapForPresales = [SELECT Id, Last_Call_Description__c FROM Lead WHERE Id IN :recordsToProcess];
+            
+            for(Lead l : leadMapForPresales){
+                convertedleadMap.put(l.id,l);
+            }
+            
+            System.debug('leadMapForPresales'+leadMapForPresales);
+
+            return Database.getQueryLocator([
+                SELECT Id, Presales_Last_Call_Description__c , Lead_Id_Str__c
+                FROM Customer_Re_enquiry_Journey__c 
+                WHERE Lead_Id_Str__c IN : recordsToProcess
+            ]);
+        }else if(methodType == 'Opportunity Presales Call Update'){
+            system.debug('Inside Start : Opportunity Created');
+            Set<Id> accountIds = new Set<Id>();
+            
+            List<Opportunity> oppList = [Select id,AccountId, Last_call_description__c ,Sales_Call_Description__c, Enquiry_Details__c from Opportunity where Id IN: recordsToProcess];
+            system.debug('opp list '+oppList);
+            for(Opportunity opp : oppList){
+                if (opp.AccountId != null) {
+                    accountIds.add(opp.AccountId);
+                    enqIdOppMap.put(opp.AccountId, opp);
+                }
+            }
+            
+            system.debug(enqIdOppMap);
+            
+            Map<Id,Enquiry_Details__c> enqMap = new Map<Id,Enquiry_Details__c>([SELECT Id, Name, Lead__c, Account__c, Opportunity__c, Result__c,Enquiry_Source__c,
+                                                                                Enquiry_Sub_Source__c,Project_Name_Text__c FROM Enquiry_Details__c 
+                                                                                where Account__c IN: accountIds]); // add the true or not
+            system.debug('enqMap :'+enqMap);
+            
+            return Database.getQueryLocator([
+                SELECT Id, 	Presales_Last_Call_Description__c ,Sales_Last_Call_Description__c, Enquiry_Details__c , Account__c  
+                FROM Customer_Re_enquiry_Journey__c 
+                WHERE Enquiry_Details__c IN :enqMap.keySet()
+            ]);
+        }
+        else {
+            throw new IllegalArgumentException('Invalid method type: ' + methodType);
+        }
+    }
+
+    public void execute(Database.BatchableContext bc, List<Sobject> scope) {
+        system.debug('Inside execute');
+        if(scope.size() > 0){
+            if (methodType == 'New Re-Enquiry') {
+                system.debug('Inside execute : New Re-Enquiry');
+                newReEnquiryMethod((List<Enquiry_Details__c>)scope);
+            }
+            if (methodType == 'Lead Converted') {
+                system.debug('Inside execute : Lead Converted');
+                leadConvertedMethod((List<Customer_Re_enquiry_Journey__c>)scope);
+            }
+            if (methodType == 'Opportunity Created') {
+                system.debug('Inside execute : Opportunity Created');
+                oppoCreatedMethod((List<Customer_Re_enquiry_Journey__c>)scope);
+            }
+            if (methodType == 'Site Visit Created') {
+                system.debug('Inside execute : Site Visit Created');
+                svCreatedMethod((List<Customer_Re_enquiry_Journey__c>)scope);
+            }
+            if (methodType == 'Booking Created') {
+                system.debug('Inside execute : Booking Created');
+                bookingCreatedMethod((List<Customer_Re_enquiry_Journey__c>)scope);
+            }
+            
+            if (methodType == 'Lead Presales Call Update') {
+                system.debug('Inside execute : Lead Presales call update');
+            	presalesCallUpdateMethod((List<Customer_Re_enquiry_Journey__c>)scope);
+        	}
+            
+            if (methodType == 'Opportunity Presales Call Update') {
+                system.debug('Inside execute : Opportunity Presales Call Update');
+            	presalesCallUpdateMethodOpp((List<Customer_Re_enquiry_Journey__c>)scope);
+        	}
+        }
+    }
+
+    public void finish(Database.BatchableContext bc) {
+        // Here since my site visit created is not returning the required records 
+        // we were not able update opporunity so we are using new batch to overcome limits
+        if (!revisitOppIds.isEmpty()) {
+            System.debug('Chaining RevisitOpportunityBatch with opps: ' + revisitOppIds);
+            Database.executeBatch(new oppSitevisitsInfoUpdateBatch(revisitOppIds,'Opportunity update'), 50);
+        }   
+    }
+     
+    private void newReEnquiryMethod(List<Enquiry_Details__c> enqList) {
+        system.debug('Inside newReEnquiryMethod');
+        for (Enquiry_Details__c e : enqList) {
+            Customer_Re_enquiry_Journey__c reEnquiry = new Customer_Re_enquiry_Journey__c();
+            reEnquiry.Name = e.Name;
+            reEnquiry.Lead__c = e.Lead__c;
+            reEnquiry.Lead_Id_Str__c = e.Lead__c;
+            reEnquiry.Account__c = e.Account__c;
+            reEnquiry.Enquiry_Details__c = e.Id;
+            reEnquiry.Enquiry_Id__c = e.Id;
+            reEnquiry.Re_Enquiry_Created_Date__c = System.now();
+            reEnquiry.Enquiry_Source__c = e.Enquiry_Source__c;
+            reEnquiry.Enquiry_Sub_Source__c = e.Enquiry_Sub_Source__c;
+            reEnquiry.Project_Name__c = e.Project_Name_Text__c;
+            reEnquiry.Result__c = e.Result__c;
+            custReEnq2InsertUpdate.add(reEnquiry);
+        }
+        try {
+            if (!custReEnq2InsertUpdate.isEmpty()) {
+                insert custReEnq2InsertUpdate;
+            }
+        } catch (Exception e) {
+            System.debug('Exception during final insert: ' + e.getMessage());
+        }
+    }
+    
+     private void presalesCallUpdateMethod(List<Customer_Re_enquiry_Journey__c> enqList) {
+         
+        system.debug('lead convert Map' +convertedleadMap);
+        System.debug('customer re enq for presales' + enqList);
+        List<Customer_Re_enquiry_Journey__c> toUpdate = new List<Customer_Re_enquiry_Journey__c>();
+		
+        for (Customer_Re_enquiry_Journey__c e : enqList) {
+            system.debug('Inside the for loop for presales update');
+            Lead convertedLead = convertedleadMap.get(e.Lead_Id_Str__c);
+            system.debug('converted Map '+convertedLead.Last_Call_Description__c);
+            if(convertedLead != null){
+                e.Presales_Last_Call_Description__c = convertedLead.Last_Call_Description__c;
+                toUpdate.add(e);
+            }
+            
+        }
+
+        if (!toUpdate.isEmpty()) {
+            update toUpdate;
+        }
+    }
+    
+    private void presalesCallUpdateMethodOpp(List<Customer_Re_enquiry_Journey__c> enqList){
+        system.debug('enq list for opp map '+enqList);
+        system.debug('Inside the presalesCallUpdateMethodOpp');
+        
+         List<Customer_Re_enquiry_Journey__c> toUpdate = new List<Customer_Re_enquiry_Journey__c>();
+
+            for (Customer_Re_enquiry_Journey__c journey : enqList) {
+                Id accountId = journey.Account__c;
+                Opportunity opp = enqIdOppMap.get(accountId);
+        
+                if (opp != null) {
+                    journey.Presales_Last_Call_Description__c = opp.Last_Call_Description__c;
+                    journey.Sales_Last_Call_Description__c = opp.Sales_Call_Description__c;
+                    toUpdate.add(journey);
+                }
+            }
+        
+            if (!toUpdate.isEmpty()) {
+                update toUpdate;
+                System.debug('Updated ' + toUpdate.size() + ' Presales Journeys');
+            }
+    } 
+    
+    
+    private void leadConvertedMethod(List<Customer_Re_enquiry_Journey__c> custReEnqList) {
+        system.debug('Inside newReEnquiryMethod');
+        for (Customer_Re_enquiry_Journey__c ce : custReEnqList) {
+            Customer_Re_enquiry_Journey__c reEnquiry = new Customer_Re_enquiry_Journey__c();
+            reEnquiry.id = ce.Id;
+            reEnquiry.Lead_Conversion_Date__c = System.Now();
+            reEnquiry.Opportunity_Created_Date__c = System.Now();
+            reEnquiry.Opportunity__c = convertedleadMap.get(ce.Lead_Id_Str__c).ConvertedOpportunityId;
+            reEnquiry.Account__c = convertedleadMap.get(ce.Lead_Id_Str__c).ConvertedAccountId;
+            
+            Lead convertedLead = convertedleadMap.get(ce.Lead_Id_Str__c);
+            if (convertedLead != null && convertedLead.ConvertedOpportunityId != null) {
+                Opportunity opp = convertedleadOppMap.get(convertedLead.ConvertedOpportunityId);
+                if (opp != null) {
+                    reEnquiry.Opportunity_Name__c = opp.Name;
+                    reEnquiry.Opportunity__c = opp.Id;
+                    reEnquiry.Opportunity_Stage__c = opp.StageName;
+                    reEnquiry.Opportunity_Lead_Source__c = opp.LeadSource;
+                }
+            }
+            custReEnq2InsertUpdate.add(reEnquiry);
+        }
+        try {
+            if (!custReEnq2InsertUpdate.isEmpty()) {
+                update custReEnq2InsertUpdate;
+            }
+        } catch (Exception e) {
+            System.debug('Exception during update: ' + e.getMessage());
+        }
+    }
+    
+    
+    private void oppoCreatedMethod(List<Customer_Re_enquiry_Journey__c> custReEnqList) {
+        system.debug('Inside newReEnquiryMethod');
+        for (Customer_Re_enquiry_Journey__c ce : custReEnqList) {
+            Customer_Re_enquiry_Journey__c reEnquiry = new Customer_Re_enquiry_Journey__c();
+            reEnquiry.id = ce.Id;
+            reEnquiry.Opportunity_Created_Date__c = System.Now();
+            reEnquiry.Opportunity_Lead_Source__c = enqIdOppMap.get(ce.Enquiry_Details__c).LeadSource ;
+            reEnquiry.Opportunity_Name__c = enqIdOppMap.get(ce.Enquiry_Details__c).Name;
+            reEnquiry.Opportunity_Stage__c = enqIdOppMap.get(ce.Enquiry_Details__c).StageName;
+            reEnquiry.Opportunity__c = enqIdOppMap.get(ce.Enquiry_Details__c).Id;
+            custReEnq2InsertUpdate.add(reEnquiry);
+        }
+        try {
+            if (!custReEnq2InsertUpdate.isEmpty()) {
+                update custReEnq2InsertUpdate;
+            }
+        } catch (Exception e) {
+            System.debug('Exception during update: ' + e.getMessage());
+        }
+    }
+    
+    private void svCreatedMethod(List<Customer_Re_enquiry_Journey__c> custReEnqList) {
+        system.debug('Inside newReEnquiryMethod');
+        for (Customer_Re_enquiry_Journey__c ce : custReEnqList) {
+            Customer_Re_enquiry_Journey__c reEnquiry = new Customer_Re_enquiry_Journey__c();
+            reEnquiry.id = ce.Id;
+            reEnquiry.Date_Of_Site_Visit__c = System.Now();
+          //  reEnquiry.Customer_Registration_Name__c = enqSvMap.get(ce.Enquiry_Details__c);
+            reEnquiry.Customer_Registration_Name__c = oppSiteVisitMap.get(ce.opportunity__c).Name;
+            reEnquiry.Site_Visit__c = oppSiteVisitMap.get(ce.opportunity__c).id;
+            custReEnq2InsertUpdate.add(reEnquiry);
+        }
+        try {
+            if (!custReEnq2InsertUpdate.isEmpty()) {
+                update custReEnq2InsertUpdate;
+            }
+        } catch (Exception e) {
+            System.debug('Exception during update: ' + e.getMessage());
+        }
+    }
+    
+    private void bookingCreatedMethod(List<Customer_Re_enquiry_Journey__c> custReEnqList) {
+        system.debug('Inside newReEnquiryMethod');
+        for (Customer_Re_enquiry_Journey__c ce : custReEnqList) {
+            Customer_Re_enquiry_Journey__c reEnquiry = new Customer_Re_enquiry_Journey__c();
+            reEnquiry.id = ce.Id;
+            reEnquiry.Booking_Created_Date__c = System.Now();
+            reEnquiry.Booking_Name__c = enqBookMap.get(ce.Enquiry_Details__c).Name ;
+            reEnquiry.Booking_Status__c	= enqBookMap.get(ce.Enquiry_Details__c).Status__c;
+            reEnquiry.Source_of_Booking__c = enqBookMap.get(ce.Enquiry_Details__c).Source_of_Booking__c;
+            custReEnq2InsertUpdate.add(reEnquiry);
+        }
+        try {
+            if (!custReEnq2InsertUpdate.isEmpty()) {
+                update custReEnq2InsertUpdate;
+            }
+        } catch (Exception e) {
+            System.debug('Exception during update: ' + e.getMessage());
+        }
+    }
+}
