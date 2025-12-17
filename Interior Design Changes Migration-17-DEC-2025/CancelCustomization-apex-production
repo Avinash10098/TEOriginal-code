@@ -1,0 +1,80 @@
+public class CancelCustomization {
+    
+    public string bookingId {get;set;}
+    public List<Customization_New__c> cn {get;set;}
+    public List<Booking__c> bk {get;set;}
+    public List<Demand__c> dList {get;set;}
+    
+    public CancelCustomization(){
+        bookingId = ApexPages.currentPage().getParameters().get('id');
+        system.debug('BookingId :'+bookingId);
+        bk = [select id,Name,Customization_Complete__c,Total_Customization_Cost__c,Sales_Promise_Item_Discount__c,Special_Discount__c,Other_Discount__c
+              from Booking__c where id =: bookingId];
+        system.debug('Booking :'+bk);
+        cn = [Select id,Name,Quotation__r.Name,Booking__c,IsCanceled__c,Total_Customization_Cost__c,Reason_For_Cancellation__c,ID_Order_Cancellation_Status__c
+              from Customization_New__c where Booking__c =: bookingId and IsCanceled__c =: false and ID_Order_Cancellation_Status__c != 'Approved'];
+        system.debug('Customization :'+cn);
+        dList = [Select id from Demand__c where Booking__c =: bookingId and Customization_Demand__c = true and Accounting_Document_Number__c != null];
+        system.debug('dList :'+dList);
+        
+        if(!cn.isEmpty()){
+            cn[0].Reason_For_Cancellation__c = null;
+            system.debug('cn.Reason_For_Cancellation__c::'+cn[0].Reason_For_Cancellation__c);   
+        }
+        if (cn.isEmpty())
+			{
+    			ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,'No Customization Found'));
+    			
+			} 
+    }
+    
+    public PageReference cancelcustomization(){
+        if (cn[0].Reason_For_Cancellation__c == Null)
+        {
+            system.debug('Inside submit 1');
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,'Select Reason for Cancellation'));
+            update cn;
+            return null;
+        }
+        if(dList.size() > 0){
+            system.debug('Inside submit 2');
+            cn[0].ID_Order_Cancellation_Status__c = 'Submitted';
+            update cn;
+            return new PageReference('/apex/CustomizationCancelSuccess?id='+bookingId+ '&whatToRender=' + 'approvalPage');
+         //   ApexPages.addmessage(new ApexPages.message(ApexPages.severity.INFO,'Interior Design Cancellation sent for Approval.'));
+        }
+        else{
+            if(!cn.isEmpty() && cn != null && cn[0].Reason_For_Cancellation__c != Null){
+                system.debug('Inside submit 3');
+                cn[0].IsCanceled__c = true;
+                cn[0].Status__c = 'Inactive';
+                bk[0].Customization_Complete__c = false;
+                bk[0].Total_Customization_Cost__c = 0;
+                bk[0].Sales_Promise_Item_Discount__c  = 0;
+                bk[0].Special_Discount__c = 0;
+                bk[0].Other_Discount__c  = 0;
+                update cn;
+                update bk;
+                return new PageReference('/apex/CustomizationCancelSuccess?id='+bookingId+ '&whatToRender=' + 'cancelPage');
+            }
+        }
+        return null;
+    }
+    
+    public void dummy(){
+        integer i=1;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+    }
+
+}
