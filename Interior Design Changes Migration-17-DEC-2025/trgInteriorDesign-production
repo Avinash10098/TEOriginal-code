@@ -1,0 +1,12 @@
+trigger trgInteriorDesign on Customization_New__c (after insert,after update) {
+    
+    if(Trigger.isUpdate && Trigger.isAfter){
+        UpdateInteriorDesignPM.updatePM(Trigger.New,Trigger.old);
+    }
+    
+    //To update customization pay milestones on new ID order process.We check on tower and unit if the actual date of completion is present and update the same 
+    //on cust pay milestone.30/09/2024
+    if(Trigger.isInsert && Trigger.isAfter){
+        CustpayMileHelperClass.updatePM(Trigger.new);
+    }
+}
