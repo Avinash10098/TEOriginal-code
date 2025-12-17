@@ -1,0 +1,450 @@
+public class TaskManagementServices {
+    public static String className = TaskManagementServices.class.getName();
+
+    public static void categoriseTask(List<Task> taskList) {
+        System.debug('Inside categorise task:' + taskList);
+       // List<Profile> profile = [SELECT Id, Name FROM Profile WHERE Id=:userinfo.getProfileId() LIMIT 1];
+       // String profileName = profile[0].Name;
+        for(Task t: taskList) {           
+            if(t.CallType != null && t.CallType.equalsIgnoreCase('Inbound')) {
+                //t.Communication_Type__c = 'Inbound Call';
+                // CT enters the campaign code in description, move it to another field and release the description field for the presales/sales team to type their comments
+                // this is the only long text area in task
+                t.Connect_Mode_Details__c = 'Incall';
+                t.UTM_Campaign__c = t.Description;
+                t.Description = '';
+            } else if (t.CallType != null && t.CallType.equalsIgnoreCase('Outbound')) {
+                //t.Communication_Type__c = 'Outbound Call';
+                t.Connect_Mode_Details__c = 'Outcall';
+                t.UTM_Campaign__c = t.Description;
+                t.Description = '';
+            }
+        }
+    }
+
+    public static void rollUpCampaignCodeToLead(List < Task > taskList){
+        System.debug('Inside roll up campaign code from UTM campaign to lead campaign code:' + taskList);
+        Set < Id > leadIdSet = new Set<Id>();
+        Map<Id, Task> leadTaskMap = new Map<Id, Task>();
+       
+        List<Profile> profile = [SELECT Id, Name FROM Profile WHERE Id=:userinfo.getProfileId() LIMIT 1];
+        String profileName = profile[0].Name;
+        for (Task t: TaskList) {
+            if (t.whoId != null && t.whoId.getSObjectType().getDescribe().getName() == 'Lead') {
+                leadIdSet.add(t.whoId);
+            }
+            leadTaskMap.put(t.whoId, t);
+        }
+        List < Lead > leadList = [select Name, Id, call_proposed_date_of_visit__c,Project__c,Contacted__c,Project__r.Name,
+            Last_call_attempted_by__c, Last_call_attempt_status__c, Last_call_description__c, Presales_agent__c,
+            Last_Call_Rating__c, Presales_Call_counter__c, last_call_attempt_date__c, IsFirstPresalesCall__c from lead
+            where Id in : leadIdSet];
+        for (Lead l: leadList) {
+            if (leadTaskMap.containsKey(l.Id) && leadTaskMap.get(l.Id).DID__c != null ) {
+                    l.Campaign_Code__c = leadTaskMap.get(l.Id).DID__c;                    
+            }
+         
+            if (l.Presales_agent__c == null && profileName.equalsIgnoreCase('Presales'))
+                l.Presales_agent__c = UserInfo.getUserId();
+            
+            // If Lead.Project__r.Name == 'Tapestry' set Contacted__c = TRUE for email or call
+            if (l.Project__r != null && l.Project__r.Name == 'Tapestry') {
+            l.Contacted__c = true;
+        	}
+        }
+        if(leadList != null && leadList.size() > 0) {
+            update leadList;
+        }
+    }
+   
+    public static void rollUpCampaignCodeToAccount(List < Task > taskList){
+        System.debug('Inside roll up campaign code from UTM campaign to account campaign code:' + taskList);
+        Set <Id> accIdSet = new Set<Id>();
+        Map<Id, Task> taskMap = new Map<Id, Task>();
+        Set<Id> oppIdSet = new Set<Id>();
+       
+        for (Task t: TaskList) {
+            if (t.whatId != null && t.whatId.getSObjectType().getDescribe().getName() == 'Account') {
+                accIdSet.add(t.whatId);
+            } else if (t.whatId != null && t.whatId.getSObjectType().getDescribe().getName() == 'Opportunity') {
+                oppIdSet.add(t.whatId);
+            }
+            taskMap.put(t.WhatId, t); // taskMap.put(t.Id, t) is updated by Neha on 9 Jan
+        }
+        if(oppIdSet != null && oppIdSet.size() >= 1 ) { // > 1 is updated by Neha on 9 Jan to =>
+            List<Opportunity> oppList = [Select Id, AccountId from Opportunity where Id in : oppIdSet];
+            for(Opportunity o : oppList) {
+                    accIdSet.add(o.AccountId);
+            }
+        }
+        if(accIdSet != null && accIdSet.size() >= 1) { // > 1 is updated by Neha on 9 Jan to =>
+                List<Account> aList = [Select Id,Call_Comments__c, Campaign_Code__c,Task_Comments__c,Next_Action__c,Connect_Mode_Details__c,Call_Status__c,Task_Owner__c from Account where Id in :accIdSet];
+                for(Account a : aList){                
+                    if(taskMap.containsKey(a.Id)){
+                        a.Campaign_code__c = taskMap.get(a.Id).DID__c;
+                        a.Call_Comments__c = taskMap.get(a.Id).CommentsCustom__c;
+                        /*Added by Mohan for customer renquires
+                        When the Task's Subject is "Follow Up Reminder", it means this task was auto-created for follow-up purposes.
+						At that moment, most Task fields (Next Action, Call Status, Connect Mode Details, etc.) are null,
+						so to avoid overwriting valid Account data with nulls, we skip updating those fields for "Follow Up Reminder" tasks.*/
+                        if (taskMap.get(a.Id).Subject != 'Follow Up Reminder') {
+                            a.Task_Owner__c = UserInfo.getName();
+                            a.Task_Comments__c = taskMap.get(a.Id).CommentsCustom__c;
+                    		a.Next_Action__c = taskMap.get(a.Id).Call_Attempt_Status__c;
+                       		a.Connect_Mode_Details__c = taskMap.get(a.Id).Connect_Mode_Details__c;
+                        	a.Call_Status__c = taskMap.get(a.Id).Call_Status__c;
+                		}
+                        /*ended by Mohan for customer renquires*/
+                        system.debug('Account camp::: ' + a.Campaign_code__c);
+                    }                      
+                }
+                if(aList != null && aList.size() > 0) {
+                    update aList;
+                }
+        }        
+    }
+    public static void updatePresalesCallDetails(List<Task> newTasks){
+       List<Enquiry_Details__c> enquiryUpdates = new List<Enquiry_Details__c>();
+        for(Task t : newTasks){
+        // Skip Email tasks
+        if(t.TaskSubtype == 'Email'){
+            continue;
+        }
+
+        // Skip auto-created follow-up reminders
+        if(t.Subject == 'Follow Up Reminder'){
+            continue;
+        }
+            if(t.Enquiry_Details__c != null){
+                String finalValue = String.isNotBlank(t.Description)
+                            ? t.Description
+                            : t.CommentsCustom__c;
+                
+                Enquiry_Details__c e = new Enquiry_Details__c(
+                    Id = t.Enquiry_Details__c
+                );
+                if (t.Task_Type__c == 'Presales Call') {
+                    e.Presales_Call_Description__c = finalValue;
+                }
+                else if (t.Task_Type__c == 'Sales Call') {
+                    e.Sales_Call_Description__c = finalValue;
+                }
+                enquiryUpdates.add(e);
+            }
+        }
+        if(!enquiryUpdates.isEmpty()){
+            update enquiryUpdates;
+        }
+    }
+    public static void latestTaskRollupToOpp(List < Task > taskList) {
+        Map < Id, Task > opptyTaskMap = new Map < Id, Task > ();
+        List<Account> AcclistNew = New List<Account>();
+        system.debug('Inside latesttaskrolluptoopty');
+        for (Task t: TaskList) {
+            if (t.WhatId != null && t.WhatId.getSObjectType().getDescribe().getName() == 'Opportunity') {
+                if (opptyTaskMap.containsKey(t.whatId)) {
+                    // if a task already exist for the oppty,
+                    // replace it with the new task only if the new task is the latest
+                    if (opptyTaskMap.get(t.whatId).createdDate < t.createdDate) {
+                        opptyTaskMap.put(t.whatId, t);
+                    }
+                } else {
+                    opptyTaskMap.put(t.whatId, t);
+                }
+            }
+        }
+        List <Opportunity> oppList = [select Name, Id, call_proposed_date_of_visit__c,
+            Last_call_attempted_by__c, Last_call_attempt_status__c,Last_call_description__c ,
+            last_call_attempt_date__c , Presales_Call_counter__c,
+            Unique_SVF_Number__c, Walk_in_Source__c, Walk_in_Sub_Source__c,      
+            Walk_in_Source_Remarks__c, Site_Visit_Count__c, Latest_Call_Attempt_Status__c, Latest_Next_Action_Date__c,
+            Latest_Proposed_Date_of_Visit__c,
+            Visit_Rating__c, AccountId,
+            Descriptive_Remarks_Feedback__c,
+            Unit_type_configuration__c, IsFirstPresalesCall__c,
+            Sales_Call_Attempt_Status__c ,
+            Sales_Call_Description__c,Sales_Call_Attempted_By__c ,Sales_Next_Action_Date__c,Sales_Call_Proposed_Date_Of_Visit__c,Sales_Call_Attempt_Date__c,
+            Sales_Call_Rating__c,Sales_Call_Reason_Not_Interested__c,Pick_up_required_for_SV__c
+            from Opportunity
+            where Id in : opptyTaskMap.keySet()];
+       
+        Set <Id> accIdSetNew = new Set < Id > ();
+        Set <Id> accIdSet = new Set < Id > ();
+      /*  List <AggregateResult> taskCountAg = [Select count(Id) taskCount, whatId oppId, RecordType.name recordTypeName from Task
+            where whatId in : opptyTaskMap.keySet() group by whatId, RecordType.name];//task_type__c taskType Task_RecordTypeName__c tskRecordTypeName
+         
+        Map <String, Map <String, Integer>> oppTaskCountMap = new Map <String, Map <String, Integer>> ();
+        Map <String, Integer> tempMap = new Map <String, Integer> ();
+        for (AggregateResult ar: taskCountAg) {
+            if (oppTaskCountMap.containsKey((String) ar.get('oppId'))) {
+                oppTaskCountMap.get((String) ar.get('oppId')).put((String) ar.get('RecordType.name'), (Integer) ar.get('taskCount'));
+            } else {
+                
+                tempMap.put((String) ar.get('RecordType.name'), (Integer) ar.get('taskCount'));
+                oppTaskCountMap.put((String) ar.get('oppId'), tempMap);
+            }
+        }
+       
+        system.debug('tempMap :: '+tempMap);*/
+        
+        List < AggregateResult > taskCountAg = [Select count(Id) taskCount, whatId oppId, task_type__c taskType from Task
+            where whatId in : opptyTaskMap.keySet() group by whatId, task_type__c];
+        Map < String, Map < String, Integer >> oppTaskCountMap = new Map < String, Map < String, Integer >> ();
+        Map < String, Integer > tempMap = new Map < String, Integer > ();
+        for (AggregateResult ar: taskCountAg) {
+            if (oppTaskCountMap.containsKey((String) ar.get('oppId'))) {
+                oppTaskCountMap.get((String) ar.get('oppId')).put((String) ar.get('taskType'), (Integer) ar.get('taskCount'));
+            } else {
+                
+                tempMap.put((String) ar.get('taskType'), (Integer) ar.get('taskCount'));
+                oppTaskCountMap.put((String) ar.get('oppId'), tempMap);
+            }
+        }
+        system.debug('tempMap :: '+tempMap);
+        for (Opportunity o: oppList) {
+           system.debug('pre opptyTaskMap::: ' + opptyTaskMap);
+            system.debug('pre opptyTaskMap.containsKey(o.Id)::: ' + opptyTaskMap.containsKey(o.Id));
+            system.debug('pre record type::: ' + opptyTaskMap.get(o.Id).Task_RecordTypeName__c);
+          //  system.debug('record type::: ' + opptyTaskMap.get(o.Id).Task_RecordTypeName__c.equalsIgnoreCase('Sales Call'));
+            system.debug('pre opptyTaskMap.get(o.Id).Task_RecordTypeName__c:: ' + opptyTaskMap.get(o.Id).Task_RecordTypeName__c == 'Presales Call');
+            system.debug('pre string.isNotBlank(opptyTaskMap.get(o.Id).Call_Attempt_Status__c)::: ' + string.isNotBlank(opptyTaskMap.get(o.Id).Call_Attempt_Status__c));
+            Datetime taskDate;
+            String taskDate1 ;
+            // system.debug('opptyTaskMap.get(o.Id).Task_RecordTypeName__c  == Presales Call  ::: ' +opptyTaskMap.get(o.Id).RecordType.name == 'Presales Call');
+            if (opptyTaskMap.containsKey(o.Id) && opptyTaskMap.get(o.Id).Task_RecordTypeName__c == 'Presales Call' && string.isNotBlank(opptyTaskMap.get(o.Id).Call_Attempt_Status__c) )
+             {
+                o.Last_call_description__c = opptyTaskMap.get(o.Id).description;
+                o.Last_Presales_Task_Id__c = opptyTaskMap.get(o.Id).Id;
+                o.Last_call_attempt_status__c = opptyTaskMap.get(o.Id).Call_Attempt_Status__c;
+                o.Next_Action_Date__c = opptyTaskMap.get(o.Id).Next_Action_Date__c;
+                o.call_proposed_date_of_visit__c = opptyTaskMap.get(o.Id).Call_Proposed_Date_Of_Visit__c;
+                o.Last_Call_Rating__c = opptyTaskMap.get(o.Id).Call_Rating__c;
+                o.Last_call_attempted_by__c = UserInfo.getName();
+                taskDate = opptyTaskMap.get(o.Id).ActivityDate;
+                o.Pick_up_required_for_SV__c = opptyTaskMap.get(o.Id).Pick_up_required_for_SV__c ;
+                o.Task_Record_Type_Name__c = opptyTaskMap.get(o.Id).Task_RecordTypeName__c; //added on 23/01/2025 for updating call status from task to opportunity
+
+                if (taskDate == null)
+                    taskDate = Date.today();
+
+                // stripping the time value 00:00:00 from the t.activity date value
+                taskDate1 = taskDate.Date().format();                
+                // Here we are concatenating the date and time values to make create a datetime string                                      
+                taskDate1 = taskDate1 + ' ' + opptyTaskMap.get(o.Id).CreatedDate.format('hh:mm a');
+                o.last_call_attempt_date__c = system.now();            
+                o.Presales_Call_counter__c = oppTaskCountMap.get(o.Id).get('Presales Call');             
+                system.debug('o.Presales_Call_counter__c:::: ' + o.Presales_Call_counter__c);
+                if (o.Presales_Call_counter__c == 1) // To populate first call details for Presales on Opty
+                {
+                    o.IsFirstPresalesCall__c = true;
+                    o.First_Call_Attempt_Date__c = o.last_call_attempt_date__c; 
+                    o.First_Call_Attempted_by__c = o.Last_call_attempted_by__c;
+                    o.First_Call_Description__c = o.Last_call_description__c;
+                 /*   o.First_Call_Attempt_Status__c = o.Last_call_attempt_status__c;
+                    o.First_Next_Action_Date__c = o.Next_Action_Date__c;
+                    o.First_Call_Proposed_DateOfVisit__c = o.call_proposed_date_of_visit__c;
+                    o.Disposition__c = opptyTaskMap.get(o.Id).Sub_Dispositions__c;*/
+            }
+        }
+     /*  else  
+            o.IsFirstPresalesCall__c = false;*/
+          
+            system.debug('opptyTaskMap::: ' + opptyTaskMap);
+            system.debug('opptyTaskMap.containsKey(o.Id)::: ' + opptyTaskMap.containsKey(o.Id));
+            system.debug('record type::: ' + opptyTaskMap.get(o.Id).Task_RecordTypeName__c);
+          //  system.debug('record type::: ' + opptyTaskMap.get(o.Id).Task_RecordTypeName__c.equalsIgnoreCase('Sales Call'));
+            system.debug('opptyTaskMap.get(o.Id).Task_RecordTypeName__c:: ' + opptyTaskMap.get(o.Id).Task_RecordTypeName__c == 'Sales Call');
+            system.debug('string.isNotBlank(opptyTaskMap.get(o.Id).Call_Attempt_Status__c)::: ' + string.isNotBlank(opptyTaskMap.get(o.Id).Call_Attempt_Status__c));
+            
+            if(opptyTaskMap.containsKey(o.Id) && opptyTaskMap.get(o.Id).Task_RecordTypeName__c == 'Sales Call' && string.isNotBlank(opptyTaskMap.get(o.Id).Call_Attempt_Status__c)) 
+            {
+                system.debug('@shital@@');
+                o.Sales_Call_Attempt_Status__c = opptyTaskMap.get(o.Id).Call_Attempt_Status__c;
+                o.Sales_Call_Description__c = opptyTaskMap.get(o.Id).description;
+                o.Sales_Call_Attempted_By__c = UserInfo.getName();
+                o.Sales_Next_Action_Date__c = opptyTaskMap.get(o.Id).Next_Action_Date__c;
+                o.Sales_Call_Proposed_Date_Of_Visit__c = opptyTaskMap.get(o.Id).Call_Proposed_Date_Of_Visit__c;
+                o.Sales_Call_Rating__c = opptyTaskMap.get(o.Id).Call_Rating__c;
+                o.Pick_up_required_for_SV__c = opptyTaskMap.get(o.Id).Pick_up_required_for_SV__c;
+                
+                system.debug(''+o.Sales_Call_Description__c);
+                
+                o.Sales_Call_Description__c = opptyTaskMap.get(o.Id).description;              
+                 taskDate = opptyTaskMap.get(o.Id).ActivityDate;
+                
+                if(taskDate == null)
+                    taskDate = Date.today();
+                
+                 taskDate1 = taskDate.Date().format();
+                taskDate1 = taskDate1 + ' ' + opptyTaskMap.get(o.Id).CreatedDate.format('hh:mm a');
+                System.Debug('Value of datetime parse function' + taskDate1);             
+                o.Sales_Call_Attempt_Date__c = system.now();                
+                Integer salesCallCounter = oppTaskCountMap.get(o.Id).get('Sales Call');    
+                system.debug('salesCallCounter ::'+salesCallCounter  );                           
+                if (salesCallCounter == 1) // To populate first call details for sales on opty
+                {                
+                   o.Sales_First_Call_Attempt_Date__c = o.Sales_Call_Attempt_Date__c;
+                /*   o.Sales_First_Call_Attempted_By__c = o.Sales_Call_Attempted_By__c;
+                   o.Sales_First_Call_Description__c = o.Sales_Call_Description__c;
+                   o.First_Sales_Next_Call_Attempt__c =  o.Sales_Call_Attempt_Status__c;
+                   o.First_Sales_Next_Action_Date__c = o.Sales_Next_Action_Date__c;
+                   o.First_Sal_Next_Call_Proposed_DateOfVisit__c =  o.Sales_Call_Proposed_Date_Of_Visit__c; */
+                }         
+            }
+           
+            /* Added by Neha to roll up latest call details on 27 Dec */
+           if(opptyTaskMap.containsKey(o.Id) && string.isNotBlank(opptyTaskMap.get(o.Id).Call_Attempt_Status__c)) {
+                o.Latest_Call_Attempt_Status__c = opptyTaskMap.get(o.Id).Call_Attempt_Status__c;
+                o.Latest_Next_Action_Date__c = opptyTaskMap.get(o.Id).Next_Action_Date__c;
+                o.Latest_Proposed_Date_of_Visit__c = opptyTaskMap.get(o.Id).Call_Proposed_Date_Of_Visit__c;    
+                o.Latest_Call_Attempt_Date__c = System.now();                
+            }
+   
+            System.debug('accidSet:' + accIdSet);
+            accIdSetNew.add(o.AccountId);
+        }
+        update(oppList);  
+    }
+// }
+    public static void latestTaskRollupToLead(List < Task > taskList) {
+        Map < Id, Task > leadTaskMap = new Map < Id, Task > ();
+        Integer callCount = 0;
+        for (Task t: TaskList) {
+            if (t.whoId != null && t.whoId.getSObjectType().getDescribe().getName() == 'Lead') {
+                if (leadTaskMap.containsKey(t.whoId)) {
+                    // if a task already exist for the lead,
+                    // replace it with the new task only if the new task is the latest
+                    if (leadTaskMap.get(t.whoId).createdDate < t.createdDate) {
+                        leadTaskMap.put(t.whoId, t);
+                    }
+                } else {
+                    leadTaskMap.put(t.whoId, t);
+                }
+            }
+        }
+        List < Lead > leadList = [select Name, Id, call_proposed_date_of_visit__c,
+            Last_call_attempted_by__c, Last_call_attempt_status__c, Last_call_description__c, //Count_of_Non_Contactable_Calls__c, commented by Shital
+            Last_Call_Rating__c, Presales_Call_counter__c, last_call_attempt_date__c, IsFirstPresalesCall__c,Pick_up_required_for_SV__c,dispositionDescription__c from lead
+            where Id in : leadTaskMap.keySet()];
+
+        List < AggregateResult > taskCountAg = [Select count(Id) taskCount, whoId leadId, task_type__c taskType from Task
+            where whoId in : leadTaskMap.keySet() group by whoId, task_type__c];
+            Map < String, Map < String, Integer >> leadTaskCountMap = new Map < String, Map < String, Integer >> ();
+        integer taskcountstr;
+        for (AggregateResult ar: taskCountAg) {
+            if (leadTaskCountMap.containsKey((String) ar.get('leadId'))) {
+                leadTaskCountMap.get((String) ar.get('leadId')).put((String) ar.get('taskType'), (Integer) ar.get('taskCount'));              
+            } else {
+                Map < String, Integer > tempMap = new Map < String, Integer > ();
+                tempMap.put((String) ar.get('taskType'), (Integer) ar.get('taskCount'));
+                leadTaskCountMap.put((String) ar.get('leadId'), tempMap);               
+            }
+        }
+       
+        for (Lead l: leadList) {
+            
+            if (leadTaskMap.get(l.Id) != null && String.isNotBlank(leadTaskMap.get(l.Id).dispositionDescription__c)) {
+            l.dispositionDescription__c = leadTaskMap.get(l.Id).dispositionDescription__c; // added on 19/02/2025 for updating dispositionDescription__c from task to lead Guru Mohan
+       		 }
+            
+            if(leadTaskMap.get(l.Id).Task_RecordTypeName__c == 'Presales Call'){
+                l.Latest_Call_Status__c = leadTaskMap.get(l.Id).Call_Status__c; // added on 23/01/2025 for updating call status from task to lead
+                if(leadTaskMap.get(l.Id).CallDurationInSeconds != null){
+                    l.Call_Duration__c = leadTaskMap.get(l.Id).CallDurationInSeconds; // added on 9/12/2024 for updating call duration from task to lead
+                }
+            }
+           
+              // when the agent edits the task and enters the call attempt status then overwrite the previous task information on the task with the latest.
+            if (leadTaskMap.containsKey(l.Id) && leadTaskMap.get(l.Id).Task_RecordTypeName__c == 'Presales Call' && string.isNotBlank(leadTaskMap.get(l.Id).Call_Attempt_Status__c) )
+            {
+                l.Last_call_description__c =    leadTaskMap.get(l.Id).description;
+                l.Last_Presales_Task_Id__c = leadTaskMap.get(l.Id).Id;
+                l.Last_call_attempt_status__c = leadTaskMap.get(l.Id).Call_Attempt_Status__c;
+                l.Latest_Next_Action_Date__c = leadTaskMap.get(l.Id).Next_Action_Date__c;
+                l.call_proposed_date_of_visit__c = leadTaskMap.get(l.Id).Call_Proposed_Date_Of_Visit__c;
+                l.Last_Call_Rating__c = leadTaskMap.get(l.Id).Call_Rating__c;
+                l.Last_call_attempted_by__c = UserInfo.getName();
+                Datetime taskDate = leadTaskMap.get(l.Id).ActivityDate;
+                l.Pick_up_required_for_SV__c = leadTaskMap.get(l.Id).Pick_up_required_for_SV__c;
+               
+                /* Added by Neha to roll up latest call details on 27 Dec */
+                l.Latest_Call_Attempt_Status__c =  leadTaskMap.get(l.Id).Call_Attempt_Status__c;
+                l.Latest_Proposed_Date_of_Visit__c = leadTaskMap.get(l.Id).Call_Proposed_Date_Of_Visit__c;    
+                l.Latest_Call_Attempt_Date__c = System.now();        
+
+                if (taskDate == null)
+                    taskDate = Date.today();
+
+                // stripping the time value 00:00:00 from the t.activity date value
+                String taskDate1 = taskDate.Date().format();
+
+                // Here we are concatenating the date and time values to make create a datetime string                      
+                taskDate1 = taskDate1 + ' ' + leadTaskMap.get(l.Id).CreatedDate.format('hh:mm a');
+
+                System.Debug('Value of datetime parse function' + taskDate1);            
+                  l.last_call_attempt_date__c = System.now();
+                 l.Presales_Call_counter__c = leadTaskCountMap.get(l.Id).get('Presales Call');
+                 system.debug('l.Presales_Call_counter__c:::: ' + l.Presales_Call_counter__c);
+                if (l.Presales_Call_counter__c == 1) // To populate first call details for Presales on lead
+                {
+                    l.IsFirstPresalesCall__c = true;
+                    l.First_Call_Attempt_Date__c = l.last_call_attempt_date__c;
+                    l.First_Call_Attempted_By__c = l.Last_call_attempted_by__c;
+                    l.First_Call_Description__c = l.Last_call_description__c;
+                 /*   l.First_Call_Attempt_Status__c = l.Last_call_attempt_status__c;
+                    l.First_Next_Action_Date__c = l.Latest_Next_Action_Date__c;
+                    l.First_Call_Proposed_DateOfVisit__c =  l.call_proposed_date_of_visit__c;
+                    l.Disposition__c = leadTaskMap.get(l.Id).Sub_Dispositions__c;*/
+                }
+                else
+                    l.IsFirstPresalesCall__c = false;
+                system.debug('l.IsFirstPresalesCall__c::::: ' + l.IsFirstPresalesCall__c);
+        
+            }
+           
+            if(leadTaskMap.containsKey(l.Id) && leadTaskMap.get(l.Id).Task_RecordTypeName__c == 'Sales Call' && string.isNotBlank(leadTaskMap.get(l.Id).Call_Attempt_Status__c) )
+            {
+                l.Sales_Call_Attempt_Status__c = leadTaskMap.get(l.Id).Call_Attempt_Status__c;
+                l.Sales_Call_Attempted_By__c = UserInfo.getName();
+                l.Sales_Next_Action_Date__c = leadTaskMap.get(l.Id).Next_Action_Date__c;
+                l.Sales_Call_Proposed_Date_Of_Visit__c = leadTaskMap.get(l.Id).Call_Proposed_Date_Of_Visit__c;
+                l.Sales_Call_Rating__c = leadTaskMap.get(l.Id).Call_Rating__c;
+                l.Pick_up_required_for_SV__c = leadTaskMap.get(l.Id).Pick_up_required_for_SV__c;
+                    system.debug('in Sales call desc ELSE loop');
+                    l.Sales_Call_Description__c = leadTaskMap.get(l.Id).description;
+              
+                Datetime taskDate = leadTaskMap.get(l.Id).ActivityDate;
+   
+                if(taskDate == null)
+                taskDate = Date.today();
+               
+                String taskDate1 = taskDate.Date().format();
+                taskDate1 = taskDate1 + ' ' + leadTaskMap.get(l.Id).createdDate.format('hh:mm a');
+                System.Debug('Value of datetime parse function' + taskDate1);
+                  l.Sales_Call_Attempt_Date__c = system.now();
+                 
+                Integer leadSalesCallCounter = leadTaskCountMap.get(l.Id).get('Sales Call'); // To populate first call details for sales on lead
+               
+                   if (leadSalesCallCounter == 1)
+                {                
+        
+                   l.Sales_First_Call_Attempt_Date__c = l.Sales_Call_Attempt_Date__c;
+                   l.Sales_First_Call_Attempted_By__c = l.Sales_Call_Attempted_By__c;
+                   l.Sales_First_Call_Description__c = l.Sales_Call_Description__c;
+              /*   l.First_Sales_Next_Call_Attempt__c = l.Sales_Call_Attempt_Status__c;
+                   l.First_Sales_Next_Action_Date__c = l.Sales_Next_Action_Date__c;
+                   l.First_Sal_Next_Call_Proposed_DateOfVisit__c =  l.Sales_Call_Proposed_Date_Of_Visit__c; */
+            }                      
+          }
+       }
+        update(leadList);
+    }
+
+    // returns the time from the datetime field in the user's locale
+    // if the input was 17/1/2016 12:30 AM, returns 12:30 AM as a string
+    public static String formatTime(DateTime input) {
+        String dt = input.format();
+        Integer s = dt.indexOf(' ');
+        return dt.substring(s + 1);
+    }
+}
