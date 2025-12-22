@@ -1,0 +1,369 @@
+<apex:component Controller="AFSIDSAPreambleController" access="global" allowDML="true">
+    <apex:attribute name="unitId" type="Id" description="Unit Id" access="global" assignTo="{!uId}"/>
+    <apex:attribute name="QuotId" type="Id" description="Quot Id" access="global" assignTo="{!QId}"/>
+    <head>
+          <style type="text/css" media="print">
+                @page {
+                
+                @top-center {
+                content: element(header);
+                }
+                
+                size:4in 4in;
+                margin:20mm 20mm 60mm 20mm;
+                
+                }
+                body{
+                margin:0;
+                padding:0;
+                font-family: SansSerif;
+                font-size:18px;
+                line-height:1.5;
+                }
+                @page {
+                size: 8.87in 10.0in;
+                margin:12mm;
+                margin-bottom:190px;
+                }
+                
+                table {
+        		page-break-inside: auto;
+      			}
+                
+                tr{
+                page-break-inside: avoid;
+        		page-break-after: auto;
+                }
+                
+                .maintable {
+                border:1px solid #6E6E6E;       
+                border-collapse: collapse;
+                margin:0;
+                
+                }
+                .maintable tr td {
+                
+                border:1px solid #6E6E6E;
+                border-collapse: collapse;
+                }
+               p.a {
+  			   white-space: nowrap;
+				}
+            </style>  
+        </head>
+    
+    <body>{!Preamble}
+        
+        <div style='page-break-after: always;'></div>
+        <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>A</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>PREAMBLE</th>
+                    </tr>
+        </table>
+        <br/>
+        <div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt;color:#4b4b4b;">
+                                <apex:outputPanel rendered="{!prj.IDSA_Preamble__c != ''}">
+                                   <!-- <div style="page-break-after:always;" ></div>-->
+                                </apex:outputPanel>
+                                <apex:outputField rendered="{!ulist[0].Unit_Ownership__c != 'JD'}" value="{!prj.IDSA_Preamble__c}" />  
+             					<apex:outputField rendered="{!ulist[0].Unit_Ownership__c == 'JD'}" value="{!prj.IDSA_Preamble_Landowner__c}" />
+        </div>
+        
+        <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                    <tr>
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>B</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Specific Terms of Design ("SToD")</th>
+                    </tr>
+        </table>
+        <p style='font-size:10pt;text-align:justify;margin-bottom: 0px;margin-top: 2px;font-family:SansSerif;color:#4b4b4b;'>The particulars of Allottees and address for communication with them is as follows:</p>
+            
+               <apex:variable value="{!1}" var="count" />
+            <apex:repeat value="{!aplist1}" var="aplst" rendered="{!ISNULL(aplist1) == false && aplist1.size > 0}">
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">{!aplst.Sr_No__c}. Particulars of Allottee No. &nbsp;{!count} <apex:variable value="{!count+1}" var="count" /></b></p>
+                <apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Name: </b>{!aplst.Name}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Company Name: </b>{!aplst.Organization_Name__c}</p></apex:outputPanel>
+				<apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'Partnership Firm',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Partnership Firm Name: </b>{!aplst.Organization_Name__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'Trust/HUF',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Name: </b>{!aplst.Organization_Name__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">CIN No: </b>{!aplst.CIN_No_1__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Father/Husband's name: </b>{!aplst.Father_Husband_s_Name__c}</p></apex:outputPanel>
+            	<!--<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised signatory:</b></p>-->
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">PAN No: </b>{!aplst.PancardNo__c}</p>
+                <apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of Birth: </b><apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!aplst.DOB__c}" /> </apex:outputText></p></apex:outputPanel>
+            	<!--<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of incorporation.:</b>{!aplst.Date_of_incorporation__c}</p>-->
+            	<apex:outputPanel rendered="{!IF(aplst.City__c == Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Permanent Address: </b>{!aplst.Permanent_Address__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.City__c != Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Permanent Address: </b>{!aplst.Permanent_Address__c}, {!aplst.City__c}, {!aplst.State__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Registered Address:</b>{!aplst.Permanent_Address__c}, {!aplst.City__c}, {!aplst.State__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Address for communication(If different from above):&nbsp;</b><apex:outputPanel rendered="{!IF(aplst.Mailing_Address_same_as_PermanentAddress__c == false,true,false)}"><apex:outputPanel rendered="{!IF(aplst.Mailing_City__c == Null,true,false)}">{!aplst.Mailing_Address__c}, {!aplst.Mailing_Country__c}, {!aplst.Mailing_Pincode__c}</apex:outputPanel><apex:outputPanel rendered="{!IF(aplst.Mailing_City__c != Null,true,false)}">{!aplst.Mailing_Address__c}, {!aplst.Mailing_City__c}, {!aplst.Mailing_State__c}, {!aplst.Mailing_Country__c}, {!aplst.Mailing_Pincode__c}</apex:outputPanel></apex:outputPanel></p>
+             <!--   <apex:outputPanel rendered="{!IF(aplst.Mailing_Address_same_as_PermanentAddress__c == false && aplst.Mailing_City__c == Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Address for communication(If different from above): </b>{!aplst.Mailing_Address__c}</p></apex:outputPanel> -->
+             <!--   <apex:outputPanel rendered="{!IF(aplst.Mailing_Address_same_as_PermanentAddress__c == false && aplst.Mailing_City__c != Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Address for communication(If different from above): </b>{!aplst.Mailing_Address__c}, {!aplst.Mailing_City__c}, {!aplst.Mailing_State__c}, {!aplst.Mailing_Country__c}, {!aplst.Mailing_Pincode__c}</p></apex:outputPanel> -->
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Email-ID: </b>{!aplst.Email_Address__c}</p>
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Mobile No.: </b>{!aplst.Mobile_Number__c}</p>
+            	<apex:outputPanel rendered="{!IF(aplst.Authorised_signatory_or_GPA_holder__c != Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised signatory or GPA holder(If applicable): </b>{!aplst.Authorised_signatory_or_GPA_holder__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company' || aplst.Subtype_Of_Applicant__c == 'Partnership Firm' || aplst.Subtype_Of_Applicant__c == 'Trust/HUF' ,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of Board Resolution: </b><apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!aplst.Date_of_Board_Resolution__c}" /> </apex:outputText></p></apex:outputPanel>
+            <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;text-align:left;">Photograph: </b><br/><br/><br/><br/><br/><br/><br/><br/></p>
+            </apex:repeat>
+           
+        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin: 0px;margin-bottom: 2px;' class="SuHeadStyle">1.02&nbsp;&nbsp;<b>{!unitownershiptext} Information</b></p>                
+        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 2px;'>The particulars of {!unitownershiptext} and address for communication with them is as follows:</p>
+                <div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 2px;'><b style='color:black;'>Name: </b>	{!promotor.name}</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 2px;'><b style='color:black;'>PAN No.: </b>{!promotor.PAN__c}</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 2px;'><b style='color:black;'>Registered office: </b>{!promotor.Registered_office__c}</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 2px;'><b style='color:black;'>Authorised Signatory: </b>{!auth[0].Name}</p>
+                    <div style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 2px;'><b style='color:black;text-align:left;font-weight:bold;'>Photograph:</b><br/><br/><apex:outputField value="{!auth[0].Photograph__c}"   /></div>
+               
+                </div>
+        		<p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin: 0px;margin-bottom: 2px;' class="SuHeadStyle">1.03&nbsp;&nbsp;<b>Interior Design Fees</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 2px;'>As per the terms of the AfS executed between the Parties, the Allottees have chosen to avail eDesign and are required to pay a eDesign Fee of INR _____________ (Rupees __________________________ only).</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin: 0px;margin-bottom: 2px;' class="SuHeadStyle">1.04&nbsp;&nbsp;<b>Interior Upgrade Charges</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin: 0px;margin-bottom: 2px;'>Based on the Interior Design options chosen by the Allottees, the {!unitownershiptext} have agreed to design the Allottees' Unit, for an estimated Inetrior design Charges of INR _____________ (Rupees __________________________ only). The estimated Interior Design Charges are exclusive of all taxes and breakup for the same is provided in the table below.</p>
+        <div>
+            
+            <table style='width: 100%;border-collapse: collapse;margin-top:5px;font-size:12pt;' cellpadding='3'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#7f7f7f;color:#ffffff;font-size:20px;' colspan="3">Estimate OF Interior Design Charges</th>
+                        <td style='border:2px solid #D3D3D3;width:50px;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:11pt;'>TOTAL[INR]</td>
+                        <td style='border:1px solid #D3D3D3;width:150px;text-align:right;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                    </tr>
+                    <tbody>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>1</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Concrete </td>
+                            <td style=' border:1px solid #D3D3D3;width:30px;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;text-align:right;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>2</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Reinforcement Steel </td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>3</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Masonry and Plaster </td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>4</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Waterproofing </td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>5</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Fenestration</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>6</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Flooring | Dado | Paviour</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>7</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>False Ceiling</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>8</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Steel Fabrication</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>9</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Specialized Fabrication [Metal | Glass | Wood] - Glass Deck | Railings</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>10</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Painting</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>11</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Electrical</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>12</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Power quality and Back-Up</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>13</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Water Supply</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>14</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Sanitary Fixtures and Fittings</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>15</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>HVAC</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>16</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Reticulated Gas</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>17</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Central Vacuum</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>18</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Vertical Transportation</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>19</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Furniture | Paneling</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>20</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Kitchen and Kitchen Appliances</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>21</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Smart Home</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;font-size:10pt;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>22</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Light fixtures</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>23</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Landscaping | Waterbodies | Water Features | Aquariums</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>24</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Specialized Works</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>25</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Deductions for any items already included in agreed specs</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>26</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Vouchers | Credits </td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style=' border:1px solid #D3D3D3;text-align:center;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>27</td>
+                            <td style=' border:1px solid #D3D3D3;font-family:SansSerif;color:#4b4b4b;font-size:10pt;'>Charges for Change Request</td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style=' border:1px solid #D3D3D3;'></td>
+                            <td style='text-align: right;border:1px solid #D3D3D3;color:#4b4b4b;'>__________&nbsp;&nbsp;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:2px;margin-bottom:0px;margin-top: 20px;' class="SuHeadStyle">1.05&nbsp;&nbsp;<b>Revised Virtual Completion Date</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top:0px;margin-bottom:0px;'>On the basis of the extent of Interior Design chosen by the Allottees, the {!unitownershiptext} propose and the Allottees agree that the Virtual Completion Date agreed between the parties in the AfS shall now be modified to the Revised Virtual Completion Date of __________.</p>
+                
+            
+            <table style='width: 100%;border-collapse: collapse;margin-top:20px;page-break-inside:avoid' cellpadding='5'>
+                    <tr>
+                        <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>C</th>
+                        <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>General Terms of Design (GToD)</th>
+                    </tr>
+                </table>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:2px;margin-bottom:0px;' class="SuHeadStyle">2.01&nbsp;&nbsp;<b>Estimate of Interior Design Charges</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;;margin-top:0px;margin-bottom:0px;'>The Allottees agree that the Interior Design charges shown in the SToD are only an estimate and that there could be errors or items that may have been missed, in which case, a revised estimate shall be provided by the {!unitownershiptext}. The Allottees agree to pay such difference, if any.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:0px;margin-bottom:0px;' class="SuHeadStyle">2.02&nbsp;&nbsp;<b>Taxes</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;;margin-top:0px;margin-bottom:0px;'>Taxes, as applicable, shall be payable in addition to the Interior Design Charges shown in the SToD.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:2px;margin-bottom:0px;' class="SuHeadStyle">2.03&nbsp;&nbsp;<b>Payment Schedule</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;;margin-top:0px;margin-bottom:0px;'>The Allottees assure the {!unitownershiptext} that all the Interior Design Charges due to the {!unitownershiptext} as per the SToD shall be paid within 30 (Thirty) calendar days from the date of signing this Interior Design Supplementary Agreement.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:2px;margin-bottom:0px;' class="SuHeadStyle">2.04&nbsp;&nbsp;<b>Cost Escalation</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;;margin-top:0px;margin-bottom:0px;'>The Allottees understand that failure to make this payment within 30 days will expose the Allottees to the risk of cost escalation due to increase in the costs of material or labour. In the event of such escalations, a revised estimate shall be provided by the {!unitownershiptext}. The Allottees agree to pay the difference, if any.</p>
+                
+            	<p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:2px;margin-bottom:0px;' class="SuHeadStyle">2.05&nbsp;&nbsp;<b>Non-Applicability of Claim Compensation</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;;margin-top:0px;margin-bottom:0px;'>
+            		The Parties expressly acknowledge that this Agreement pertains solely to the provision of Interior Design services. Accordingly, Claim Compensation under Clause 8.01 (a) of the AfS shall not be payable or applicable in respect of payments made under this IDSA This distinction arises from the fact that interior design works constitute additional, discretionary upgrades involving specialized procurement and scheduling that are independent of the primary construction timelines of standard specifications set forth in the AfS
+            	</p>
+                
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:2px;margin-bottom:0px;' class="SuHeadStyle">2.06&nbsp;&nbsp;<b>Construction and Specifications</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;;margin-top:0px;margin-bottom:0px;'>The {!unitownershiptext} shall carry out and supervise the construction of the Unit as per the Drawings and Specifications provided in <b>Appendix I</b> and <b>Appendix II</b> respectively, of this Interior Design Supplementary Agreement.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:2px;margin-bottom:0px;' class="SuHeadStyle">2.07&nbsp;&nbsp;<b>Checking of Drawings and Specifications</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;;margin-top:0px;margin-bottom:0px;'>The Allottees hereby confirm that they have read through and verified all the drawings and specifications appended hereto before signing them and confirm that these documents represent the Allottees Interior Design requirements for the Unit. The Allottees acknowledge that there could be differences or variations in the end product and confirm that they shall not raise any objections for the same.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:2px;margin-bottom:0px;' class="SuHeadStyle">2.08&nbsp;&nbsp;<b>Supplementary Agreement</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;;margin-top:0px;margin-bottom:0px;'>This Supplementary Agreement is being signed subsequent to the AfS and shall at all times be read in consonance therewith. The Parties hereby acknowledge, confirm and agree that apart from this Agreement there are no other changes effected to the AfS and the same continues to be in force and binding on the Parties.</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top:2px;margin-bottom:0px;' class="SuHeadStyle">2.09&nbsp;&nbsp;<b>Entire Agreement</b></p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;;margin-top:0px;margin-bottom:0px;'>This Agreement shall be read as part and parcel of the Agreement for Sale and constitutes the entire agreement between the Parties. No change, variation or modification of any of the terms and conditions set forth herein shall be valid unless incorporated as an amendment to the Agreement for Sale and is signed by the Parties.</p>
+            
+            	<p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;'>IN WITNESS WHEREOF, the Parties hereto have signed these presents on the day and year above written.</p>
+                
+            <table style='width:100%;border:none;page-break-inside:avoid'>
+                    <tr>
+                        <th style='border:1px solid #D3D3D3;height:150px;vertical-align:bottom;text-indent:10px;font-size:10pt;text-align:left;font-family:SansSerif;'>Allottees</th>
+                        <th style='border:1px solid #D3D3D3;height:150px;vertical-align:bottom;text-indent:10px;font-size:10pt;text-align:left;font-family:SansSerif;'>{!unitownershiptext}</th>
+                    </tr>
+                    <tr>
+                        <td style='border:1px solid #D3D3D3;height:150px;'><p style='margin:0;font-size:12pt;text-indent:10px;'>Signature</p><p style='margin:0;font-size:10pt;text-indent:10px;font-family:SansSerif;'><b>Witness 01</b> (Name and Address)</p></td>
+                        <td style='border:1px solid #D3D3D3;height:150px;'><p style='margin:0;font-size:12pt;text-indent:10px;'>Signature</p><p style='margin:0;font-size:10pt;text-indent:10px;font-family:SansSerif;'><b>Witness 02</b> (Name and Address)</p></td>
+                    </tr>
+                </table>
+        </div>
+    </body>
+    
+</apex:component>
