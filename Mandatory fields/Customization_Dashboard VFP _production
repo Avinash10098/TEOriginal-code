@@ -1,0 +1,346 @@
+<apex:page sidebar="false" showHeader="false" standardStylesheets="false" Doctype="html-5.0" controller="customizationMasterDashboard">
+    
+    <head>
+        <style>
+            .jumbotron{
+                    background:  #2196F3;
+                    margin-left: 20px;
+                    margin-right: 20px;
+                    border-radius: 15px;
+                    background: #D9E9FF;
+                }
+            .jumbotron1{
+                    background:  #2196F3;
+                    margin-left: 20px;
+                    margin-right: 20px;
+                    border-radius: 15px;
+                    width:Auto;
+                    background: #D9E9FF;
+                }
+            .heading{
+                    background: #bfd8df;
+                    font-family: "proxima-nova", "Helvetica Neue", Helvetica, Arial, sans-serif;
+                    margin-left: 20px;
+                    margin-right: 20px;
+                    border-radius: 15px;
+                    color:white;
+                }
+                
+                table {
+            font-family: Lato,verdana, arial, sans-serif;
+            font-size: 12px;
+            border-width: 3px;
+            border-collapse: collapse;
+            empty-cells:show;
+            
+        }
+     
+        table th {
+            border-width: 1px;
+            padding: 3px;
+            border: 1px solid #517994;
+            background-color:#FFFAFA;
+            color:black;
+            }
+     
+        table td {
+            border-width: 1px;
+            padding: 1px;
+            border: 1px solid #CAD1C3;
+        }
+                
+                .primary-button {
+                    background-color: #5971AD;
+                    color: #ffffff;
+                    border-radius: 4px;
+                    width: 50%;
+                    border: none;
+                    outline: none;
+                    cursor: pointer;
+                    align: right; 
+                    margin: 1px;
+                }
+                
+                .primary-button1 {
+                    background-color: #5971AD;
+                    color: #ffffff;
+                    border-radius: 4px;
+                    width: 20%;
+                    border: none;
+                    outline: none;
+                    cursor: pointer;
+                    align: right; 
+                }
+                .primary-button2 {
+                    background-color: #5971AD;
+                    color: #ffffff;
+                    border-radius: 2px;
+                    width: 10%;
+                    border: none;
+                    outline: none;
+                    cursor: pointer;
+                    align: left; 
+                } 
+                .errormsg{
+                    margin-left: 20px;
+                    margin-right: 20px;
+                    color:red;
+                }
+        </style>
+        <script>
+            function saveFun() {
+                
+                saveAction();
+            }
+            function renderFun(){
+                renderSave();
+            }
+        </script>
+    </head>
+    <body>
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div class="fadeMe">
+                    &nbsp;
+                </div>
+                <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                    <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                        <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                        <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        <div class="container">
+            
+                <apex:form >
+                <div class="heading">
+                    <center>
+                        <h1> Interior Design Order </h1>
+                    </center>
+                    
+                 </div>
+                 </apex:form>
+         </div>
+        <div class= "errormsg">
+              <!-- <apex:pagemessages id="pgmsg"></apex:pagemessages> -->
+             <apex:outputLabel value="{!errorMsg1}" id="pgmsg1">
+             </apex:outputLabel>
+        </div>
+        <!--<apex:outputPanel rendered="{!AND(isError1 == 1)}">
+            <apex:outputText value="{!errorMsg1}"></apex:outputText>
+        </apex:outputPanel> -->
+         <apex:form >
+         <apex:outputPanel rendered="{!AND(isError1 == 0)}">
+         <div class ="jumbotron jumbotron-fluid">
+             <table width="100%">
+                 <tr>
+                     <td>ID Start Date</td>
+                     <td><apex:input type="date" value="{!IDSAStartDate}" required="true" onchange="renderFun();"/> </td>
+                     <td>Actual Submission Date</td>
+                     <td><apex:input type="date" value="{!SubmissionDate}" required="true" onchange="renderFun();"/> </td>
+                     <td>IDSA Signed Date</td>
+                     <td><apex:input type="date" value="{!IDSASignedDate}" required="true" onchange="renderFun();"/> </td>
+                     <td>Revised Virtual Completion Date</td>
+                     <td><apex:input type="date" value="{!RevVirComDate}" required="true" onchange="renderFun();"/> </td>
+                 </tr>
+             </table> 
+         </div>
+      
+         <div class ="jumbotron jumbotron-fluid">  
+             <table width="100%">
+                 <tr>
+                     
+                        <center>
+                            <th colspan="2">Interior Design Section</th>
+                             <th colspan="1"><apex:commandButton style="width:30%;" value="Add" action="{!addSelectedAmount}" styleclass="primary-button" onclick="renderFun();"/></th> 
+                        </center>
+                     
+                 </tr>
+                 <tr>
+                     <th>SR No.</th>
+                     <!---<th>Name</th>---->
+                     <th>Description</th>
+                     <!-- <th>Status</th> -->
+                     <th>Amount</th>
+                     <!---<th>Action</th>---->
+                     
+                 </tr>
+                 
+                 <apex:repeat value="{!showCustomizationList}" var="lc">
+                 <tr>
+                     <td>{!lc.SrNo}</td>
+                     <!---<td>{!lc.name}</td>---->
+                     <td>{!lc.description}</td>
+                    <!--  <td><apex:outputText >{!lc.Active__c} </apex:outputText> </td> -->
+                     <td><apex:inputText value="{!lc.Amount}"/></td>
+                     <!---<td><apex:inputCheckbox value="{!lc.selected}"/></td>--->
+                 </tr>
+                 </apex:repeat>
+                 <tr>
+                     <td colspan="2"><b>Total Interior Design Amount</b></td>
+                     <td colspan="1">{!TotalcustAmount}</td>
+                     
+                 </tr>
+                 </table>
+                 
+          </div>
+          
+         <div class ="jumbotron jumbotron-fluid">  
+                 <table width="100%"> 
+                 <tr>
+                     <th colspan="1"><center><b>Add Discounts</b></center></th>
+                     <th colspan ="1"><apex:commandButton value="Add Discount" action="{!addDiscounts}" styleclass="primary-button" onclick="renderFun();"/></th>
+                 </tr>    
+                 <apex:repeat value="{!showDiscountList}" var="sd">
+                 <tr>
+                     <td ><b>{!sd.disName}</b></td>
+                     <td ><apex:inputText value="{!sd.disAmount}" rendered="{!AND(sd.disName != 'Interior Design Credit')}"/> <apex:outputtext value="{!sd.disAmount}" rendered="{!AND(sd.disName == 'Interior Design Credit')}"/>  </td>
+                     <!---<td><apex:inputCheckbox value="{!sd.selected}"/></td>--->
+                 </tr>
+                 </apex:repeat>
+                 <tr>
+                     <td><b>Total Discount Applied</b></td>
+                     <td>{!totalDisAmount}</td>
+                     
+                 </tr>
+                 </table>
+          </div>
+          <div class ="jumbotron jumbotron-fluid">
+              <table width ="100%">
+                  <tr>
+                      <td width="32%"><b>Total Cost of Interior Design</b></td>
+                      <td width="35%"><center>{!showTotalCC}</center></td>
+                      <td width="10%"><lable><b>Any Remarks: </b></lable><apex:inputField value="{!cn.Discount_Remarks__c}"/> </td>
+                  </tr>
+              </table>
+          </div>  
+          <div class= "errormsg">
+              <!-- <apex:pagemessages id="pgmsg"></apex:pagemessages> -->
+              
+                  <apex:outputLabel value="{!errorMsg}" id="pgmsg" escape="false">
+              </apex:outputLabel>
+          </div>
+             <div class= "errormsg">
+              <!-- <apex:pagemessages id="pgmsg"></apex:pagemessages> -->
+             
+                  <apex:outputLabel value="{!errorMsg1}" id="pgmsg1" escape="false">
+              </apex:outputLabel>
+          </div>
+          <apex:outputPanel id="milestonesId">
+          <div class ="jumbotron1" >
+              <apex:variable var="rowNumber" value="{!0}"/>
+              <table >
+                  
+                  <tr>
+                      <th colspan="11" width="70%"><center><b>Add Payment Milestones</b></center>
+                          
+                      </th>
+                      <th colspan="2" width="30%">
+                          <apex:commandButton value="Add Row" action="{!addMilestone}" styleclass="primary-button"/> <br/>
+                          <apex:commandButton value="Update" action="{!validatePaymentMilestones}" styleclass="primary-button" reRender="pgmsg,milestonesId" onclick="renderFun();"/>
+                      </th> 
+                  </tr>
+                  <tr>
+                      <th>Sr No</th>
+                      <th style="width:200px;">Milestone Name</th>
+                      <th style="width:30px;">Milestone Type</th>
+                      <th style="width:40px;">Construction Stage</th>
+                      <th style="width:10px;">Milestone Days/Months</th>
+                      <th style="width:10px;">Number of days/Months</th>
+                      <th style="width:10px;">Percentage</th>
+                      <th style="width:30px;">Amount</th>
+                      <th style="width:30px;">CGST</th>
+                      <th style="width:30px;">SGST</th>
+                      <th style="width:30px;">Due Date</th>
+                      <th colspan ="2">Action</th> 
+                  </tr>
+                  <!-- <tr>
+                       <td><apex:outputText value="{0}"> 
+                           <apex:param value="{!rowNumber+1}" />
+                           </apex:outputText>
+                      </td>
+                      <td><apex:inputField value="{!cpm.Milestone_Name__c}"/> </td>
+                      <td><apex:inputField value="{!cpm.Milestone_type__c}"/> </td>
+                      <td><apex:inputField value="{!cpm.Project_Construction_Stages__c}"/> </td>
+                      <td><apex:inputField value="{!cpm.Milestone_Date_Calculation__c}"/> </td>
+                      <td><apex:inputField value="{!cpm.Number_of_days_months__c}"/> </td>
+                      <td><apex:inputField value="{!cpm.Percentage__c}"/></td>
+                      <td><apex:outputtext value="{!cpm.Amount__c}"/> </td>
+                      <td><apex:outputtext value="{!cpm.CGST__c}"/> </td>
+                      <td><apex:outputtext value="{!cpm.SGST__c}"/> </td>
+                      <td><apex:outputtext value="{!cpm.Due_Date__c}"/> </td>
+                      <td>
+                            <apex:commandLink title="Delete Receipt" action="{!deleteMilestone}" rendered="{!If(OR(cpmList.size > 0, cpmList.size > 0),True,false)}">
+                            <apex:image value="{!$Resource.DeleteIcon}" height="25" width="25" /> 
+                            <apex:param name="rowIndex" value="{!rowNumber}"/>
+                            </apex:commandLink>
+                            <apex:variable var="rowNumber" value="{!rowNumber+1}"/>
+                      </td>
+                      
+                  </tr> -->
+                  
+                  <tr style="display:{!if((previousRaisedAmount != 0 && previousRaisedAmount <= showTotalCC),'table-row','none')}">
+                      <td>*</td> 
+                      <td>Previously Raised Amount</td>
+                      <td> </td>
+                      <td> </td>
+                      <td> </td>
+                      <td> </td>
+                      <td> </td>
+                      <td>{!previousRaisedAmount}</td>
+                      <td> </td>
+                      <td> </td>
+                      <td> </td>
+                      <td> </td>
+                  </tr>
+                  
+                  <apex:repeat value="{!cpmlist}" var="cpm">   
+                  <tr style="display:{!if((previousRaisedAmount != showTotalCC),'table-row','none')}">
+                       <td><apex:outputText value="{0}"> 
+                           <apex:param value="{!rowNumber+1}" />
+                           </apex:outputText>
+                      </td>
+                      <td><apex:inputField value="{!cpm.Milestone_Name__c}"/> </td>
+                      <td><apex:inputField value="{!cpm.Milestone_type__c}"/> </td>
+                      <td>
+                          <apex:selectList id="stageOptions1" size="1" value="{!cpm.Project_Construction_Stages__c}" styleclass="slds-select__small" multiselect="false">
+                                <apex:selectOptions value="{!lstStages}"/>         
+                         </apex:selectList>
+                      </td>
+                      <td><apex:inputField value="{!cpm.Milestone_Date_Calculation__c}"/> </td>
+                      <td><apex:inputField style="width:30px" value="{!cpm.Number_of_days_months__c}"/> </td>
+                      <td><apex:outputtext style="width:30px" value="{!cpm.Percentage__c}"/></td>
+                      <td><apex:inputField value="{!cpm.Amount__c}"/> </td>
+                      <td><apex:outputtext value="{!cpm.GST_in_String__c}"/> </td>
+                      <td><apex:outputtext value="{!cpm.SGST_in_String__c}"/> </td>
+                      <td><apex:outputtext value="{!cpm.DueDate_in_String__c}"/> </td>
+                      <td>
+                            <apex:commandLink title="Delete Receipt" action="{!deleteMilestone}" rendered="{!If(OR(cpmList.size > 1, cpmList.size > 1),True,false)}">
+                            <apex:image value="{!$Resource.DeleteIcon}" height="25" width="25" /> 
+                            <apex:param name="rowIndex" value="{!rowNumber}"/>
+                            </apex:commandLink>
+                            <apex:variable var="rowNumber" value="{!rowNumber+1}"/>
+                      </td>
+                      
+                  </tr>
+                  </apex:repeat>
+                  
+              </table>
+          </div> 
+          </apex:outputPanel>
+          <div class ="jumbotron1" >
+              <table width="100%">
+                  <tr>
+                      <td><center><apex:commandButton id="savebtn" value="Submit" onclick="this.disabled='disabled'; saveFun();" styleclass="primary-button1" />
+                          		  <apex:actionfunction name="saveAction" action="{!save}" reRender="pgmsg1,pgmsg,milestonesId" status="status"/>
+                                  <apex:actionfunction name="renderSave" rerender="savebtn" /></center></td>
+                  </tr>
+              </table>
+          </div>
+           </apex:outputPanel>
+         </apex:form>
+        
+    </body>
+      
+</apex:page>
