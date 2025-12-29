@@ -1,0 +1,486 @@
+<apex:page sidebar="false" standardStylesheets="false" renderAs="PDF" docType="html-5.0" Controller="AFSController" applyHtmlTag="true" applyBodyTag="false" action="{!dmlOperation}">
+    <head>
+        <style type="text/css" media="print">
+            @page {
+            counter-increment:pages;
+            
+            @top-center {
+            content: element(header); 
+            }
+            @bottom-left {
+            content: element(footer);
+            
+            }
+            
+            size:4in 4in;
+            margin:20mm 20mm 60mm 20mm;
+            
+            }
+            body{
+            margin:0;
+            padding:0;
+            font-family: Tahoma, Geneva, SansSerif;
+            font-size:18px;
+            line-height:1.5;
+            }
+            @page {
+            size: 8.26in 11.69in;
+            margin:12mm;
+            margin-bottom:150px;
+            }
+            
+            .footer{
+            display:block;
+            position: running(footer);
+            margin: 0px auto !Important;
+            
+            width: 100%;
+            
+            }
+            
+            .maintable {
+            
+            border-collapse: collapse;
+            margin:0;
+            font-family:SansSerif;
+            
+            }
+            
+            .maintable tr td {
+            
+            border:2px solid #DCDCDC;
+            border-collapse: collapse;
+            }
+            .specification{
+            background-color:#303030;   
+            text-align: center !important;
+            border-collapse: collapse;
+            font-size: 10pt;
+            color:white;            
+            height:50px;
+            width:70% !important;
+            font-weight: bold;
+            }
+            
+            .speccolor{
+            font-weight: bold;
+            color:white;
+            transform: rotate(90deg) !important;
+            text-transform: uppercase;
+            font-size: 10pt;
+            }
+            
+            .category{
+            background-color:#808080;
+            font-weight: bold;
+            color:white;
+            font-size: 12px;
+            padding:5px;
+            cell-padding:10px;
+            }
+            
+            .subcategory{
+            width:15%;
+            text-align:right !important;
+            padding:5px;
+            font-size: 10pt;
+            }
+            .testcss1{ 
+            text-align:center !important;
+            padding:5px;
+            font-size: 11px;
+            font-family:SansSerif;
+            }
+            .testcss2{
+            width:40%;
+            text-align:left !important;
+            padding:5px;
+            font-size: 11px;
+            
+            }
+            .testcss3{
+            width:15%;
+            text-align:center !important;
+            padding:5px;
+            font-size: 11px;
+            }
+            .library{
+            font-size:10pt;
+            padding:5px;
+            }
+            .specapplicable{
+            
+            }
+            
+            
+            
+            @page {
+            
+            @bottom-left {
+            content: element(footer);
+            }
+            
+            }
+            
+            div.footer {
+            display: block;
+            padding: 5px;
+            position: running(footer);
+            width: 100%;
+            font-size:14px !important;
+            }
+            .pagenumber:before {
+            content: counter(page);
+            }
+            .pagecount:before {
+            content: counter(pages);
+            }
+            .sfdc_richtext p {
+                margin-top: -1em;
+                margin-bottom: 1.2em;
+            }
+            hr{
+            border-top: 0px solid #4b4b4b;
+            }
+            
+            
+            
+        </style>
+    </head>
+    <body>
+        <div class= "errormsg1">
+              <!-- <apex:pagemessages id="pgmsg"></apex:pagemessages> -->
+             <apex:outputLabel value="{!errormsg}" id="pgmsg1" escape="false">
+             </apex:outputLabel>
+        </div>
+        
+        <apex:outputPanel rendered="{!AND(isError1 == 0)}">
+        <!------------------------------------------------Residential----------------------------------------------------------->
+        <apex:outputPanel rendered="{!isResidential}">
+        <!----------------------------------------------- Footer---------------------------------------------------------------->
+       
+        <div class="footer">
+            <hr/>
+            <br/>
+            <apex:outputPanel rendered="{!isRequired}">
+                
+            <table width="100%">
+                <tr style="display:{!if(phase.Landowner_Signatory__c != '','table-row','none')}">
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b"></td>
+                    <td width="33.33%" style="font-size;9pt; text-align:center; font-family:SansSerif; color:#4b4b4b"></td>
+                    <td width="33.33%" style="font-size;9pt; text-align:right; font-family:SansSerif; color:#4b4b4b">Land Owners</td> 
+                </tr>
+                <tr style="display:{!if(phase.Landowner_Signatory__c != '','table-row','none')}">
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b">Allottees</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:center; font-family:SansSerif; color:#4b4b4b">Promoters</td>
+                    <td width="33.33%" style="font-size:11px; text-align:right; font-family:SansSerif; color:#4b4b4b">{!phase.Landowner_Signatory__c}</td> 
+                </tr>
+                <tr style="display:{!if(phase.Landowner_Signatory__c == '','table-row','none')}">
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b">Allottees</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:center; font-family:SansSerif; color:#4b4b4b">Promoters</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:right; font-family:SansSerif; color:#4b4b4b">Land Owners</td> 
+                </tr>
+                   
+                <tr><td colspan="3" ><hr style="border:0.010em solid; "/></td></tr>
+                <tr>
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b">Agreement for Sale</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:center; font-family:SansSerif; color:#4b4b4b">{!prj.name}</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:right;align:right; font-family:SansSerif; color:#4b4b4b"><div align="right">Page <span class="pagenumber"/> of total pages <span class="pagecount"/></div></td> 
+                </tr>
+            </table>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!isNotRequired}">
+            <br/>     
+            <table  width="100%">
+                <tr>
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b">Allottees</td>
+                    <td colspan="2" width="33.33%" style="font-size;9pt; text-align:right; font-family:SansSerif; color:#4b4b4b">Promoters</td>
+                     
+                </tr>
+                <tr><td colspan="3" ><hr style="border:0.010em solid "/></td></tr>
+                <tr>
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b">Agreement for Sale</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:center; font-family:SansSerif; color:#4b4b4b">{!prj.name}</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:right;align:right; font-family:SansSerif; color:#4b4b4b"><div align="right">Page <span class="pagenumber"/> of total pages <span class="pagecount"/></div></td> 
+                </tr>
+            </table>
+            </apex:outputPanel>
+            
+        </div>
+        
+        
+        <!----------------------------------- First Page ----------------------------------------------------------->
+        <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+            <table style='height:99%;width: 99%;margin-left: auto;margin-right: auto;' cellpadding='7'>
+            <tr>
+                <td style='vertical-align:middle;'>
+                    <div style='background: #7f7f7f;line-height:50px;color: #FFFFFF;text-align:center;font-size:25px;border:1px solid #7f7f7f;margin-top: 10px;font-family:SansSerif;' ><b>AGREEMENT FOR SALE</b></div>
+                    <div style='background: {!prj.Color_Code__c};line-height:50px;color: #FFFFFF;text-align:center;font-size:22px;border:1px solid #7f7f7f;margin-top: 10px;font-family:SansSerif;'>{!unt.Name} | <b>{!prj.Name} {!phase.name}</b></div>
+                    <div style='line-height:150px;text-align:center;font-family:SansSerif;'><b>Privileged and Confidential</b></div>
+                </td>
+            </tr>
+        </table>
+      
+        <!----------------------------------- Content Table -----------------------------------------------------------> 
+        <div style="page-break-after:always;">
+            <c:AFSContentTable isNewPhase="{!NewPhase}" noObjLetter="{!showNoObjLetter}" prjState="{!prj.State__c}" prjName="{!prj.Name}" unitOwner="{!UnitOwnership}" ownership="{!Unt.Unit_Ownership__c}"/>
+        </div>
+        
+        <!----------------------------------- PREAMBLE ----------------------------------------------------------->
+        <div style="page-break-after:always;">
+            <c:AFSPreamble unitId="{!bk.Unit__c}" oppoId="{!Quote.Opportunity__c}"/>
+        </div> 
+        
+        <!----------------------------------- Specification Page ----------------------------------------------------------->   
+        <div style="page-break-after:always;"></div>  
+        <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+            <tr>
+                <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>b.</th>
+                <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Specifications</th>
+            </tr>
+        </table>
+            <div style='border:1px solid #D3D3D3;font-family:SansSerif;'>
+                <!--  <apex:include pageName="{!specificationPage}"/> -->
+                <apex:outputPanel rendered="{!renderSpec}">
+                    <c:ViewSpecificationCopy specsId="{!specList[0].id}"/> 
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!NOT(renderSpec)}">
+                    <c:ViewSpecification_C specsId="{!Quote.Specification_Id__c}"/> 
+                </apex:outputPanel>
+            </div>
+        <apex:outputPanel >
+        <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'>
+       <!-- *The Specifications list provided hereinabove is applicable only for the default layout of the Unit and does not apply to any changes to spaces within
+            the Unit or any additional spaces created during the Interior Design journey/Specifications upgrade. Even though it shall be our earnest endeavour 
+            to use the same brands/products/materials as mentioned above, there may be unforeseen situations that compel us to deviate owing the discontinuance 
+            or unavailability of a certain material/product. However, please rest assured that any change shall always be of an equivalent brand/product/material    -->
+            *The Specifications listed here are applicable only for the default layout of the Unit and may not apply to changes made to spaces within the Unit
+            or any additional spaces created during the interior design journey. It is our earnest endeavour to use the same brands, products and materials as
+            mentioned above, however, if there are situations that compel us to change some items, rest assured that all changes shall always be of an
+            equivalent brand, product or material.
+        </p>
+        </apex:outputPanel>
+        <!----------------------------------- Unit Plan ----------------------------------------------------------->
+        <div  style="page-break-after:always;"></div>
+        <apex:outputPanel rendered="{!NewPhase}">
+            <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>c.</th>
+                    <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>Amenities</th>
+                </tr>
+            </table>
+            <br/>
+            <div style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'>
+                <apex:outputField value="{!phase.Project_Amenities__c}" />
+            </div>
+            <div  style="page-break-after:always;"></div>
+            <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>d.</th>
+                    <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>Unit Plan</th>
+                </tr>
+            </table>  
+        <br/>
+            <div >
+             <!--   <apex:outputField value="{!typemaster.Unit_Plan__c}" /> -->
+                <img src="{!UnitPlanImageURL}" width="700px" height="800px"/> 
+            </div>
+         
+        <div style="page-break-after:always;"></div>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!NOT(NewPhase)}">    
+            <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>c.</th>
+                    <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>Unit Plan</th>
+                </tr>
+            </table>  
+        <br/>
+            <div >
+             <!--   <apex:outputField value="{!typemaster.Unit_Plan__c}" /> -->
+                <img src="{!UnitPlanImageURL}" width="700px" height="800px"/> 
+            </div>
+         </apex:outputPanel>
+        <div style="page-break-after:always;"></div>
+        <!-----<c:PFAGeneralTermOfSale />---->
+        <c:AFSCommercialTerms QuotId="{!Quote.Id}" unitOwner="{!Unt.Unit_Ownership__c}"/>
+        
+        <div style='page-break-after: always;'></div>
+        <apex:outputPanel rendered="{!NOT(NewPhase)}">
+        <c:AFSVirtualCompletion unitId="{!bk.Unit__c}"/>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!NewPhase}">
+        <c:AFSVirtualCompletionNewPhase unitId="{!bk.Unit__c}"/> 
+        </apex:outputPanel>
+        <!----------------------------------- schedule Property ----------------------------------------------------------->
+        <div style="page-break-after:always;"></div>
+        <c:AFSScheduleProperties phaseId="{!tw.Cluster__c}" projId="{!bk.Project__c}" UnitId="{!bk.Unit__c}"/>
+        <!----------------------------------- Annexure 3 ----------------------------------------------------------->
+        <div style="page-break-after:always;"></div>
+        <c:AFSAnnexure2 BookId="{!bk.id}"/>
+        <!------------------------------------Pune Project ------------------------------------------------------------>
+            
+          <!--  <apex:outputPanel rendered="{!IF((prj.State__c == 'Maharashtra'),true,false)}"> 
+            <div style="{!IF((prj.Name == 'Songs From The Wood'),'display:block','display:none')}"> 
+            <c:AFSPuneProject bookingId="{!bk.id}" />
+            </div> 
+            </apex:outputPanel>  -->
+        <!----------------------------------- Annexure 3 ----------------------------------------------------------->
+        <div style="page-break-after:always;"></div>
+        <c:AFSContentTable2 BookId="{!bk.id}"/>
+        
+        <!----------------------------------- IDSA Preamble----------------------------------------------------------->
+        <c:AFSIDSAPreamble unitId="{!bk.Unit__c}" QuotId="{!Quote.Opportunity__c}" />
+        <!----------------------------------- Apendix 1 Drawing----------------------------------------------------------->
+        <c:AFSAnnexure unitOwner="{!Unt.Unit_Ownership__c}"/>
+        <!----------------------------------- Annexure 6----------------------------------------------------------->
+        <c:AFSAnnexure7 BokId="{!bk.Id}"/> 
+        
+        </apex:outputPanel> 
+        
+        <!---------------------------------------------------------Commercial------------------------------------------------>
+        
+        <apex:outputPanel rendered="{!isCommercial}">
+         <!----------------------------------------------- Footer---------------------------------------------------------------->
+        
+        <div class="footer">
+            <hr/>
+            <br/><br/>
+            <apex:outputPanel rendered="{!isRequired}">
+            <table  width="100%">
+                <tr>
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b">Allottees</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:center; font-family:SansSerif; color:#4b4b4b">Promoters</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:right; font-family:SansSerif; color:#4b4b4b">Land Owners</td> 
+                </tr>
+                <tr><td colspan="3" ><hr style="border:0.010em solid "/></td></tr>
+                <tr>
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b">Agreement for Sale</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:center; font-family:SansSerif; color:#4b4b4b">{!prj.name}</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:right;align:right; font-family:SansSerif; color:#4b4b4b"><div align="right">Page <span class="pagenumber"/> of total pages <span class="pagecount"/></div></td> 
+                </tr>
+            </table>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!isNotRequired}">
+            <table  width="100%">
+                <tr>
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b">Allottees</td>
+                    <td colspan="2" width="33.33%" style="font-size;9pt; text-align:right; font-family:SansSerif; color:#4b4b4b">Promoters</td>
+                     
+                </tr>
+                <tr><td colspan="3" ><hr style="border:0.010em solid "/></td></tr>
+                <tr>
+                    <td width="33.33%" style="font-size;9pt; text-align:left; font-family:SansSerif; color:#4b4b4b">Agreement for Sale</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:center; font-family:SansSerif; color:#4b4b4b">{!prj.name}</td>
+                    <td width="33.33%" style="font-size;9pt; text-align:right;align:right; font-family:SansSerif; color:#4b4b4b"><div align="right">Page <span class="pagenumber"/> of total pages <span class="pagecount"/></div></td> 
+                </tr>
+            </table>
+            </apex:outputPanel>
+        </div>
+        
+        
+        <!----------------------------------- First Page ----------------------------------------------------------->
+        <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+            <table style='height:99%;width: 99%;margin-left: auto;margin-right: auto;' cellpadding='5'>
+            <tr>
+                <td style='vertical-align:middle;'>
+                    <div style='background: #7f7f7f;line-height:50px;color: #FFFFFF;text-align:center;font-size:25px;border:1px solid #7f7f7f;margin-top: 10px;font-family:SansSerif;' ><b>AGREEMENT FOR SALE</b></div>
+                      <div style='background: {!prj.Color_Code__c};line-height:50px;color: #FFFFFF;text-align:center;font-size:22px;border:1px solid #7f7f7f;margin-top: 10px;font-family:SansSerif;'>{!unt.Name} | <b>{!prj.Name}</b></div>
+                    <div style='line-height:150px;text-align:center;font-family:SansSerif;font-size:13px;'><b>Privileged and Confidential</b></div>
+                </td>
+            </tr>
+        </table>
+       
+        
+        <!----------------------------------- Content Table -----------------------------------------------------------> 
+        <div style="page-break-after:always;">
+           <c:AFSCommercialContentTable />
+        </div>
+        
+        <!----------------------------------- PREAMBLE ----------------------------------------------------------->
+        <div style="page-break-after:always;line-height:1.5;">
+            <c:AFSPreamble unitId="{!bk.Unit__c}" oppoId="{!Quote.Opportunity__c}"/>
+        </div> 
+        
+        <!----------------------------------- Specification Page ----------------------------------------------------------->   
+        <div style="page-break-after:always;"></div>  
+        <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+            <tr>
+                <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>c.</th>
+                <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Specifications</th>
+            </tr>
+        </table>
+     <!--   <div style='border:1px solid #D3D3D3;font-family:SansSerif;'>
+            <c:ViewSpecification_C specsId="{!Quote.Specification_Id__c}" />
+        </div> -->
+            <div style='border:1px solid #D3D3D3;font-family:SansSerif;'>
+                <apex:outputPanel rendered="{!renderSpec}">
+                    <c:ViewSpecificationCopy specsId="{!specList[0].id}"/> 
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!NOT(renderSpec)}">
+                    <c:ViewSpecification_C specsId="{!Quote.Specification_Id__c}"/> 
+                </apex:outputPanel>
+            </div>
+        <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'>
+        *It is our earnest endeavour to use the same brands, products and materials as mentioned above, however, if there are situations that compel us to change some items, rest assured that all changes shall always be of an equivalent brand, product or material.    
+        </p>
+        <!----------------------------------- Unit Plan ----------------------------------------------------------->
+        <div  style="page-break-after:always;"></div>
+            <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>d.</th>
+                    <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>Unit Plan</th>
+                </tr>
+            </table>  
+        <br/>
+        <br/>
+        
+            <div class="Unitp">
+                <apex:outputField value="{!typemaster.Unit_Plan__c}" />
+            </div>
+            <!----------------------------------- Common Amenities ----------------------------------------------------------->
+        <!--div  style="page-break-after:always;"></div>
+            <table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;'>e.</th>
+                    <th style='border:1px solid #D3D3D3;background-color:#EEEEEE;text-align: left;'>Common Amenities</th>
+                </tr>
+            </table>  
+        <br/>
+        <br/-->
+        <!-----------------------------------Commercial Terms-------------------------------------------------->
+        
+        <div style="page-break-after:always;"></div>
+        <!-----<c:PFAGeneralTermOfSale />---->
+        <c:AFSCommercialTerms QuotId="{!Quote.Id}"/>
+        
+        <!-------------------------------------Virtual Completion------------------------------------------------->
+        <div style='page-break-after: always;'></div>
+        <c:AFSVirtualCompletion unitId="{!bk.Unit__c}" />
+        
+        <!----------------------------------- schedule Property ----------------------------------------------------------->
+        <div style="page-break-after:always;"></div>
+        <c:AFSScheduleProperties phaseId="{!tw.Cluster__c}" projId="{!bk.Project__c}" UnitId="{!bk.Unit__c}"/>
+            
+        <!----------------------------------- Annexure 1 and 2 ----------------------------------------------------------->
+        <div style='page-break-after: always;'></div>
+        <c:AFSAnnexure2 BookId="{!bk.id}"/>
+            
+        <!----------------------------------- Annexure 03 ----------------------------------------------------------->
+        <div style="page-break-after:always;"></div>
+        <c:AFSCommercialAnnexure03 />
+            
+         <!----------------------------------- Annexure 04 ----------------------------------------------------------->
+        <div style="page-break-after:always;"></div>
+        <c:AFSCommercialAnnexure04 BokId="{!bk.Id}" />
+            
+         <!----------------------------------- Annexure 05 Till Last Page ----------------------------------------------------------->
+        <div style="page-break-after:always;"></div>
+        <c:AFSCommercialAnnexure05 BokId="{!bk.Id}" />
+            
+         <!----------------------------------- Annexure 6----------------------------------------------------------->
+        <c:AFSCommercialAnnexure06 BokId="{!bk.Id}"/>
+        </apex:outputPanel>   
+        </apex:outputPanel>
+    </body>
+</apex:page>
