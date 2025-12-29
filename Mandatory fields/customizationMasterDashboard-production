@@ -1,0 +1,734 @@
+// Test class : TestCustomizationMasterDashboard
+public class customizationMasterDashboard{
+    public List<Customization_Details__c> lstCD {get;set;}
+    public Customization_New__c cn {get;set;}
+    public Date IDSAStartDate {get;set;}
+    public Date SubmissionDate {get;set;}
+    public Date IDSASignedDate {get;set;}
+    public Date RevVirComDate {get;set;}
+    public Customization_Master_Line_Items__c cmli {get;set;}
+    public selectCustomizationWrapper selectWrapper {get;set;}
+    public List<selectCustomizationWrapper> selectedCust {get;set;}
+    public List<selectCustomizationWrapper> showCustomizationList {get;set;}
+    public List<Booking__C> lstBooking {get;set;}
+     public List<Booking__C> lstBooking1 {get;set;}
+    public List<discountWrapper> showDiscountList {get;set;}
+    public discountWrapper selectDiscount {get;set;}
+    public List<Customization_Payment_Milestones__c> cpmList {get;set;}
+    public Customization_Payment_Milestones__c cpm {get;set;}
+    public List<selectOption> lstStages {get;set;}
+    
+    public Decimal totalAmount {get;set;}
+    public Decimal totalDisAmount {get;set;}
+    public Decimal totalCC {get;set;}
+    public Decimal showTotalCC {get;set;}
+    public Decimal tempCC {get;set;}
+    public Decimal sgst {get;set;}
+    public Decimal cgst {get;set;}
+    public Integer rowIndex {get; set;}
+    
+    public string bookingId {get;set;}
+    public string errorMsg {get;set;}
+    public Integer isError1 {get;set;}
+    public Integer isError {get;set;}
+    public String errorMsg1 {get;set;}
+    public String TotalcustAmount {get;set;}
+    public String printTotalCC {get;set;}
+    public Decimal totalMilestoneAmount {get;set;}
+    public List<Customization_New__c> IdList {get;set;}
+    
+    public List< Customization_Master__c > cMaster {get;set;}
+    public Decimal previousRaisedAmount {get;set;}
+    public List<Customization_Payment_Milestones__c> raisedcustPMList {get;set;}
+    
+    public customizationMasterDashboard()
+    {
+        lstCD = new List<Customization_Details__c>();
+        cn = new Customization_New__c();
+        cmli = new Customization_Master_Line_Items__c();
+        cpm = new Customization_Payment_Milestones__c();
+        showCustomizationList = new List<selectCustomizationWrapper>();
+        showDiscountList = new List<discountWrapper> ();
+        cpmList = new List<Customization_Payment_Milestones__c>();
+        cpmlist.add(new Customization_Payment_Milestones__c());
+        totalAmount = 0;
+        totalDisAmount = 0;
+        totalCC = 0;
+        tempCC = 0;
+        showTotalCC = 0;
+        sgst = 0;
+        cgst = 0;
+        rowIndex = 0;
+        lstStages = new List<selectOption>();
+        lstBooking = new List<Booking__C>();
+        lstBooking1 = new List<Booking__C>();
+        errorMsg = '';
+        errorMsg1 = '';
+        cMaster = new List< Customization_Master__c >();
+        isError1 =0;
+        IdList = new List<Customization_New__c>();
+        previousRaisedAmount = 0;
+        raisedcustPMList = new List<Customization_Payment_Milestones__c>();
+        
+        bookingId = ApexPages.currentPage().getParameters().get('id');   
+        //bookingId = 'a0Cp00000082L0xEAE';
+        lstBooking1 = [Select id, Name,IDSA_Signed_Date__c,Status__c,Customization_Complete__c,Is_DDA_IDA_Required__c,
+                       DDA_IDA_Signing_Date__c,Unit__c from Booking__c where id=: bookingId];
+        IdList = [Select Booking__c,Status__c,IsCanceled__c,Reason_For_Cancellation__c from Customization_New__c where Booking__c = : lstBooking1[0].id and IsCanceled__c = True order by createddate desc];
+       //---------Query on all previous Raised Customization_Payment_Milestones__c related to the cancelled Interior Design-----------18/06/2024
+        If(IdList.size() > 0){
+            Set<Id> custPmIds = new Set<Id>();
+            List<Demand__c> dlist = new List<Demand__c>();
+            dlist = [Select id,Total_Amount_Demanded__c,Customization_Payment_Milestones__c from Demand__c where Booking__c =: bookingId and Customization_Demand__c = True
+                     and Customization_Payment_Milestones__c != null and Demand_Status__c = 'Raised'];
+            if(dlist.size() > 0){
+                for(Demand__c d: dlist){
+                    previousRaisedAmount += d.Total_Amount_Demanded__c;
+                    custPmIds.add(d.Customization_Payment_Milestones__c);
+                }
+            }
+            
+            raisedcustPMList = [Select Id,Name,Booking__c,Demand_Raised__c,Amount__c,Milestone_Name__c,Milestone_type__c,Number_of_days_months__c,Milestone_Date_Calculation__c,
+                                Percentage__c,CGST__c,SGST__c,Due_Date__c,Quotation__c,Sr_No__c,Project_Construction_Stages__c,Invoice_Date__c,Is_Due__c,
+                                Customization__c,Total_Rs__c,Total_Tax__c,Is_Legacy_Record__c,Fugue_ID__c,Is_Back_Dated__c from
+                                Customization_Payment_Milestones__c where Id IN: custPmIds];
+            
+        }
+       //-----------------------------------------------------------------------------------------------------------------------------  
+        List<Customization_Master_Line_Items__c> CustLineItem = new List<Customization_Master_Line_Items__c>();
+        Map<String,Decimal> CustLineItemMap = new Map<String,Decimal>();
+        if(IdList != Null && IdList.size() > 0){
+            CustLineItem = [select Name,Active__c,Amount__c,Customization__c from Customization_Master_Line_Items__c where 
+                                                                     Customization__c =: IdList[0].id ];
+            for(Customization_Master_Line_Items__c cm : CustLineItem){
+                CustLineItemMap.put(cm.Name, cm.Amount__c);
+            }
+        }
+                             
+        if( lstBooking1[0].Is_DDA_IDA_Required__c == 'Yes'){
+            if(lstBooking1[0].DDA_IDA_Signing_Date__c == null){
+                errorMsg1 += ' Please Select DDA/ IDA Signing Date'; 
+                //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'Please Enter Atleast one Milestone'));
+                isError1 = 1;
+            }
+            }
+          if( lstBooking1[0].Customization_Complete__c == true){
+            
+                errorMsg1 += ' Customization is Already Done For this Booking<br/>'; 
+                //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'Please Enter Atleast one Milestone'));
+                isError1 = 1;
+            }
+        else if( lstBooking1[0].Status__c != 'Processed'){
+            errorMsg1 += ' Booking is Not Processed<br/>'; 
+                //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'Please Enter Atleast one Milestone'));
+                isError1 = 1;
+        }
+         cMaster = [select id,name, Active__c, Tax_Rate__c from Customization_Master__c where Active__c = true]; 
+         List<Customization_Details__c> tempCD = [Select Id, name, Sr_No__c,Description__c,Amount__c,Customization_Master_New__c,Active__c
+                                                 from Customization_Details__c 
+                                                 where Active__c =: true and Customization_Master_New__c =:cMaster[0].id
+                                                 ORDER BY Sr_No__c ASC 
+                                                 ];
+        for(Customization_Details__c cd: tempCD)
+        {
+            lstCD.add(cd);
+            if(CustLineItem.size() > 0 && CustLineItem != Null && CustLineItemMap.containsKey(cd.Name)){
+                system.debug('inside if::'+cd.Name);
+                selectWrapper = new selectCustomizationWrapper(cd.Sr_No__c, cd.Name, cd.Description__c, CustLineItemMap.get(cd.Name));
+            }
+            else{
+                system.debug('inside else::'+cd.Name);
+                selectWrapper = new selectCustomizationWrapper(cd.Sr_No__c, cd.Name, cd.Description__c, cd.Amount__c);
+            }
+        //    selectWrapper = new selectCustomizationWrapper(cd.Sr_No__c, cd.Name, cd.Description__c, cd.Amount__c);
+            showCustomizationList.add(selectWrapper);
+        }
+        system.debug('List Customization:: '+lstCD);
+        
+        
+        /// ------ Quotation -----///
+        
+        lstBooking = new List<Booking__c>();
+        DescribeSObjectResult describeResult = Booking__c.getSObjectType().getDescribe();  
+        List<String> fieldNames = new List<String>( describeResult.fields.getMap().keySet() );
+        String query = ' SELECT ' + String.join( fieldNames, ',' ) +  ',Quotation__r.Customization_Credit__c,Unit__r.Project__c,Unit__r.Tower__c,Project__r.Interior_Design_Head__c ' +
+                       ' FROM ' + describeResult.getName() + ' where id=' + '\'' + bookingId + '\''; 
+        lstBooking = Database.query( query );
+            //// -------- End Quotation Query -----------------////
+            
+            ////---- discount --- /////
+            if(lstBooking[0].Quotation__r.Customization_Credit__c != null)    
+                selectDiscount = new discountWrapper('Interior Design Credit',lstBooking[0].Quotation__r.Customization_Credit__c);
+            else
+                selectDiscount = new discountWrapper('Interior Design Credit',0);    
+            showDiscountList.add(selectDiscount);
+            
+            selectDiscount = new discountWrapper('Special Discount (Lumpsum)',cn.Special_Discount_Amount__c);
+            showDiscountList.add(selectDiscount);
+        
+            selectDiscount = new discountWrapper('Sales Promise Item Discount (Lumpsum)',cn.Sales_Promise_Item_Discount_Amount__c);
+            showDiscountList.add(selectDiscount);
+        	
+        	// New Changes
+        	selectDiscount = new discountWrapper('Compensation Discount',cn.Compensation_Discount_Amount__c);
+            showDiscountList.add(selectDiscount);
+            
+            selectDiscount = new discountWrapper('Other Discount (Lumpsum)',cn.Other_Discount_Amount__c);
+            showDiscountList.add(selectDiscount);
+        
+        
+            
+            List<Project_Construction_Stages__c> pclist = InventoryCostServices.getConstructionStagesForTower(lstBooking[0].Unit__r.Project__c, lstBooking[0].Unit__r.Tower__c);
+            if(pclist != null && !pcList.isEmpty()) {
+                lstStages.add(new SelectOption('', '--None--'));
+                for(Project_Construction_Stages__c p : pclist) {
+                    lstStages.add(new SelectOption(p.Id, p.Name));
+                }
+            }
+                
+            ////--------Dis End -----//
+    }
+    
+    
+        public PageReference save(){
+            System.debug('totalMilestoneAmount::'+totalMilestoneAmount);
+            System.debug('showTotalCC::'+showTotalCC);
+        errorMsg1 = '';
+            if(totalMilestoneAmount == Null && showTotalCC > 0){
+                System.debug('Inside If');
+                System.debug('totalMilestoneAmount::'+totalMilestoneAmount+'Total_Customization_Cost__c::'+cn.Total_Customization_Cost__c);
+                errorMsg += 'Total Cost of Interior Design and Total Milestone Amount should be same <br/>'; 
+                isError = 1;
+            }
+            else if(showTotalCC != totalMilestoneAmount && showTotalCC > 0 && totalMilestoneAmount > 0){
+                System.debug('Inside else If');
+            //    System.debug('totalMilestoneAmount::'+totalMilestoneAmount+'Total_Customization_Cost__c::'+cn.Total_Customization_Cost__c);
+            //    errorMsg1 += 'Total Cost of Interior Design and Total Milestone Amount should be same <br/>'; 
+           //     isError1 = 1;
+                
+            }else{
+                System.debug('Inside else');
+                //cn.name = 'Customization - '+ lstBooking[0].Name;
+        cn.Booking__c = bookingId;
+        cn.ID_Start_Date__c = IDSAStartDate;
+        cn.Submission_Date__c = SubmissionDate;
+        cn.IDSA_Signed_Date__c = IDSASignedDate;
+        cn.Revised_Virtual_Completion_Date__c = RevVirComDate;
+        cn.Quotation__c = lstBooking[0].Quotation__c;
+        
+
+        if( lstBooking1[0].Customization_Complete__c != true){
+            //Made this change so as to generate customization even when Total Cust Cost is 0.
+                if(cn.Total_Customization_Cost__c != 0 || cn.Total_Customization_Cost__c == 0){
+                    cn.Interior_Design_Head__c = lstBooking[0].Project__r.Interior_Design_Head__c;
+               /*     if(cn.Total_Customization_Cost__c > 0){
+                        cn.Total_Customization_Cost__c += sgst+cgst;
+                    }  */ // commented to calculate Interior Design cost without tax
+                    
+                    
+                    Decimal discount = 0;
+                    if(cn.Special_Discount_Amount__c != null){
+                        discount +=  cn.Special_Discount_Amount__c;
+                    }
+                    if(cn.Sales_Promise_Item_Discount_Amount__c != null){
+                         discount +=  cn.Sales_Promise_Item_Discount_Amount__c;
+                    }
+                    if(cn.Other_Discount_Amount__c != null){
+                        discount +=  cn.Other_Discount_Amount__c;
+                    }
+                    if(lstBooking[0].Quotation__r.Customization_Credit__c != null){
+                    	discount += lstBooking[0].Quotation__r.Customization_Credit__c;
+                    }
+                    system.debug('cn.Total_Customization_Cost__c::'+cn.Total_Customization_Cost__c);
+                    if(cn.Total_Customization_Cost__c > 0){
+                    cn.Total_Customization_Cost__c = cn.Total_Customization_Cost__c - discount;
+                        system.debug('Inside If');
+                    }
+                    if(cn.Total_Customization_Cost__c < 0){
+                       cn.Total_Customization_Cost__c = 0; 
+                        system.debug('Inside else if');
+                    }
+                    if(cn.Total_Customization_Cost__c == Null){
+                       cn.Total_Customization_Cost__c = 0; 
+                    }
+                    system.debug('cn.Total_Customization_Cost__c::'+cn.Total_Customization_Cost__c);
+                    //cn.Total_Customization_Cost__c = cn.Total_Customization_Cost__c - ( cn.Special_Discount_Amount__c + cn.Sales_Promise_Item_Discount_Amount__c + cn.Other_Discount_Amount__c);
+                    //if(lstBooking[0].Quotation__r.Customization_Credit__c != null){
+                    //cn.Total_Customization_Cost__c = cn.Total_Customization_Cost__c - lstBooking[0].Quotation__r.Customization_Credit__c;
+                    //}
+                    
+                    cn.Unit__c = lstBooking1[0].Unit__c;
+                    if(IdList.size() > 0 && IdList[0].Reason_For_Cancellation__c == 'Change Order'){
+                        cn.Reason_For_Cancellation__c = IdList[0].Reason_For_Cancellation__c;
+                    }
+                    
+                    // When all customization master line-item amounts are equal to 0, mark the Default Interior Design field as True
+                    Boolean lineItem = false;
+                    for(selectCustomizationWrapper scw : showCustomizationList){
+                        if(scw.Amount > 0){
+                            lineItem = true;
+                            break;
+                        }
+                    }
+                    if(lineItem == false){
+                        cn.Default_Interior_Design__c = true;
+                    }else{
+                        cn.Default_Interior_Design__c = false;
+                    }
+                    
+                    
+                insert cn;
+            }
+            else{
+                errorMsg1 += ' Please Enter the Amount<br/>'; 
+                //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'Please Enter Atleast one Milestone'));
+                isError1 = 1;
+                }
+        }
+        else{
+                errorMsg1 += ' Customization is Already Done For this Booking<br/>'; 
+                //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'Please Enter Atleast one Milestone'));
+                isError1 = 1;
+        }
+        system.debug(cn.IDSA_Signed_Date__c);
+        system.debug(cn.Special_Discount_Amount__c);
+        system.debug(cn.Sales_Promise_Item_Discount_Amount__c);
+        system.debug(cn.Other_Discount_Amount__c);
+        
+   //     lstBooking[0].IDSA_Signed_Date__c = cn.IDSA_Signed_Date__c;
+   //     lstBooking[0].ID_Start_Date__c = cn.ID_Start_Date__c;
+  //      lstBooking[0].Submission_Date__c = cn.Submission_Date__c;
+  //     lstBooking[0].Customization_Complete__c = true;
+  //      lstBooking[0].Customization__c = lstBooking[0].Quotation__r.Customization_Credit__c;
+  //      lstBooking[0].Special_Discount__c = cn.Special_Discount_Amount__c;
+  //      lstBooking[0].Sales_Promise_Item_Discount__c = cn.Sales_Promise_Item_Discount_Amount__c;
+  //      lstBooking[0].Other_Discount__c = cn.Other_Discount_Amount__c;
+  //    lstBooking[0].Total_Customization_Cost__c = cn.Total_Customization_Cost__c;
+  //      lstBooking[0].Revised_Virtual_Completion_Date__c = cn.Revised_Virtual_Completion_Date__c;
+            
+        List<Customization_Master_Line_Items__c> custLineItemList = new List<Customization_Master_Line_Items__c>();
+        Customization_Master_Line_Items__c cmli ;
+        for(selectCustomizationWrapper scw: showCustomizationList)
+        {
+           // if(scw.selected == true)
+            //{
+               cmli = new Customization_Master_Line_Items__c();
+               cmli.Sr_No__c = scw.SrNo;
+               cmli.name = scw.name;
+               cmli.Selected__c = scw.selected;
+               cmli.Customization__c = cn.id;
+               cmli.Active__c = true;
+               cmli.Amount__c = scw.Amount;
+               cmli.Booking__c = bookingId;
+               cmli.Quotation__c = lstBooking[0].Quotation__C;
+               custLineItemList.add(cmli);
+           //}
+           
+        }
+        
+        if(!custLineItemList.isEmpty() && lstBooking1[0].Customization_Complete__c != true)
+        {
+            insert custLineItemList;
+            
+        }
+        update lstBooking;
+        if( string.isBlank(cpmlist[0].Milestone_Name__c)){
+            
+                errorMsg1 += ' Milestone Name is missing.<br/>'; 
+                //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'Please Enter Atleast one Milestone'));
+                isError1 = 1;
+            }
+       
+        
+        List<Customization_Payment_Milestones__c> custPaymentMileList = new List<Customization_Payment_Milestones__c>();
+        Customization_Payment_Milestones__c cpm;
+        system.debug('Cpmlist :'+cpmlist);
+        if(cpmlist != null && !cpmlist.isEmpty() && cpmlist[0].Milestone_Name__c != null && cpmlist[0].Milestone_Name__c != '' ){
+            for(Customization_Payment_Milestones__c cpmlist: cpmlist){
+                cpm = new Customization_Payment_Milestones__c();
+                cpm.Name = cpmlist.Milestone_Name__c;
+                cpm.Milestone_Name__c = '[ID] '+cpmlist.Milestone_Name__c;
+                cpm.Milestone_type__c = cpmlist.Milestone_type__c;
+                cpm.Number_of_days_months__c = cpmlist.Number_of_days_months__c;
+                cpm.Milestone_Date_Calculation__c = cpmlist.Milestone_Date_Calculation__c;
+                cpm.Percentage__c = cpmlist.Percentage__c;
+                cpm.Amount__c = cpmlist.Amount__c;
+                cpm.CGST__c = cpmlist.CGST__c;
+                cpm.SGST__c = cpmlist.SGST__c;
+                cpm.Due_Date__c = cpmlist.Due_Date__c;
+                cpm.Project_Construction_Stages__c = cpmlist.Project_Construction_Stages__c;
+                cpm.Booking__c = bookingId;
+                cpm.Quotation__c = lstBooking[0].Quotation__c;
+                cpm.Customization__c = cn.id;
+                custPaymentMileList.add(cpm);
+            
+            }
+        }
+        //------------Updating the Booking on previously raised customization PMs-----------------------------18/06/2024
+        List<Customization_Payment_Milestones__c> custPMListtoUpdate = new List<Customization_Payment_Milestones__c>();
+                List<Customization_Payment_Milestones__c> custPMListtoInsert = new List<Customization_Payment_Milestones__c>();
+        	if(raisedcustPMList.size() > 0 && previousRaisedAmount <= showTotalCC){
+                for(Customization_Payment_Milestones__c c : raisedcustPMList){
+                    Customization_Payment_Milestones__c pmclone = c.clone(false, false, false, false);
+					pmclone.Demand_Raised__c = True; 
+                    pmclone.is_Previosly_Raised_Milestone__c = True;
+                    custPMListtoInsert.add(pmclone);
+                    
+                    c.Booking__c = bookingId;
+                    c.Customization__c = cn.id;
+                    c.Demand_Raised__c = True;
+                    c.is_Previosly_Raised_Milestone__c = True;
+                    custPMListtoUpdate.add(c);
+                    
+                }
+            }
+        //--------------------------------------------------------------------------------------------------------------
+     //   if(cpmlist[0].Milestone_Name__c != null && string.isNotBlank(cpmlist[0].Milestone_Name__c) && cn.Total_Customization_Cost__c != 0 && lstBooking1[0].Customization_Complete__c != true){
+                if(lstBooking1[0].Customization_Complete__c != true){  
+                    if(cpmlist[0].Milestone_Name__c != null && string.isNotBlank(cpmlist[0].Milestone_Name__c) && showTotalCC > 0){
+                       insert custPaymentMileList; 
+                    } 
+                    if(custPMListtoUpdate.size() > 0){
+                        update custPMListtoUpdate;
+                        insert custPMListtoInsert;
+                    }
+                    return new PageReference('/apex/CustomizationSuccessPage?id='+bookingId);
+                }
+        system.debug('cpmlist:'+cpmlist);
+		system.debug('custPaymentMileList:::'+custPaymentMileList);
+        return null;
+            }
+        return null;
+    }
+    
+    
+    
+    
+    public void uploadMilestone()
+    {
+        system.debug('In Upload Milestone' +cpmlist);
+        Map<String, Tax_Slab__c> taxslabsMap = InventoryCostServices.getTaxRates();
+        List<Project_Construction_Stages__c> pclist = InventoryCostServices.getConstructionStagesForTower(lstBooking[0].Unit__r.Project__c, lstBooking[0].Unit__r.Tower__c);
+        map<id,Project_Construction_Stages__c> pcMap = new map<id,Project_Construction_Stages__c>();
+        for(Project_Construction_Stages__c pc : pclist){
+            pcMap.put(pc.id,pc);
+        }
+        
+        for(Customization_Payment_Milestones__c cm : cpmlist)
+        {
+            
+            if(cm.Milestone_Date_Calculation__c =='Days')
+            {
+                integer days = integer.valueof(cm.Number_of_days_months__c);
+                
+                if(cm.Milestone_type__c == 'Time Linked'){
+                    //datetime dt = lstBooking[0].Booking_Date__c;
+                    datetime dt = IDSASignedDate;
+                    date DueDate = date.newinstance(dt.year(), dt.month(), dt.day());
+                    cm.Due_date__c = DueDate.addDays(days);
+                }
+                else{
+                    datetime dt = IDSASignedDate;
+                    //date DueDate = date.newinstance(dt.year(), dt.month(), dt.day());
+                    //cm.Due_date__c = DueDate.addDays(days);
+                    if(pcMap.get(cm.Project_Construction_Stages__c) != null ){
+                        system.debug('Project Custruction Stages::'+pcMap.get(cm.Project_Construction_Stages__c).id);
+                        cm.Project_Construction_Stages__c = pcMap.get(cm.Project_Construction_Stages__c).id;
+                        system.debug('Project Custruction Stages::'+cm.Project_Construction_Stages__c);
+                        if(pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c != null){
+                            if(pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c > system.today())    
+                            {
+                                system.debug('Actual Date:: '+ pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c);
+                                date DueDate = pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c;
+                                cm.Due_Date__c = DueDate.addDays(days);
+                                system.debug('Actual Date:: '+ cm.Due_Date__c);
+                            }
+                            else if(pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c <= system.today())
+                            {
+                                date DueDate = system.today();
+                                cm.Due_Date__c = DueDate.addDays(days);
+                            }
+                        }
+                        else {
+                            if(pcMap.get(cm.Project_Construction_Stages__c).Planned_date_of_completion__c > system.today())    
+                            {
+                                date DueDate = pcMap.get(cm.Project_Construction_Stages__c).Planned_date_of_completion__c;
+                                cm.Due_Date__c = DueDate.addDays(days);
+                            }
+                            else if(pcMap.get(cm.Project_Construction_Stages__c).Planned_date_of_completion__c <= system.today())
+                            {
+                                date DueDate = system.today();
+                                cm.Due_Date__c = DueDate.addDays(days);
+                            }
+                        }
+                    }
+                }
+
+            }else if(cm.Milestone_Date_Calculation__c =='Months')
+            {
+                integer monthDays = integer.valueof(cm.Number_of_days_months__c * 30);
+               
+                if(cm.Milestone_type__c == 'Time Linked'){
+                    //datetime dt = lstBooking[0].Booking_Date__c;
+                    datetime dt = IDSASignedDate;
+                    date DueDate = date.newinstance(dt.year(), dt.month(), dt.day());
+                    cm.Due_date__c = DueDate.addDays(monthDays);
+                }
+                else{
+                    datetime dt = IDSASignedDate;
+                    //date DueDate = date.newinstance(dt.year(), dt.month(), dt.day());
+                    //cm.Due_date__c = DueDate.addDays(monthDays);
+                    if(pcMap.get(cm.Project_Construction_Stages__c) != null ){
+                        system.debug('Project Custruction Stages::'+pcMap.get(cm.Project_Construction_Stages__c).id);
+                        cm.Project_Construction_Stages__c = pcMap.get(cm.Project_Construction_Stages__c).id;
+                        if(pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c != null){
+                            if(pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c > system.today())    
+                            {
+                                system.debug('Actual Date:: '+ pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c);
+                                date DueDate = pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c;
+                                cm.Due_Date__c = DueDate.addDays(monthDays);
+                                system.debug('Actual Date:: '+ cm.Due_Date__c);
+                            }
+                            else if(pcMap.get(cm.Project_Construction_Stages__c).Actual_date_of_completion__c <= system.today())
+                            {
+                                date DueDate = system.today();
+                                cm.Due_Date__c = DueDate.addDays(monthDays);
+                            }
+                        }
+                        else {
+                            if(pcMap.get(cm.Project_Construction_Stages__c).Planned_date_of_completion__c > system.today())    
+                            {
+                                date DueDate = pcMap.get(cm.Project_Construction_Stages__c).Planned_date_of_completion__c;
+                                cm.Due_Date__c = DueDate.addDays(monthDays);
+                            }
+                            else if(pcMap.get(cm.Project_Construction_Stages__c).Planned_date_of_completion__c <= system.today())
+                            {
+                                date DueDate = system.today();
+                                cm.Due_Date__c = DueDate.addDays(monthDays);
+                            }
+                        }
+                    }
+                }
+            }
+            
+         //   cm.Amount__c = ((showTotalCC * cm.Percentage__c)/100).setscale(0,RoundingMode.HALF_UP);
+            cm.Amount__c = cm.Amount__c;
+            cm.Percentage__c = ((cm.Amount__c/showTotalCC)*100).setscale(2,RoundingMode.HALF_UP);
+            cm.SGST__c = ((cm.Amount__c * taxslabsMap.get(cMaster[0].Tax_Rate__c).Tax2_Percentage__c * taxslabsMap.get(cMaster[0].Tax_Rate__c).Taxable2_Percentage__c)/10000).setscale(0,RoundingMode.HALF_UP);
+            cm.CGST__c = ((cm.Amount__c * taxslabsMap.get(cMaster[0].Tax_Rate__c).Tax1_Percentage__c * taxslabsMap.get(cMaster[0].Tax_Rate__c).Taxable1_Percentage__c)/10000).setscale(0,RoundingMode.HALF_UP);
+            system.debug('cm.Amount__c::'+cm.Amount__c); 
+            sgst += cm.SGST__c;
+            cgst += cm.CGST__c;
+            cm.Amount_in_string__c = InventoryCostServices.INFormatR(cm.Amount__c);
+            cm.SGST_in_String__c = InventoryCostServices.INFormatR(cm.SGST__c);
+            cm.GST_in_String__c = InventoryCostServices.INFormatR(cm.CGST__c);             
+            cm.DueDate_in_String__c = cm.Due_date__c.format();
+            
+            
+        }
+    }
+    
+    public void validatePaymentMilestones(){
+        errorMsg = '';
+        integer i = 1;
+        Integer isError = 0;
+        Decimal milestonePercentage = 0;
+        if(previousRaisedAmount <= showTotalCC){
+            totalMilestoneAmount = previousRaisedAmount;
+        }
+        else{
+            totalMilestoneAmount = 0;
+        }
+        if(previousRaisedAmount > 0 && previousRaisedAmount == showTotalCC){
+            errorMsg += ' on #Row ' + i + ' Previously raised amount is equal to the ID order anount. Please click on Submit.<br/>'; 
+            //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'on #Row ' + i + ' Milestone Name is missing.'));
+            isError = 1;
+        }
+        else{
+            for(Customization_Payment_Milestones__c cm : cpmlist){
+                
+                totalMilestoneAmount += cm.Amount__c;
+                //   totalMilestoneAmount += ((showTotalCC * cm.Percentage__c)/100).setscale(0,RoundingMode.HALF_UP);
+                //   totalMilestoneAmount += ((showTotalCC * cm.Percentage__c)/100);
+                System.debug('totalMilestoneAmount::'+totalMilestoneAmount);
+                System.debug('Total Customization cost::'+showTotalCC);
+                
+                
+                if(string.isBlank(cm.Milestone_Name__c)){
+                    errorMsg += ' on #Row ' + i + ' Milestone Name is missing.<br/>'; 
+                    //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'on #Row ' + i + ' Milestone Name is missing.'));
+                    isError = 1;
+                }
+                else if(string.isBlank(cm.Milestone_type__c)){
+                    errorMsg += ' on #Row ' + i + ' Milestone Type is missing.<br/>';
+                    //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'on #Row ' + i + ' Milestone Type is missing.'));
+                    isError = 1;
+                }else if(string.isNotBlank(cm.Milestone_type__c) && cm.Milestone_type__c == 'Construction Linked' && cm.Project_Construction_Stages__c == null){
+                    errorMsg += ' on #Row ' + i + ' Construction Stage is missing.<br/>';
+                    //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'on #Row ' + i + ' Construction Stage is missing.'));
+                    isError = 1;
+                }else if(string.isNotBlank(cm.Milestone_type__c) && cm.Milestone_type__c == 'Time Linked' && cm.Project_Construction_Stages__c != null){
+                    errorMsg += ' on #Row ' + i + ' For Time Linked milestones Construction Stage should be blank.<br/>';
+                    //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'on #Row ' + i + ' Construction Stage is missing.'));
+                    isError = 1;
+                }else if(string.isBlank(cm.Milestone_Date_Calculation__c)){
+                    errorMsg += ' on #Row ' + i + ' Milestone Days/Months is missing.<br/>';
+                    //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'on #Row ' + i + ' Milestone Days/Months is missing.'));
+                    isError = 1;
+                }else if(cm.Number_of_days_months__c == null){
+                    errorMsg += ' on #Row ' + i + ' No. of Days is missing.<br/>';
+                    // ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'on #Row ' + i + ' No. of Days is missing.'));
+                    isError = 1;
+                }/*else if(cm.Percentage__c == null){
+errorMsg += ' on #Row ' + i + ' Milestone Percentage is missing.<br/>';
+// ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'on #Row ' + i + ' Milestone Percentage is missing.'));
+isError = 1;
+}*/
+                
+                if(cm.Percentage__c != null){
+                    milestonePercentage += cm.Percentage__c;
+                }
+                i++;
+            }
+            if(showTotalCC != totalMilestoneAmount){
+                errorMsg +=' Total Cost of Interior Design and Total Milestone Amount should be same.<br/>'; 
+                isError = 1;
+            }
+            if(showTotalCC == 0){
+                errorMsg += 'Total Interior Design Amount is Zero.<br/>'; 
+                //ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error,'on #Row ' + i + ' Milestone Name is missing.'));
+                isError = 1;
+            }
+            /*if(milestonePercentage != 100){
+errorMsg += ' Total milestone percentage should be 100%';
+isError = 1;
+}*/
+            if(isError == 1){
+                errorMsg = ' ERROR: <br/>' + errorMsg;
+            }else{
+                uploadMilestone();
+            }
+        }       
+    }
+    
+    public void addMilestone(){        
+        cpmlist.add(new Customization_Payment_Milestones__c());
+    }
+    
+    public void deleteMilestone(){              
+        rowIndex = Integer.valueOf(ApexPages.currentPage().getParameters().get('rowIndex'));
+        cpmlist.remove(rowIndex);
+    }
+    
+    public void totalCC( decimal totalC , decimal DA)
+    {
+        
+        showTotalCC = totalC - DA;
+    }
+    
+    public void addDiscounts()
+    {
+        totalDisAmount = 0;
+       
+        for(discountWrapper dw : showDiscountList )
+        {
+            if(dw.disAmount == Null)
+                    dw.disAmount = 0;
+            if(dw.disName == 'Interior Design Credit' )
+            {    
+                totalDisAmount += dw.disAmount;
+            }
+            if(dw.disName == 'Special Discount (Lumpsum)' )
+            {
+                totalDisAmount += dw.disAmount;
+                cn.Special_Discount__c = dw.disName;
+                cn.Special_Discount_Amount__c = dw.disAmount;
+            }
+            if(dw.disName == 'Sales Promise Item Discount (Lumpsum)' )
+            {
+                totalDisAmount += dw.disAmount;
+                cn.Sales_Promise_Item_Discount__c = dw.disName;
+                cn.Sales_Promise_Item_Discount_Amount__c = dw.disAmount;
+            }
+            if(dw.disName == 'Other Discount (Lumpsum)')
+            {
+                totalDisAmount += dw.disAmount;
+                cn.Other_Discount__c = dw.disName;
+                cn.Other_Discount_Amount__c = dw.disAmount;
+            }
+            
+            if(dw.disName == 'Compensation Discount')
+            {
+                totalDisAmount += dw.disAmount;
+                cn.Compensation_Discount__c = dw.disName;
+                cn.Compensation_Discount_Amount__c = dw.disAmount;
+            }
+        }
+        system.debug(totalCC +' :: '+ totalDisAmount);
+        totalCC(totalCC,totalDisAmount);
+    }
+    
+    public void addSelectedAmount()
+    {
+        totalAmount = 0;
+        totalCC = 0;
+        selectedCust = new List<selectCustomizationWrapper> ();
+        for(selectCustomizationWrapper scw : showCustomizationList)
+        {
+            //if(scw.selected == true)
+            //{
+                totalAmount = totalAmount + scw.Amount;
+            //}
+        }
+        
+        Decimal testdec = totalAmount.scale();
+        system.debug('testdec:'+testdec);
+        if(testdec != 0){
+            errorMsg1 += 'Enter Rounded off values'; 
+            isError1 = 1;
+        }
+        TotalcustAmount = InventoryCostServices.INFormatForNPV(totalAmount);
+        totalCC = totalAmount;
+        showTotalCC = totalCC;
+        printTotalCC = InventoryCostServices.INFormatR(showTotalCC);
+        cn.Total_Customization_Cost__c = totalCC;
+        system.debug('totalAmount::'+totalAmount);
+    }
+    
+    public class selectCustomizationWrapper
+    {
+        public Boolean selected {get; set;}
+        public Decimal SrNo {get;set;}
+        public String name {get;set;}
+        public string description {get;set;}
+        public Decimal Amount {get;set;}
+        public Decimal totalAmount {get;set;}
+        public Customization_Details__c cd {get;set;}
+        
+        public selectCustomizationWrapper(Decimal sr, string cName, string dsc, Decimal Amt)
+        {
+            this.selected = false;
+            this.SrNo = sr;
+            this.name = cName;
+            this.description = dsc;
+            this.Amount = Amt;
+        }
+    }
+    
+    public class discountWrapper
+    {
+      public boolean selected {get;set;}
+      public string disName {get;set;}
+      public Decimal disAmount {get;set;}
+     
+      
+      public discountWrapper(string discName, Decimal discAmount)
+      {
+          this.selected = false;
+          this.disName = discName;
+          this.disAmount = discAmount;
+          
+      }  
+    }
+    
+}
