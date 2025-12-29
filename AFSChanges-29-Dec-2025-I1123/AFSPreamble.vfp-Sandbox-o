@@ -1,0 +1,380 @@
+<apex:component controller="PreambleController" access="global" allowDML="true">
+    <apex:attribute name="PreId" type="Id" description="Preamble Id" access="global" assignTo="{!pId}"/>
+    <apex:attribute name="unitId" type="Id" description="Unit Id" access="global" assignTo="{!uId}"/>
+    <apex:attribute name="oppoId" type="Id" description="oppo Id" access="global" assignTo="{!oppId}"/>
+    <head>          
+        <style type="text/css" media="print">
+            @page {
+                
+                @top-center {
+                content: element(header);
+                }
+                
+                size:4in 4in;
+                margin:20mm 20mm 60mm 20mm;
+                
+                }
+                body{
+                margin:0;
+                padding:0;
+                font-family: SansSerif;
+                font-size:18px;
+                line-height:1.5;
+                }
+                @page {
+                size: 8.87in 10.0in;
+                margin:12mm;
+                margin-bottom:190px;
+                }
+                
+                table {
+        		page-break-inside: auto;
+      			}
+                
+                tr{
+                page-break-inside: avoid;
+        		page-break-after: auto;
+                }
+                
+                .maintable {
+                border:1px solid #DCDCDC;       
+                border-collapse: collapse;
+                margin:0;
+                
+                }
+                .maintable tr td {
+                
+                border:1px solid #DCDCDC;
+                border-collapse: collapse;
+                }
+               p.a {
+  			   white-space: nowrap;
+				}
+            #myDiv { 
+            border:0px; 
+            height:50px; 
+            width:10px; 
+            }
+            
+        </style>
+    </head>
+    
+    <body>{!createTCPDF}
+    <!-- .Photograph1 span table.htmlDetailElementTable tbody tr td div.sfdc_richtext p img {
+            width: 50px !important;
+            }   -->
+    
+    <div style="page-break-after:always;">
+            <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>A</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>PREAMBLE</th>
+                </tr>
+            </table>
+        <br/>
+
+        		<div  style="text-align: justify;text-justify: inter-word;font-family:SansSerif;font-size:10pt; line-height:normal; margin-top: 0px;margin-bottom: 0px; color:#4b4b4b;">
+                                <apex:outputPanel rendered="{!phase.Preamble_Details__c != ''}">
+                                   <!-- <div style="page-break-after:always;" ></div>-->
+                                </apex:outputPanel>
+                        <apex:outputField rendered="{!ulist[0].Unit_Ownership__c != 'JD'}" value="{!phase.Preamble_Details__c}" />
+                        <apex:outputField rendered="{!ulist[0].Unit_Ownership__c == 'JD'}" value="{!phase.Preamble_Details_JD_Unit__c}" /> 
+                </div>
+        
+        
+        	<div style='page-break-after: always;'></div>
+        	<table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>B</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>SPECIFIC TERMS OF SALE ("SToS")</th>
+                </tr>
+            </table>
+        <br/>
+        	<table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>1</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Allottees Information</th>
+                </tr>
+            </table>
+        <div>
+                <p style='font-size:10pt;text-align:justify;margin-bottom: 0px;margin-top: 2px;font-family:SansSerif;color:#4b4b4b;'>The particulars of Allottees and address for communication with them is as follows:</p>
+            <apex:outputPanel rendered="{!isResidential}">
+                <apex:variable value="{!1}" var="count" />
+            <apex:repeat value="{!aplist1}" var="aplst" rendered="{!ISNULL(aplist1) == false && aplist1.size > 0}">
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">{!aplst.Sr_No__c}. Particulars of Allottee &nbsp;{!count} <apex:variable value="{!count+1}" var="count" /></b></p>
+                <apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Name:&nbsp;</b>{!aplst.Name}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Company Name:&nbsp;</b>{!aplst.Organization_Name__c}</p></apex:outputPanel>
+				<apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'Partnership Firm',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Partnership Firm Name:&nbsp;</b>{!aplst.Organization_Name__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'Trust/HUF',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Name:&nbsp;</b>{!aplst.Organization_Name__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">CIN No:&nbsp;</b>{!aplst.CIN_No_1__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Father's/Husband's name:&nbsp;</b>{!aplst.Father_Husband_s_Name__c}</p></apex:outputPanel>
+            	<!--<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised signatory:</b></p>-->
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">PAN No:&nbsp;</b>{!aplst.PancardNo__c}</p>
+               <apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of Birth:&nbsp;</b><apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!aplst.DOB__c}" /> </apex:outputText></p></apex:outputPanel>
+            	<!--<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of incorporation.:</b>{!aplst.Date_of_incorporation__c}</p>-->
+            	<apex:outputPanel rendered="{!IF(aplst.City__c == Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Permanent Address:&nbsp;</b>{!aplst.Permanent_Address__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.City__c != Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Permanent Address:&nbsp;</b>{!aplst.Permanent_Address__c}, {!aplst.City__c}, {!aplst.State__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company' || aplst.Subtype_Of_Applicant__c == 'Partnership Firm' || aplst.Subtype_Of_Applicant__c == 'Trust/HUF',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Registered Address:&nbsp;</b>{!aplst.Permanent_Address__c}, {!aplst.City__c}, {!aplst.State__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Address for communication(If different from above):&nbsp;</b><apex:outputPanel rendered="{!IF(aplst.Mailing_Address_same_as_PermanentAddress__c == false,true,false)}"><apex:outputPanel rendered="{!IF(aplst.Mailing_City__c == Null,true,false)}">{!aplst.Mailing_Address__c}, {!aplst.Mailing_Country__c}, {!aplst.Mailing_Pincode__c}</apex:outputPanel><apex:outputPanel rendered="{!IF(aplst.Mailing_City__c != Null,true,false)}">{!aplst.Mailing_Address__c}, {!aplst.Mailing_City__c}, {!aplst.Mailing_State__c}, {!aplst.Mailing_Country__c}, {!aplst.Mailing_Pincode__c}</apex:outputPanel></apex:outputPanel></p> 
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Email-ID:&nbsp;</b>{!aplst.Email_Address__c}</p>
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Mobile No.:&nbsp;</b>{!aplst.Mobile_Number__c}</p>
+            	<apex:outputPanel rendered="{!IF(aplst.Authorised_signatory_or_GPA_holder__c != Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised signatory or GPA holder(If applicable):&nbsp;</b>{!aplst.Authorised_signatory_or_GPA_holder__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!IF(aplst.Subtype_Of_Applicant__c == 'For Company' || aplst.Subtype_Of_Applicant__c == 'Partnership Firm' || aplst.Subtype_Of_Applicant__c == 'Trust/HUF' ,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of Board Resolution:</b><apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!aplst.Date_of_Board_Resolution__c}" /> </apex:outputText></p></apex:outputPanel>
+            <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;text-align:left;">Photograph:&nbsp;</b><br/><br/><br/><br/><br/><br/><br/><br/></p>
+            </apex:repeat>
+            </apex:outputPanel> 
+            <apex:outputPanel rendered="{!isCommercial}">
+                <apex:variable value="{!1}" var="count" />
+            <apex:repeat value="{!aplist1}" var="aplst" rendered="{!ISNULL(aplist1) == false && aplist1.size > 0}">
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">{!aplst.Sr_No__c}. Particulars of Allottee &nbsp;{!count} <apex:variable value="{!count+1}" var="count" /> </b></p>
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Name: </b>{!aplst.Name}</p>
+ 				<apex:outputPanel rendered="{!IF(aplst.Type_Of_Applicant__c == 'Individual Buyer',true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Father's/Husband's name: </b>{!aplst.Father_Husband_s_Name__c}</p></apex:outputPanel>
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">PAN No: </b>{!aplst.PancardNo__c}</p>
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Date of Birth: </b><apex:outputText value="{0, date, dd.MM.yyyy}"> <apex:param value="{!aplst.DOB__c}" /> </apex:outputText></p>
+            	<apex:outputPanel rendered="{!IF(aplst.City__c == Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Permanent Address: </b>{!aplst.Permanent_Address__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+            	<apex:outputPanel rendered="{!IF(aplst.City__c != Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Permanent Address:&nbsp;</b>{!aplst.Permanent_Address__c}, {!aplst.City__c}, {!aplst.State__c}, {!aplst.Country__c}, {!aplst.Pincode__c}</p></apex:outputPanel>
+            <!--    <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Address for communication(If different from above): </b><apex:outputPanel rendered="{!IF(aplst.Mailing_Address_same_as_PermanentAddress__c == false,true,false)}">{!aplst.Mailing_Address__c}</apex:outputPanel></p> -->
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Address for communication(If different from above):&nbsp;</b><apex:outputPanel rendered="{!IF(aplst.Mailing_Address_same_as_PermanentAddress__c == false,true,false)}"><apex:outputPanel rendered="{!IF(aplst.Mailing_City__c == Null,true,false)}">{!aplst.Mailing_Address__c}</apex:outputPanel><apex:outputPanel rendered="{!IF(aplst.Mailing_City__c != Null,true,false)}">{!aplst.Mailing_Address__c}, {!aplst.Mailing_City__c}, {!aplst.Mailing_State__c}, {!aplst.Mailing_Country__c}, {!aplst.Mailing_Pincode__c}</apex:outputPanel></apex:outputPanel></p> 
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Email-ID: </b>{!aplst.Email_Address__c}</p>
+            	<p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Mobile No.: </b>{!aplst.Mobile_Number__c}</p>
+                <apex:outputPanel rendered="{!IF(aplst.Authorised_signatory_or_GPA_holder__c != Null,true,false)}" ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised signatory or GPA holder(If applicable):&nbsp;</b>{!aplst.Authorised_signatory_or_GPA_holder__c}</p></apex:outputPanel>
+            <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;text-align:left;">Photograph: </b><br/><br/><br/><br/><br/><br/><br/><br/></p>
+            </apex:repeat>
+            </apex:outputPanel>
+            </div>
+        	<table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr style="display:{!if(ulist[0].Unit_Ownership__c != 'JD','table-row','none')}">
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>2</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Promoters Information</th>
+                </tr>
+                <tr style="display:{!if(ulist[0].Unit_Ownership__c == 'JD','table-row','none')}">
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>2</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Developers Information - (Confirming Party)</th>
+                </tr>
+            </table>
+        	<div>
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'>The particulars of&nbsp;<apex:outputPanel rendered="{!ulist[0].Unit_Ownership__c != 'JD'}">Promoters</apex:outputPanel><apex:outputPanel rendered="{!ulist[0].Unit_Ownership__c == 'JD'}">Developers</apex:outputPanel>&nbsp;and address for communication with them is as follows:</p>
+                <div>
+				 <apex:repeat value="{!promotorlist}" var="promo" rendered="{!ISNULL(promotorlist) == false && promotorlist.size > 0}">
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Name: </b>{!promotorlist[0].name}</p>
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">PAN No.: </b>{!promotorlist[0].PAN__c}</p>
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">CIN No.: </b>{!promotorlist[0].CIN_NO__c}</p>
+                <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Registered office: </b>{!promotorlist[0].Registered_office__c}</p>
+           <!--     <apex:outputPanel rendered="{!isResidential && newPhase == False}"><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised Signatory: </b>{!auth[0].Name}</p></apex:outputPanel>   -->
+           <!--     <apex:outputPanel rendered="{!isResidential && newPhase}"><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised Signatory duly authorised vide Board resolution dated&nbsp; <apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!ulist[0].Tower__r.cluster__r.Board_Resolution_Date__c}" /> </apex:outputText>: </b>{!auth[0].Name}</p></apex:outputPanel>   -->  
+           <!--     <apex:outputPanel rendered="{!isCommercial}"><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised Signatory duly authorised vide Board resolution dated&nbsp;<apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!ulist[0].Tower__r.cluster__r.Board_Resolution_Date__c}" /> </apex:outputText>: </b>{!auth[0].Name}</p></apex:outputPanel>   -->
+                <apex:outputPanel ><p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Authorised Signatory duly authorised vide Board resolution dated&nbsp; <apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!ulist[0].Tower__r.cluster__r.Board_Resolution_Date__c}" /> </apex:outputText>: </b>{!auth[0].Name}</p></apex:outputPanel>
+                 <div Class="Photograph1" style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;' ><b style='color:black;text-align:left;font-weight:bold;'>Photograph:<br/><br/> </b><apex:outputField value="{!auth[0].Photograph__c}"   /></div>
+                <!--<p style='font-size:10pt;text-align:justify;text-indent: 10px;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'></p> -->
+                 </apex:repeat>
+                    <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'><b style ="color:black;">Official Email IDs: </b></p>
+                    <apex:repeat value="{!splitted}" var="email" >
+                        
+                        <p style='font-size:10pt;text-align:justify;margin-top: 0px;margin-bottom: 0px;font-family:SansSerif;color:#4b4b4b;'>{!email}</p>
+                    </apex:repeat>
+                </div>
+            </div>
+        
+        	<table style='width: 100%;border-collapse: collapse;margin-top:5px;' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>3</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;'>Landowners Information</th>
+                </tr>
+            </table>
+        	<apex:outputPanel rendered="{!Promoter==false}">
+        	<div >
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'>The particulars of Landowners and address for communication with them is as follows:</p>
+                <apex:variable value="{!1}" var="count" />
+                
+                <!-- new added for only phase 3 ATR -->
+                <!--
+                <apex:outputPanel rendered="{!isphase3ATR}">
+                    <p style="font-size:10pt;text-align:justify;font-family:SansSerif;margin:0;">
+                        1.&nbsp;Particulars of Landowners&nbsp;No.&nbsp;
+                        <apex:variable var="count" value="{!1}" />
+                        <apex:repeat value="{!land}" var="landownr" rendered="{!NOT(ISNULL(land)) && land.size > 0}">
+                            <apex:outputPanel rendered="{! landownr.Sr_No_for_AfS__c != 6}">
+                                <b>&nbsp;{!count}<apex:outputPanel >,</apex:outputPanel></b>
+                                
+                            </apex:outputPanel>
+                            <apex:variable var="count" value="{!count + 1}" />
+                        </apex:repeat>
+                        [<apex:repeat value="{!land}" var="landownr" rendered="{!NOT(ISNULL(land)) && land.size > 0}">
+                        	<apex:outputPanel rendered="{!landownr.Sr_No_for_AfS__c != 6}">
+                            	{!landownr.Survey_Number_ATR__c}<apex:outputText value=", " rendered="{!NOT(landownr == land[land.size-1])}" />
+                            </apex:outputPanel>
+                        </apex:repeat>]
+                    </p>
+                    <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px; margin-left : 10px;'><b style ="color:black;">Name: </b>{!land[0].Land_Owner_Name__c}</p>
+                    <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px; margin-left : 10px;'><b style ="color:black;">Address for communication: </b>{!land[0].Address_for_communication__c}</p><br/>
+                    
+                    <p style="font-size:10pt;text-align:justify;font-family:SansSerif;margin:0;">
+                        2.&nbsp;Particulars of Landowners&nbsp;No.&nbsp;
+                        <apex:variable var="count" value="{!1}" />
+                        <apex:repeat value="{!land}" var="landownr" rendered="{!NOT(ISNULL(land)) && land.size > 0}">
+                            <apex:outputPanel rendered="{!landownr.Sr_No_for_AfS__c== 6}">
+                                <b>&nbsp;{!count}</b>
+                            </apex:outputPanel>
+                            <apex:variable var="count" value="{!count + 1}" />
+                        </apex:repeat>
+                        [<apex:repeat value="{!land}" var="landownr" rendered="{!NOT(ISNULL(land)) && land.size > 0}">
+                        	<apex:outputPanel rendered="{!landownr.Sr_No_for_AfS__c == 6}">
+                            	{!landownr.Survey_Number_ATR__c}<apex:outputText value=", " rendered="{!NOT(landownr == land[land.size-1])}" />
+                            </apex:outputPanel>
+                        </apex:repeat>]
+                    </p>
+                    <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px; margin-left : 10px;'><b style ="color:black;">Name: </b>{!land[6].Land_Owner_Name__c}</p>
+                    <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px; margin-left : 10px;'><b style ="color:black;">Address for communication: </b>{!land[6].Address_for_communication__c}</p><br/>
+                    
+                    
+                </apex:outputPanel> -->
+                <!-- new added for only phase 3 ATR -->
+                
+                <apex:repeat value="{!land}" var="landownr" rendered="{!ISNULL(land) == false && land.size > 0}">
+                <!--<p>{!isphase3ATR}</p>-->
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;margin-top: 0px;margin-bottom: 0px;'>{!landownr.Sr_No__c}.&nbsp;Particulars of Landowners&nbsp;No.&nbsp;{!count}</p><apex:variable value="{!count+1}" var="count" />
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Name: </b>{!landownr.Land_Owner_Name__c}</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Father/Husband's Name: &nbsp;</b>{!landownr.Father_Husband_s_Name__c}</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">PAN No: </b>{!landownr.PAN_No__c}</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Date of Birth: </b><apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!landownr.Date_of_Birth__c}" /> </apex:outputText></p>
+                    <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Address for communication: </b>{!landownr.Address_for_communication__c}</p><br/>
+            </apex:repeat>        
+            <apex:outputPanel rendered="{!ulist[0].Unit_Ownership__c != 'JD'}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">GPA holder: </b>{!phase.GPA_Holder__c}</p></apex:outputPanel>
+            <apex:outputPanel rendered="{!ulist[0].Unit_Ownership__c == 'JD'}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;"><apex:outputPanel rendered="{!prj.POA_Holder__c != Null}">POA holder:</apex:outputPanel> </b>{!prj.POA_Holder__c}</p></apex:outputPanel>
+            <apex:outputPanel rendered="{!ulist[0].Unit_Ownership__c != 'JD'}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;width:95%'><b style ="color:black;text-align:left;">Authorised Signatory for Landowners:</b>{!phase.Authorised_Signatory_of_Promoters__c}</p></apex:outputPanel>
+                <apex:outputPanel rendered="{!prj.Name == 'Songs from the Wood'}">
+                    <table style='width:100%;border:none;page-break-inside:avoid;margin-top:14px'>
+                        <tr>
+                            <td style='border:1px solid #d3d3d3;height:150px;'><p style='margin:0;font-size:10pt;text-indent:10px;'>Signature</p><p style='margin:0;font-size:10pt;text-indent:10px;'><b>Witness 01</b> (Name and Address)</p></td>
+                            <td style='border:1px solid #d3d3d3;height:150px;'><p style='margin:0;font-size:10pt;text-indent:10px;'>Signature</p><p style='margin:0;font-size:10pt;text-indent:10px;'><b>Witness 02</b> (Name and Address)</p></td>
+                        </tr>
+                    </table>
+                </apex:outputPanel>
+            </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!Promoter==true}">
+            <div>
+              <apex:outputText >
+                  <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'>Same as Promoters.</p>
+              </apex:outputText>        
+        </div>
+                </apex:outputPanel>
+        <br/>	
+        <apex:outputPanel rendered="{!isResidential}">
+        	<table style='width: 100%;border-collapse: collapse;margin-top:0px' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>4</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Unit</th>
+                </tr>
+            </table>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!isCommercial}">
+        	<table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>4</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Unit and Allottees’ Saleable Area Details</th>
+                </tr>
+            </table>
+        </apex:outputPanel>
+        <br/>
+        	<table style='width: 100%;border-collapse: collapse;margin-top:0px' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>a.</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Unit Details</th>
+                </tr>
+            </table>
+        <apex:outputPanel rendered="{!isResidential && newPhase== false}">
+            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'>The particulars of the Unit purchased by the Allottees are as follows:</p>
+            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'>	A residential unit as provided below together with privileges to enjoy the common areas and amenities in the Project:</p>
+            <table style='width: 100%;border:none;margin:0px;margin-top:5px;font-size:12pt;border-collapse:collapse;padding:0px' >
+                <tr>
+                    <td style='border:none;font-family:SansSerif;font-size:11pt;margin:0px;padding:0px'>
+                        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Unit: </b>{!ulist[0].name}</p>
+                        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Specification: </b><span style='color:{!ulist[0].Selected_Specification__c};'>{!ulist[0].Selected_Specification__c}</span></p>
+                        
+                        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Built Up: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Builtup_Area_Sub_Product__c}" /></apex:outputText> square feet</p>
+                        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Carpet Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].RERA_Carpet_Area_Sub_Product__c}" /></apex:outputText> square feet</p>
+                        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Outdoor Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Outdoor_Area_Sub_Product__c}" /></apex:outputText> square feet</p>
+                        <apex:outputPanel rendered="{!plotarea}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'  ><b style ="color:black;">Plot Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Villa_Plot_Area_Sub_Product__c}" /></apex:outputText> square feet</p></apex:outputPanel>
+                        <apex:outputPanel rendered="{!exclusivearea}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;' ><b style ="color:black;">Exclusive Access Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Exclusive_Access_Area__c}" /></apex:outputText> square feet</p></apex:outputPanel>
+                        <apex:outputPanel rendered="{!additionalarea}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;"  >Additional Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Additional_Area__c}" /></apex:outputText> square feet</p></apex:outputPanel>
+                        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><apex:outputPanel rendered="{!isvilla == false}"><b style ="color:black;">Floor: </b>{!ulist[0].Floor__c} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b style="color:black;">Level: </b>{!ulist[0].Level__c}</apex:outputPanel> </p>                            
+                        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><apex:outputPanel rendered="{!exclusiveRight}"><b style ="color:black;">Exclusive right to Access: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Additional_Land__c}" /></apex:outputText> square feet </apex:outputPanel></p> 
+                        <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Car Parks: </b>{!bk.quotation__r.TotalEarmarkedCarpark__c+bk.quotation__r.TotalAdditionalCarpark__c}</p><!--<apex:outputPanel rendered="{!bk.quotation__r.TotalEarmarkedCarpark__c > 0}">Earmarked Car Park:{!bk.quotation__r.TotalEarmarkedCarpark__c}&nbsp;</apex:outputPanel><apex:outputPanel rendered="{!bk.quotation__r.TotalAdditionalCarpark__c > 0}">Additional Car Park:{!bk.quotation__r.TotalAdditionalCarpark__c}</apex:outputPanel>  -->
+                    </td>
+                    <td style='border:none; width:50%;margin:0px;padding:0px'>
+                    </td>
+                </tr>
+            </table>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!isResidential && newPhase}">
+        <div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'>The particulars of the Unit purchased by the Allottees are as follows:</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'>	A residential unit as provided below together with privileges to enjoy the common areas and amenities in the Project:</p>
+                <table style='width: 100%;margin-top:5px;border-collapse:collapse;padding:0px' >
+                    <tr>
+                        <td style='font-family:SansSerif;padding:0px;'>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Unit: </b>{!ulist[0].name}</p>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Specification: </b><span style='color:{!ulist[0].Selected_Specification__c};'>{!ulist[0].Selected_Specification__c}</span></p>
+                            
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Built Up: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Builtup_Area_Sub_Product__c}" /></apex:outputText> square feet</p>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Carpet Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].RERA_Carpet_Area_Sub_Product__c}" /></apex:outputText> square feet</p>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Outdoor Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Outdoor_Area_Sub_Product__c}" /></apex:outputText> square feet</p>
+                            <apex:outputPanel rendered="{!exclusivearea}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;' ><b style ="color:black;">Exclusive Access Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Exclusive_Access_Area__c}" /></apex:outputText> square feet</p></apex:outputPanel>
+                            <apex:outputPanel rendered="{!additionalarea}"><p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;"  >Additional Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Additional_Area__c}" /></apex:outputText> square feet</p></apex:outputPanel>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><apex:outputPanel rendered="{!isvilla == false}"><b style ="color:black;">Floor: </b>{!ulist[0].Floor__c} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b style="color:black;">Level: </b>{!ulist[0].Level__c}</apex:outputPanel> </p>
+							<p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><apex:outputPanel rendered="{!exclusiveRight}"><b style ="color:black;">Exclusive right to Access: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!excAccessRight}" /></apex:outputText> square feet </apex:outputPanel></p>                            
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;padding:0px'><apex:outputPanel rendered="{!isvilla == false}"><b style ="color:black;">Car Parks: </b>{!bk.quotation__r.TotalEarmarkedCarpark__c+bk.quotation__r.TotalAdditionalCarpark__c} </apex:outputPanel></p><!--<apex:outputPanel rendered="{!bk.quotation__r.TotalEarmarkedCarpark__c > 0}">Earmarked Car Park:{!bk.quotation__r.TotalEarmarkedCarpark__c}&nbsp;</apex:outputPanel><apex:outputPanel rendered="{!bk.quotation__r.TotalAdditionalCarpark__c > 0}">Additional Car Park:{!bk.quotation__r.TotalAdditionalCarpark__c}</apex:outputPanel>  -->
+                        </td>
+                        <td style='border:0px solid rgba(202, 202, 202,1); width:50%;'>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!isCommercial}">
+        <div>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'>The particulars of the Unit containing the Allottee's Saleable Area are as follows:</p>
+                <table style='width: 100%;border:none;margin-top:5px;font-size:12pt;' cellpadding='5'>
+                    <tr>
+                        <td style='border:0px solid;font-family:SansSerif;font-size:11pt;'>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Unit: </b>{!ulist[0].Parent_Unit__c}</p>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Floor: </b>{!ulist[0].Floor__c}</p>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Level: </b> {!ulist[0].Level__c} </p>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Total Unit Saleable Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Parent_Saleable_Area__c}" /></apex:outputText> square feet</p>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Total Unit Carpet Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Parent_Carpet_Area__c}" /></apex:outputText> square feet</p>
+							<p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Total Unit Outdoor Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Parent_Unit_Outdoor_Area__c}" /></apex:outputText> square feet</p>                            
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Total No.of Car Parks assigned to the Unit: {!ulist[0].Total_No_Of_Car_Park__c}</b></p>
+                        </td>
+                        <td style='border:0px solid rgba(202, 202, 202,1); width:50%;'>
+                        </td>
+                    </tr>
+                </table>
+            
+            <div style="display:{!if(ulist[0].Unit_Disclaimer__c != Null,'True','False')}">
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><apex:outputPanel rendered="{!IF(ulist[0].Unit_Disclaimer__c != Null, true, false)}"><br/></apex:outputPanel> <apex:outputField value="{!ulist[0].Unit_Disclaimer__c}" /></p>
+            </div>
+            <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;'>b.</th>
+                    <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align:left;font-family:SansSerif;'>Saleable Area Details</th>
+                </tr>
+            </table>
+             <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'>The particulars of the Saleable Area in the Unit proposed to be purchased by the Allottees:</p>
+			<table style='width: 100%;border:none;margin-top:5px;font-size:12pt;' cellpadding='5'>
+                    <tr>
+                        <td style='border:0px solid;font-family:SansSerif;font-size:11pt;'>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Allotees’s Saleable Area ID: </b>{!ulist[0].Name}</p>
+                            <p style='font-size:10pt;text-align:justify;font-family:SansSerif;color:#4b4b4b;margin-top: 0px;margin-bottom: 0px;'><b style ="color:black;">Allotees’s Saleable Area: </b><apex:outputText value="{0, number, integer}"><apex:param value="{!ulist[0].Saleable_Area_Sub_Product__c}" /></apex:outputText> square feet</p>                            
+                        </td>
+                        <td style='border:0px solid rgba(202, 202, 202,1); width:50%;'>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </apex:outputPanel>
+        
+        </div>
+       
+        </body>
+</apex:component>
