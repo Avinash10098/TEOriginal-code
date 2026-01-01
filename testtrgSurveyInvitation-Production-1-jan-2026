@@ -1,0 +1,41 @@
+// test class : testtrgSurveyInvitation
+trigger trgSurveyInvitation on SurveyInvitation (after insert) {
+    //Check if survey trigger flag is active - query on custom setting
+    Boolean isActive = [Select Name,Is_Active__c from SurveyTrigger__c where Name = 'isActive'].Is_Active__c;
+    
+    // Fetch surveys from custom settings and build a Set of survey names
+    Set<String> surveyNameSet = new Set<String>();
+    for (Surveys__c s : [SELECT Name FROM Surveys__c]) {
+        surveyNameSet.add(s.Name);
+    }
+
+    // Collect Survey IDs from the trigger context
+    Set<Id> surveyIds = new Set<Id>();
+    for (SurveyInvitation si : Trigger.new) {
+        if (si.SurveyId != null) {
+            surveyIds.add(si.SurveyId);
+        }
+    }
+
+    // Query Surveys associated with the Survey Invitations
+    Map<Id, String> surveyNamesMap = new Map<Id, String>();
+    for (Survey s : [SELECT Id, Name FROM Survey WHERE Id IN :surveyIds]) {
+        surveyNamesMap.put(s.Id, s.Name);
+    }
+
+    Set<Id> survIdSet = new Set<Id>();
+    // Perform API callout if conditions are met
+    for (SurveyInvitation si : Trigger.new) {
+        system.debug('Inside sv loop');
+        system.debug('si.Applicant_Details__c ::'+si.Applicant_Details__c);
+        system.debug('si.SurveyId ::'+si.SurveyId);
+        system.debug('surveyNameSet ::'+surveyNameSet);
+        system.debug('surveyNamesMap.get(si.SurveyId) ::'+surveyNamesMap.get(si.SurveyId));
+        if (si.Applicant_Details__c != null && surveyNameSet.contains(surveyNamesMap.get(si.SurveyId)) && isActive) {
+            survIdSet.add(si.Id);
+        }
+    }
+    if(!survIdSet.isEmpty()){
+        System.enqueueJob(new marketingCloudAPIQueable(survIdSet));
+    }
+}
