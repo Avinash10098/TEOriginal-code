@@ -1,0 +1,164 @@
+//TestClass : TestDeDupeChecker,TestVMS_CP_Integration
+trigger AccountTrigger on Account(before Insert, after Insert, before update, after update) {
+    
+    set <ID> AccID = new Set <ID> ();
+    set <ID> AccID1 = new Set <ID> ();
+    set <ID> AccID3 = new Set <ID> ();
+     if (Trigger.IsInsert) {   
+        if (Trigger.isAfter) {
+                List<Account> updateCMList = new List<Account>();
+            for(Account a : trigger.new) {
+                if(a.isPersonAccount && (a.Campaign_Code__c != null )) {  
+                    updateCMList.add(a);
+                    }
+                    AccID3.add(a.Id);
+                  if(!AccID3.IsEmpty()){
+                      System.enqueuejob(new ContactManagementQueue(AccID3));
+                  }
+   
+            }
+            if (updateCMList != null && updateCMList.size() > 0) {
+                    try {
+                    PersonAccountManagementServices.AddCampaignToAccount(updateCMList);
+                    } catch (GlobalException ex) {
+                    System.debug('Global Exception:' + ex.getErrorMsg() + ex.getClassDetails());
+                    }
+            }
+            //////Added By ashish Starts////////
+            For(Account Acc : Trigger.New){
+                if(Acc.Id != Null){
+                    if(Acc.RecordTypeId == Schema.SObjectType.Account.getRecordTypeInfosByName().get('Business Partners').getRecordTypeId()){ //check Business Account Record type id
+                        AccID.add(Acc.Id);
+                    }
+                 }
+            }
+            system.debug('set of AccID' + AccID);
+            if(!AccID.isEmpty()){
+                VMS_CP_Integration.VMScpInsert(AccID);
+            }
+            //////Added By ashish Ends////////
+        }
+   } 
+    //---For updating contact management lookup on account------------------------------02-03-2025
+    if (Trigger.isBefore && Trigger.isInsert) {
+        Map<String, Contact_Management__c> contactMap = ContactManagementServices.getMatchingContacts(Trigger.new);
+        
+        // Assign matching Contact_Management__c record to Accounts
+        for (Account acc : Trigger.new) {
+            if (String.isNotBlank(acc.PersonMobilePhone) && contactMap.containsKey(acc.PersonMobilePhone)) {
+                acc.Contact_Management__c = contactMap.get(acc.PersonMobilePhone).Id;
+            } else if (String.isNotBlank(acc.Phone) && contactMap.containsKey(acc.Phone)) {
+                acc.Contact_Management__c = contactMap.get(acc.Phone).Id;
+            } else if (String.isNotBlank(acc.PersonEmail) && contactMap.containsKey(acc.PersonEmail)) {
+                acc.Contact_Management__c = contactMap.get(acc.PersonEmail).Id;
+            } else if (String.isNotBlank(acc.Alternate_Email__c) && contactMap.containsKey(acc.Alternate_Email__c)) {
+                acc.Contact_Management__c = contactMap.get(acc.Alternate_Email__c).Id;
+            }
+        }
+    }
+    //--------------------------------------------------------------------------------------------
+    //--Updating Contact Management with Account Lookup---------------------------------02-03-2025
+    if (Trigger.isAfter && Trigger.isInsert) {
+        Map<id,id> conAccIds = new Map<id,id>();
+        for (Account acc : Trigger.new) {
+            if (acc.Contact_Management__c != null) {
+                conAccIds.put(acc.Contact_Management__c, acc.Id);
+            }
+        }
+        if (!conAccIds.isEmpty()) {
+            List<Contact_Management__c> conList = new List<Contact_Management__c>();
+            for (Contact_Management__c c : [SELECT Id FROM Contact_Management__c WHERE Id IN :conAccIds.keySet()]) {
+                c.Account__c = conAccIds.get(c.Id);
+                conList.add(c);
+            }
+            if (!conList.isEmpty()) {
+                update conList;
+            }
+        }
+    }
+    //--------------------------------------------------------------------------------------------
+   if(Trigger.isUpdate || Trigger.isInsert) {
+       if (Trigger.isBefore) {
+   
+      List < DupResultsDTO > dupResList = new List < DupResultsDTO > ();
+        Map<lead,Account> leadaccMap = new Map<lead,Account>();
+        if (Trigger.isBefore) {
+            If(!(System.isBatch())) {
+                 List<Lead> leadList=new List<Lead>();
+                 for(Account acc:Trigger.New){
+                 Lead leadObj=new Lead();
+                              
+                 leadObj.lastName = acc.lastName;
+                 leadObj.MobilePhone=acc.PersonMobilePhone;
+                 leadObj.Phone=acc.Phone;
+                 leadObj.Email = acc.PersonEmail;
+                 leadObj.RDS_Alternate_Email_Id__c= acc.Alternate_Email__c;
+                 leadObj.Phone_Third__c = acc.Phone_Third__c;
+                 leadObj.Email_Third__c = acc.Email_Third__c;
+                 leadObj.Account_ID__c=acc.Id;
+                 leadObj.id= acc.LeadRecordID__c;
+                 system.debug('acc.LeadRecordID__c@@ '+acc.LeadRecordID__c);
+                 leadList.add(leadObj);
+                 leadaccMap.put(leadObj, acc);
+             }
+            
+                dupResList = LeadManagementServices.leadPreProcessing(leadList, 'WEB');
+                if (!dupResList.isEmpty()) {
+                  
+                  for (Lead l: leadList) {
+                        System.debug('Trigger.new: ' + l);
+                        for (DupResultsDTO d: dupResList) {
+                            if (d.originalLead == l) {
+                                System.debug('Trigger.new: dup match' + l + d.originalLead);
+                               String errMsg = 'Duplicates exists for:' + l.lastName; //Duplicates exists for:' + l.lastName + '\n'+'you cannot create duplicates
+                                //String errMsg = 'Duplicates exists for:' +l.FirstName+' '+l.MiddleName+' '+l.lastName + '\n';
+                                
+                                for (String dupType: d.duplicatesMap.keySet()) {
+                                    errMsg += ' (' + d.duplicatesMap.get(dupType) + ')';  // Changed by Neha on 23/1/19                                                              
+                                }
+                             //   if(!test.isRunningTest())
+                                leadAccMap.get(l).addError(errMsg);
+                               
+                            }
+                        }
+                    }
+                   
+              }
+            }
+          }
+        }
+     }
+        if( Trigger.isUpdate && Trigger.isAfter) {
+            List < Account > updateCMList = new List < Account > ();
+            for (account a: trigger.new) {
+              if (Trigger.newMap.get(a.Id).Campaign_Code__C != Trigger.oldMap.get(a.Id).Campaign_Code__C )  
+                    updateCMList.add(a);
+            }
+            if (updateCMList != null && updateCMList.size() > 0) {
+                try {
+                    PersonAccountManagementServices.AddCampaignToAccount(updateCMList);
+                } catch (GlobalException ex) {
+                  System.debug('Global Exception:' + ex.getErrorMsg() + ex.getClassDetails());
+                }
+            }
+            //////Added By ashish Starts////////
+            For(Account Acc : Trigger.New){
+                if((Trigger.newMap.get(Acc.Id).Name != Trigger.oldMap.get(Acc.Id).Name)||
+                   (Trigger.newMap.get(Acc.Id).Phone__c != Trigger.oldMap.get(Acc.Id).Phone__c)||
+                   (Trigger.newMap.get(Acc.Id).Email__c != Trigger.oldMap.get(Acc.Id).Email__c)||
+                   (Trigger.newMap.get(Acc.Id).Description != Trigger.oldMap.get(Acc.Id).Description)||
+                   (Trigger.newMap.get(Acc.Id).Address_Local__c != Trigger.oldMap.get(Acc.Id).Address_Local__c)||
+                   (Trigger.newMap.get(Acc.Id).RERA_Registration_No__c != Trigger.oldMap.get(Acc.Id).RERA_Registration_No__c)){
+                    if(Acc.RecordTypeId == Schema.SObjectType.Account.getRecordTypeInfosByName().get('Business Partners').getRecordTypeId()){//check Business Account Record type id
+                        AccID.add(Acc.Id);
+                    }
+                 }
+            }
+            system.debug('set of AccID' + AccID);
+            if(!AccID.isEmpty()){
+                VMS_CP_Integration.VMScpUpdate(AccID);
+            }
+            //////Added By ashish Ends////////
+        }
+   
+ }
