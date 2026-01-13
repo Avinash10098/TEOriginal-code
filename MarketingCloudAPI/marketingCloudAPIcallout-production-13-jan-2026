@@ -1,0 +1,88 @@
+public class marketingCloudAPIcallout {
+    
+    public static String getBearerToken() {
+        try {
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint('https://mcy2033167l3zj69ytfly21np2c4.auth.marketingcloudapis.com/v2/token');
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            
+            
+            String body = '{"grant_type":"client_credentials",'
+                + '"client_id":"p4effczh7rmoemlqrtvg46qo",'
+                + '"client_secret":"1q2prRJ37ZZnZu0M5iwTGgpZ",'
+                + '"account_id":"546008766"}';
+            req.setBody(body);
+            
+            Http http = new Http();
+            HttpResponse res = http.send(req);
+            
+            system.debug('res ::'+res);
+            if (res.getStatusCode() == 200) {
+                Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+                system.debug('access_token ::'+responseMap.get('access_token'));
+                return (String) responseMap.get('access_token');
+            } else {
+                System.debug('Error: ' + res.getBody());
+                throw new CalloutException('Failed to fetch bearer token');
+            }
+        } catch (Exception e) {
+            System.debug('Exception: ' + e.getMessage());
+            throw e;
+        }
+    }
+    
+    // Method to make the actual REST callout
+    public static void makeApiCallout(set<Id> siId) {
+        String bearerToken = getBearerToken();
+        
+        List<SurveyInvitation> siList = new List<SurveyInvitation>();
+        siList = [Select id, Applicant_Details__c,InvitationURL__c,survey.name,surveyid from SurveyInvitation where id IN: siId];
+        system.debug('siList::'+siList);
+        Applicant_Details__c a = [Select id,Name,Mobile_Number__c,Locales__c,Booking__r.Unit__c,Booking__r.Project__c,
+                                  Booking__r.Unit__r.Name,Booking__r.Project__r.Name,Phone_Marketing__c
+                                  from Applicant_Details__c where id =: siList[0].Applicant_Details__c];
+        if(a.id != null){
+            try {
+                
+                String payload = '{"ContactKey": "' + a.id + '", '
+                    + '"EventDefinitionKey": "APIEvent-862cb62c-202f-f760-38a2-b7fe8d76e31f", '
+                    + '"Data": {'
+                    + '"Customer_Name": "' + a.Name + '", '
+                    + '"Phone": "' + a.Phone_Marketing__c + '", '
+                    + '"Applicant_Id": "' + a.id + '", '
+                    + '"Survey_Inv_Id": "' + siList[0].id + '", '
+                    + '"Locale": "' + a.Locales__c + '", '
+                    + '"Unit": "' + a.Booking__r.Unit__c + '", '
+                    + '"Project": "' + a.Booking__r.Project__c+ '", '
+                    + '"Unit_Name": "' + a.Booking__r.Unit__r.Name+ '", '
+                    + '"Project_Name": "' + a.Booking__r.Project__r.Name+ '", '
+                    + '"SurveyInvitation:Survey:Name": "' + siList[0].survey.name+ '", '
+                    + '"SurveyInvitation:Survey:Id": "' + siList[0].surveyid+ '", '
+                    + '"URL": "' + siList[0].InvitationURL__c + '"'
+                    + '}}';
+                
+                HttpRequest req = new HttpRequest();
+                req.setEndpoint('https://mcy2033167l3zj69ytfly21np2c4.rest.marketingcloudapis.com/interaction/v1/events');
+                req.setMethod('POST'); 
+                req.setHeader('Authorization', 'Bearer ' + bearerToken);
+                req.setHeader('Content-Type', 'application/json');
+                req.setBody(payload);
+                
+                // Send request
+                Http http = new Http();
+                HttpResponse res = http.send(req);
+                
+                system.debug('res ::'+res);
+                system.debug('res status code ::'+res.getStatusCode());
+                if (res.getStatusCode() == 201) {
+                    System.debug('Response: ' + res.getBody());
+                } else {
+                    System.debug('Error: ' + res.getBody());
+                }
+            } catch (Exception e) {
+                System.debug('Exception: ' + e.getMessage());
+            }
+        }
+    }
+}
