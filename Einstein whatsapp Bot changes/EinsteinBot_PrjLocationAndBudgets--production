@@ -1,0 +1,480 @@
+public class EinsteinBot_PrjLocationAndBudgets {
+    public class PrechatInput{
+        @InvocableVariable
+        public string MessagingSessionId;
+        @InvocableVariable
+        public String whatsappNumberWithCode;
+        @InvocableVariable
+        public String whatsappNumberWithoutCode;
+        @InvocableVariable
+        public String applicantAccountId;
+        @InvocableVariable
+        public String prjFilter;
+        @InvocableVariable
+        public string sChatKey;
+        @InvocableVariable
+        public String sMessagingEndUserId;
+        @InvocableVariable
+        public string sChannelType;
+        @InvocableVariable
+        public string sProjectName;
+        @InvocableVariable
+        public string sCustomerName;
+        @InvocableVariable
+        public string sCustomerEmail;
+        @InvocableVariable
+        public string soperatingKeyword;
+        @InvocableVariable
+        public string ProjectName;
+        @InvocableVariable
+        public string ProjectLocation;
+        @InvocableVariable
+        public string Projectbudget;
+        @InvocableVariable
+        public string selectedImage;
+        @InvocableVariable
+        public string selectedenquiryid;
+        @InvocableVariable
+        public string selectedProjId;
+        @InvocableVariable
+        public Boolean IsCustomerExists;
+        @InvocableVariable
+        public string ExistingCustomerProjectName;
+    }
+    public class PrechatOutput{
+        @InvocableVariable
+        public String whatsappNumberWithCode;
+        @InvocableVariable
+        public String whatsappNumberWithoutCode;
+        @InvocableVariable
+        public String CountryCode;
+        @InvocableVariable
+        public String MessagingEndUserId;
+        @InvocableVariable
+        public String MessagingEndUserName;
+        @InvocableVariable
+        public string MessagingSessionId;
+        @InvocableVariable
+        public string[] prjBudgets;
+        @InvocableVariable
+        public string[] prjLocations;
+        @InvocableVariable
+        public string[] prjList;
+        @InvocableVariable
+        public string ProjectDetaill;
+        @InvocableVariable
+        public string website;
+        @InvocableVariable
+        public string ProjectDetaill1;
+        @InvocableVariable
+        public string ProjectDetaill2;
+        @InvocableVariable
+        public string ProjectDetaill3;
+        @InvocableVariable
+        public string projectName;
+        @InvocableVariable
+        public Id cvIdforbrochure;
+        @InvocableVariable
+        public string[] imagelist;
+        @InvocableVariable
+        public Id imageid;
+        @InvocableVariable
+        public string enquiryid;
+        @InvocableVariable
+        public string ProjId;
+        
+        // Added on 05/06/2024
+        @InvocableVariable
+        public string[] PNameLocationList;
+        @InvocableVariable
+        public Id Image1Id;
+        @InvocableVariable
+        public Id Image2Id;
+        @InvocableVariable
+        public Id Image3Id;
+        @InvocableVariable
+        public Id Image4Id;
+        @InvocableVariable
+        public Id Image5Id;
+        @InvocableVariable
+        public boolean imagestatus;
+        
+    }
+    
+    @InvocableMethod(label = 'Bot_FetchProjectLocationsAndBudgets')
+    public static List<PrechatOutput> FetchProjectLocationsAndBudgets(List <PrechatInput> inputParameters){
+        List <PrechatOutput> outputParameters = new List<PrechatOutput>();
+        PrechatOutput outputParameter = new PrechatOutput();
+        String prjFilter = inputParameters[0].prjFilter;
+        List<Project__c> prjList1 = new List<Project__c>();
+        List<String> projectnameList = new List<String>();
+        List<String> projectLocationList = new List<String>();
+        List<String> projectbudgetList = new List<String>();
+        List<Lead> leadlist=new List<Lead>();
+        List<Enquiry_Details__c> enqList = new List<Enquiry_Details__c>();
+        List<Lead> ldlist= new List<Lead>();
+        List<MessagingEndUser> msguserlist = new List<MessagingEndUser>();
+        List<MessagingEndUser> msguseremptylist = new List<MessagingEndUser>();
+        List<Enquiry_Details__c> eqlistupdate = new List<Enquiry_Details__c>();
+        List<String> numericvalueList = new List<String>();
+        String NumberWithCode ;
+        List<String> imagelist1 = new List<String>();
+        
+        // Added on 05/06/2024
+        OutputParameter.ProjectDetaill = ''; 
+        OutputParameter.ProjectDetaill1 = '';    
+        OutputParameter.ProjectDetaill2 = ''; 
+        OutputParameter.ProjectDetaill3 = ''; 
+        List<String> PNameLocationList = new List<String>();
+        
+        if(inputParameters != null && inputParameters.size() == 1 ){ //&& inputParameters[0].sAccountId != null
+            String sChatKey = inputParameters[0].sChatKey;
+            String sMessagingEndUserId = inputParameters[0].sMessagingEndUserId;
+            //String sAccountId = inputParameters[0].sAccountId;
+            String sChannelType = inputParameters[0].sChannelType;
+            if (String.isNotBlank(sMessagingEndUserId)) {
+                List<MessagingEndUser> meu = [Select Id,Name,MessageType,MessagingChannelId, MessagingPlatformKey,Account.Name from MessagingEndUser 
+                                              where id =:inputParameters[0].sMessagingEndUserId];
+                System.debug('meu'+meu);
+                
+                List <String> splitFields = new List <String>();
+                String whatsappNumberWithCode;
+                if(meu[0].MessagingPlatformKey.contains(':')){
+                    splitFields = meu[0].MessagingPlatformKey.split(':');
+                    whatsappNumberWithCode = splitFields[1]; //meu[0].MessagingPlatformKey.substringAfter('+');
+                    NumberWithCode=splitFields[1];
+                }else{
+                    whatsappNumberWithCode = meu[0].MessagingPlatformKey;
+                    NumberWithCode=meu[0].MessagingPlatformKey;
+                }
+                System.debug('whatsappNumberWithCode'+whatsappNumberWithCode);
+                String whatsappNumberWithoutCode = whatsappNumberWithCode.mid(3, 10);
+                System.debug('whatsappNumberWithoutCode'+whatsappNumberWithoutCode);
+                
+                OutputParameter.whatsappNumberWithCode = whatsappNumberWithCode.mid(1, whatsappNumberWithCode.length()-11)+'-'+whatsappNumberWithCode.mid(whatsappNumberWithCode.length()-10,10);
+                OutputParameter.whatsappNumberWithoutCode = whatsappNumberWithCode.mid(whatsappNumberWithCode.length()-10,10);
+                OutputParameter.CountryCode = whatsappNumberWithCode.mid(1, whatsappNumberWithCode.length()-11);
+                system.debug('meu.....'+OutputParameter.whatsappNumberWithoutCode);
+            }
+           
+            if(prjFilter != null && prjFilter != ''){
+                if(prjFilter == 'Budget'){
+                    prjList1 = [select id, Location__c,Budget__c,Name,
+                                About__c from Project__c where Budget__c != null];
+                    
+                    if(!prjList1.isEmpty()){
+                        Set<String> uniqueElements = new Set<String>();
+                        Set<String> budgetprice = new Set<String>();
+                        for(Project__c p:prjList1){
+                            budgetprice.add(p.Budget__c);
+                        }
+                        if(!budgetprice.isEmpty()){
+                            for(String str : budgetprice) {
+                                List<String> separatedStrings = str.split(', |;');
+                                for(String separatedString : separatedStrings) {
+                                    uniqueElements.add(separatedString.trim());
+                                }
+                            }
+                            uniqueElements = new Set<String>();
+                            Schema.DescribeSObjectResult objDesc = Project__c.SObjectType.getDescribe();
+                            Schema.DescribeFieldResult fieldDesc = objDesc.fields.getMap().get('Budget__c').getDescribe();
+                            List<Schema.PicklistEntry> picklistValues = fieldDesc.getPicklistValues();
+                            for (Schema.PicklistEntry picklistValue : picklistValues) {
+                                uniqueElements.add(picklistValue.getLabel());
+                                System.debug('Picklist Value: ' + picklistValue.getLabel());
+                            }
+                            List<String> uniqueList = new List<String>(uniqueElements);
+                            
+                            if(!uniqueList.isEmpty()){
+                                outputParameter.prjBudgets=uniqueList;
+                                
+                                OutputParameter.prjBudgets.add('Main menu');    
+                            }
+                            System.debug(OutputParameter);
+                        }
+                    }
+                }
+                if(prjFilter == 'Location'){
+                    prjList1 = [select id, Location__c,Budget__c,Name,
+                                About__c,Description_1__c,Description_2__c,Description_3__c,City__c from Project__c where Location__c != null AND City__c !=null];
+                    System.Debug('Output nameList: '+prjList1);
+                    
+                    for(Project__c pr:prjList1){
+                        projectLocationList.add(pr.Location__c+', '+pr.City__c);
+                        outputParameter.ProjectDetaill=pr.About__c; 
+                    }
+                    System.Debug('Output nameList: '+projectLocationList);
+                    Set<String> uniqueNames = new Set<String>();
+                    List<String> uniqueNameList = new List<String>();
+                    for (String name : projectLocationList) {
+                        uniqueNames.add(name);
+                    }
+                    for (String uniqueName : uniqueNames) {
+                        uniqueNameList.add(uniqueName);
+                    }
+                    System.Debug('Output nameList: '+uniqueNameList);
+                    if(!uniqueNameList.isEmpty()){
+                        outputParameter.prjLocations=uniqueNameList;
+                        OutputParameter.prjLocations.add('Request a callback');
+                        OutputParameter.prjLocations.add('Main menu');
+                        OutputParameter.prjLocations.add('Not interested'); 
+                    }
+                }
+            }        
+            System.Debug('Output prjList: '+prjList1);
+            if(inputParameters[0].soperatingKeyword=='Lead Creation'){
+                System.Debug('IN whatsappNumberWithoutCode: '+inputParameters[0].whatsappNumberWithoutCode);
+                System.Debug('OUT whatsappNumberWithoutCode: '+OutputParameter.whatsappNumberWithoutCode);
+                List<Project__c> ProjectList = [Select Id,Name From Project__c where Name=: inputParameters[0].sProjectName];
+                leadlist=[select Id,Name from Lead where MobilePhone=: OutputParameter.whatsappNumberWithoutCode];
+                System.Debug(' leadlist: '+leadlist);
+                System.Debug(' leadlist: '+inputParameters[0].sProjectName);
+                String result =inputParameters[0].sProjectName; 
+                System.debug('result..'+result);
+                Enquiry_Details__c eq = new Enquiry_Details__c();
+                
+                if(leadlist.size()>0){
+                    eq.Last_Name__c=inputParameters[0].sCustomerName;
+                    eq.Mobile_No__c=OutputParameter.whatsappNumberWithoutCode;
+                    eq.Email__c=inputParameters[0].sCustomerEmail;
+                    eq.Project_Name_Text__c=result;
+                    eq.Project_Interested__c = ProjectList[0].Id;
+                    eq.Type__c='Chatbot';
+                    enqList.add(eq);
+                    System.Debug('Output enquiry: '+enqList);
+                }else{
+                    System.Debug('Output enquiry: '+inputParameters[0].sProjectName);
+                    eq.Last_Name__c=inputParameters[0].sCustomerName;
+                    eq.Mobile_No__c=OutputParameter.whatsappNumberWithoutCode;
+                    eq.Email__c=inputParameters[0].sCustomerEmail;
+                    eq.Project_Name_Text__c=result;
+                    eq.Type__c='Chatbot';
+                    eq.Project_Interested__c = ProjectList[0].Id;
+                    enqList.add(eq);
+                }
+                System.Debug('Output enquiry: '+enqList);
+                if(!enqList.isEmpty()){
+                    Insert enqList; 
+                    System.Debug(' enquiry Id: '+enqList[0].Id);
+                    for(Enquiry_Details__c eqn:enqList){
+                        OutputParameter.enquiryid=eqn.Id; 
+                    }
+                    prjList1=[select Id,Name,About__c,Project_Link__c,Description_1__c,Description_2__c,Description_3__c from Project__c where Name=:result];
+                    System.Debug(' p list '+prjList1);
+                    if(!prjList1.isEmpty()){
+                        outputParameter.ProjectDetaill=prjList1[0].About__c;
+                        outputParameter.website=prjList1[0].Project_Link__c;
+                        system.debug('test inputs::'+inputParameters[0].Projectbudget);
+                        if(inputParameters[0].Projectbudget == 'INR 4 Cr* to 7 Cr*'){
+                            outputParameter.ProjectDetaill1= String.isNotBlank(prjList1[0].Description_1__c) ? prjList1[0].Description_1__c : ' ';
+                        }
+                        else if(inputParameters[0].Projectbudget == 'INR 7 Cr* to 10 Cr*'){
+                            outputParameter.ProjectDetaill1= String.isNotBlank(prjList1[0].Description_2__c) ? prjList1[0].Description_2__c : ' ';
+                        }
+                        else if(inputParameters[0].Projectbudget == 'INR 10* Cr and above'){
+                            outputParameter.ProjectDetaill1= String.isNotBlank(prjList1[0].Description_3__c) ? prjList1[0].Description_3__c : ' ';
+                        }
+                        else{
+                            outputParameter.ProjectDetaill1= String.isNotBlank(prjList1[0].Description_1__c) ? prjList1[0].Description_1__c : ' ';
+                        }
+                        outputParameter.ProjId=prjList1[0].Id;
+                        
+                        if(prjList1[0].Name !=null){
+                            set<Id> attachedmentIdSet = new set<Id>();
+                            List<Marketing_Collaterals__c> selectedBrochureList = [select id, isActive__c,View_Brochure__c,AttachmentId__c,Project__c,Project__r.Name from Marketing_Collaterals__c 
+                                                                                   where isActive__c = true and AttachmentId__c != null and Project__r.Name =: prjList1[0].Name];
+                            system.debug('size of selectedBrochureList::'+selectedBrochureList.size());
+                            system.debug('selectedBrochureList::'+selectedBrochureList);
+                            if(selectedBrochureList != null && selectedBrochureList.size() > 0 && !selectedBrochureList.isEmpty()){
+                                for(Marketing_Collaterals__c prjB : selectedBrochureList){
+                                    if(prjB.AttachmentId__c != null && prjB.AttachmentId__c != ''){
+                                        attachedmentIdSet.add(prjB.AttachmentId__c);
+                                    }
+                                }
+                            }
+                             system.debug('attachedmentIdSet::'+attachedmentIdSet);
+                            if(attachedmentIdSet != null && attachedmentIdSet.size() > 0 && !attachedmentIdSet.isEmpty()){
+                                List<ContentVersion> contentVersionList = [SELECT Id, FileType, Title, FileExtension,
+                                                                           ContentDocument.CreatedBy.Name, ContentDocument.ContentSize,
+                                                                           CreatedDate, ContentDocumentId, ContentDocument.FileType,Public_URL__c
+                                                                           FROM   ContentVersion WHERE  ContentDocumentId IN : attachedmentIdSet];
+                                system.debug('size of contentVersionList::'+contentVersionList.size());
+                                system.debug('contentVersionList::'+contentVersionList);
+                                if(contentVersionList != null && !contentVersionList.isEmpty() && contentVersionList.size() > 0){
+                                    for(ContentVersion cv : contentVersionList){
+                                        outputParameter.cvIdforbrochure=cv.Id;
+                                    }
+                                }
+                            }
+                        }
+                        list<ContentDocumentLink>contID=[SELECT ContentDocumentId FROM ContentDocumentLink
+                                                         WHERE LinkedEntityId =:prjList1[0].Id];
+                        system.debug('contID::'+contID);
+                        if(contID !=null && contID.size() >0){
+                            list<id>contIdlist=new list<id>();
+                            For(ContentDocumentLink cl:contID){
+                                contIdlist.add(cl.ContentDocumentId);
+                            }
+                            system.debug('contID'+contID);
+                            set<string> imageset= new set<string>();        
+                            if(contIdlist != null && contIdlist.size() > 0){
+                                List<ContentVersion> contentVersionList1 = [SELECT Id, FileType, Title, FileExtension,
+                                                                            ContentDocument.CreatedBy.Name, ContentDocument.ContentSize,
+                                                                            CreatedDate, ContentDocumentId, ContentDocument.FileType,Public_URL__c FROM   ContentVersion 
+                                                                            WHERE  ContentDocumentId IN : contIdlist and (Title LIKE '%Image1%' OR
+                                                                                                                          Title LIKE '%Image2%' OR
+                                                                                                                          Title LIKE '%Image3%' OR
+                                                                                                                          Title LIKE '%Image4%' OR
+                                                                                                                          Title LIKE '%Image5%')order by CreatedDate ASC];
+                                system.debug('size of contentVersionList1::'+contentVersionList1.size());
+                                system.debug('contentVersionList1::'+contentVersionList1);
+                                if(contentVersionList1 != null && !contentVersionList1.isEmpty() && contentVersionList1.size() > 0){
+                                    outputParameter.imagestatus=true;
+                                    for(integer i=0;i<contentVersionList1.size();i++){
+                                        if(contentVersionList1[i].Title=='Image1' ){
+                                            outputParameter.Image1Id=contentVersionList1[i].Id;
+                                        }
+                                        if(contentVersionList1[i].Title=='Image2'){
+                                            outputParameter.Image2Id=contentVersionList1[i].Id;
+                                        }
+                                        if(contentVersionList1[i].Title=='Image3'){
+                                            outputParameter.Image3Id=contentVersionList1[i].Id;
+                                        }
+                                        if(contentVersionList1[i].Title=='Image4'){
+                                            outputParameter.Image4Id=contentVersionList1[i].Id;
+                                        }
+                                        if(contentVersionList1[i].Title=='Image5'){
+                                            outputParameter.Image5Id=contentVersionList1[i].Id;
+                                        }
+                                    }
+                                }else{
+                                    outputParameter.imagestatus=false;
+                                }
+                            }
+                        }
+                    }
+                    system.debug('outputParameter.imagelist...'+outputParameter.imagelist);
+                    system.debug('searchValue...'+NumberWithCode);
+                    string NumberWithCode1='whatsapp:'+NumberWithCode;
+                    msguserlist=[Select Id,Name,MessageType,MessagingChannelId,
+                                 MessagingPlatformKey,Account.Name from MessagingEndUser
+                                 where Name=:NumberWithCode1];
+                    system.debug('msguserlist...'+msguserlist);
+                    system.debug('msguserlist...'+enqList);
+                    for(Enquiry_Details__c enq:enqList){
+                        if(enq.Lead__c!=null && msguserlist.size()>0){
+                            ldlist=[select Id,Name from Lead where Id=:enq.Lead__c];
+                            
+                            MessagingEndUser msg = new MessagingEndUser();
+                            msg.Id=msguserlist[0].Id;
+                            msg.Name=ldlist[0].Name;
+                            msguseremptylist.add(msg);
+                        }
+                    }
+                    if(!msguseremptylist.isEmpty()){
+                        update msguseremptylist;
+                    }
+                }     
+            }
+            if(inputParameters[0].soperatingKeyword=='Project List for Location'){
+                system.debug('projectnameList...'+inputParameters[0].ProjectLocation);
+                String pname = inputParameters[0].ProjectLocation.substringBefore(',');
+                system.debug('pname...'+pname);
+                
+                prjList1=[select Id,Name,About__c,Location__c from Project__c where Location__c=:pname ];
+                system.debug('prjList1...'+prjList1);
+                List<String> uniquePNameList = new List<String>();
+                if(!prjList1.isEmpty()){
+                    for(Project__c pp: prjList1){
+                        uniquePNameList.add(pp.Name);
+                    }
+                    if(!uniquePNameList.isEmpty()){
+                        outputParameter.PNameLocationList = uniquePNameList;
+                        outputParameter.PNameLocationList.add('Previous question');
+                        outputParameter.PNameLocationList.add('Main menu');
+                    }
+                    system.debug('projectnameList...'+projectnameList);
+                    outputParameter.projectName=prjList1[0].Name;
+                    system.debug('projectnameList...'+prjList1[0].Name);
+                    if(prjList1[0].Name !=null){
+                        set<Id> attachedmentIdSet = new set<Id>();
+                        List<Marketing_Collaterals__c> selectedBrochureList = [select id, isActive__c,View_Brochure__c,AttachmentId__c,Project__c,Project__r.Name from Marketing_Collaterals__c 
+                                                                               where isActive__c = true and AttachmentId__c != null and Project__r.Name =: prjList1[0].Name];
+                        system.debug('size of selectedBrochureList::'+selectedBrochureList.size());
+                        system.debug('selectedBrochureList::'+selectedBrochureList);
+                        if(selectedBrochureList != null && selectedBrochureList.size() > 0 && !selectedBrochureList.isEmpty()){
+                            for(Marketing_Collaterals__c prjB : selectedBrochureList){
+                                if(prjB.AttachmentId__c != null && prjB.AttachmentId__c != ''){
+                                    attachedmentIdSet.add(prjB.AttachmentId__c);
+                                }
+                            }
+                        }
+                        if(attachedmentIdSet != null && attachedmentIdSet.size() > 0 && !attachedmentIdSet.isEmpty()){
+                            List<ContentVersion> contentVersionList = [SELECT Id, FileType, Title, FileExtension,
+                                                                       ContentDocument.CreatedBy.Name, ContentDocument.ContentSize,
+                                                                       CreatedDate, ContentDocumentId, ContentDocument.FileType,Public_URL__c
+                                                                       FROM   ContentVersion WHERE  ContentDocumentId IN : attachedmentIdSet];
+                            system.debug('size of contentVersionList::'+contentVersionList.size());
+                            system.debug('contentVersionList::'+contentVersionList);
+                            if(contentVersionList != null && !contentVersionList.isEmpty() && contentVersionList.size() > 0){
+                                for(ContentVersion cv : contentVersionList){
+                                    outputParameter.cvIdforbrochure=cv.Id;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if(inputParameters[0].soperatingKeyword=='Project List for Budget'){
+                system.debug('projectnameList...'+inputParameters[0].Projectbudget);
+                List<Project__c> filteredProjects = new List<Project__c>();
+                Decimal initialBudget = 0; 
+                Decimal finalBudget =  0;
+                String prbudget = inputParameters[0].Projectbudget;
+                List<Project__c> projectList = [SELECT Id, Name, About__c, Location__c, Budget__c, City__c FROM Project__c WHERE Budget__c INCLUDES (:prbudget)];
+                
+                system.debug('projectList...'+projectList);
+                if(!projectList.isEmpty()){
+                    for(Project__c p:projectList){
+                        projectnameList.add(p.Name );
+                    }
+                    system.debug('projectnameList...'+projectnameList);
+                    if(!projectnameList.isEmpty()){
+                        outputParameter.prjList=projectnameList;
+                        OutputParameter.prjList.add('Previous question');
+                        OutputParameter.prjList.add('Main menu');
+                        OutputParameter.prjList.add('Not interested');
+                        OutputParameter.prjList.add('Request a callback');
+                        OutputParameter.prjList.add('End chat');
+                    }
+                }  
+            }
+            if(inputParameters[0].soperatingKeyword=='show image' && (inputParameters[0].selectedImage !='' || inputParameters[0].selectedImage!=null)){
+                list<ContentDocumentLink>contID=[SELECT ContentDocumentId FROM ContentDocumentLink
+                                                 WHERE LinkedEntityId =:inputParameters[0].selectedProjId];
+                system.debug('contID::'+contID);
+                if(contID !=null && contID.size() >0){
+                    list<id>contIdlist=new list<id>();
+                    For(ContentDocumentLink cl:contID){
+                        contIdlist.add(cl.ContentDocumentId);
+                    }
+                    system.debug('contIdlist::'+contIdlist);
+                    List<ContentVersion> contentVersionList = [SELECT Id, FileType, Title, FileExtension,
+                                                               ContentDocument.CreatedBy.Name, ContentDocument.ContentSize,
+                                                               CreatedDate, ContentDocumentId, ContentDocument.FileType,Public_URL__c
+                                                               FROM   ContentVersion WHERE  Title=: inputParameters[0].selectedImage AND ContentDocumentId IN:contIdlist];
+                    system.debug('size of contentVersionList::'+contentVersionList.size());
+                    system.debug('size of contentVersionList::'+inputParameters[0].selectedImage);
+                    if(contentVersionList != null && !contentVersionList.isEmpty() && contentVersionList.size() > 0){
+                        for(ContentVersion cv : contentVersionList){
+                            outputParameter.imageid=cv.Id;
+                        }
+                    }
+                }
+            }
+        }
+        System.Debug('Output parameters: '+outputParameter);
+        outputParameters.add(outputParameter);
+        return outputParameters;  
+    }    
+}
