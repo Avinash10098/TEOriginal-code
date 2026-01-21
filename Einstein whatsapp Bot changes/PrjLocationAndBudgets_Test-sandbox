@@ -1,0 +1,443 @@
+@isTest
+public class PrjLocationAndBudgets_Test {
+    @isTest
+    static void testFetchProjectLocationsAndBudgets() {
+        
+       
+        // Setup test data
+        Project__c project1 = new Project__c(Name = 'Project1', Location__c = 'Location1', Budget__c = '1000', Project_Code__c='123', Show_this_project_on_WhatsApp__c = true);
+        Project__c project2 = new Project__c(Name = 'Project2', Location__c = 'Location2', Budget__c = '2000', Project_Code__c='121' , Show_this_project_on_WhatsApp__c = true);
+        insert new List<Project__c> { project1, project2 };
+        Organization a_ORG = [Select Id, Name, IsSandbox from Organization];
+          MessagingEndUser m = New MessagingEndUser();
+        m.Name = 'TE Test USER';
+        m.MessageType = 'WhatsApp';
+        
+        m.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI // 0MjOX000000BH5a0AG
+        m.MessagingPlatformKey = 'whatsapp:+910000000001';
+        insert m;
+        List<MessagingEndUser> m1 = New List<MessagingEndUser>();
+        m1 = [select Id from MessagingEndUser where id =: m.id ];
+        
+        Messagingsession ms = New Messagingsession();        
+        ms.Status = 'Ended';
+        ms.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI
+        ms.MessagingEndUserId = m.id;
+        insert ms;
+        
+        Enquiry_Details__c enq = new Enquiry_Details__c(Last_Name__c = 'Enquiry1', Mobile_No__c = '1234567890', Email__c = 'test@example.com', Project_Name_Text__c = 'Project1', Type__c = 'Chatbot', Project_Interested__c = project1.Id);
+        insert enq;
+
+        Marketing_Collaterals__c mc = new Marketing_Collaterals__c( AttachmentId__c = '001', Project__c = project1.Id);
+        insert mc;
+
+        // Prepare input
+        EinsteinBot_PrjLocationAndBudgets.PrechatInput input = new EinsteinBot_PrjLocationAndBudgets.PrechatInput();
+        input.sChatKey = 'TestKey';
+        input.sMessagingEndUserId = m.Id;
+        input.sChannelType = 'WhatsApp';
+        input.prjFilter = 'Location';
+        input.sProjectName = 'Project1';
+        input.sCustomerName = 'Customer1';
+        input.sCustomerEmail = 'customer1@example.com';
+        input.soperatingKeyword = 'Lead Creation';
+        input.whatsappNumberWithCode = '+1234567890';
+        input.whatsappNumberWithoutCode = '1234567890';
+        
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatInput> inputList = new List<EinsteinBot_PrjLocationAndBudgets.PrechatInput>{ input };
+
+        // Call the method
+        Test.startTest();
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatOutput> outputList = EinsteinBot_PrjLocationAndBudgets.FetchProjectLocationsAndBudgets(inputList);
+        Test.stopTest();
+
+      
+    } 
+    @isTest
+    static void testFetchProjectLocationsAndBudgets_Budget() {
+        Project__c project1 = new Project__c(Name = 'Project1', Location__c = 'Location1', Budget__c = '1000', Project_Code__c='123' , Show_this_project_on_WhatsApp__c = true);
+        Project__c project2 = new Project__c(Name = 'Project2', Location__c = 'Location2', Budget__c = '2000', Project_Code__c='121' , Show_this_project_on_WhatsApp__c = true);
+        insert new List<Project__c> { project1, project2 };
+        Organization a_ORG = [Select Id, Name, IsSandbox from Organization];
+          MessagingEndUser m = New MessagingEndUser();
+        m.Name = 'TE Test USER';
+        m.MessageType = 'WhatsApp';
+        m.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI
+        m.MessagingPlatformKey = 'whatsapp:+910000000001';
+        insert m;
+        List<MessagingEndUser> m1 = New List<MessagingEndUser>();
+        m1 = [select Id from MessagingEndUser where id =: m.id ];
+        
+        Messagingsession ms = New Messagingsession();        
+        ms.Status = 'Ended';
+        ms.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI
+        ms.MessagingEndUserId = m.id;
+        insert ms;
+        
+        EinsteinBot_PrjLocationAndBudgets.PrechatInput input = new EinsteinBot_PrjLocationAndBudgets.PrechatInput();
+        input.prjFilter = 'Budget';
+        input.sMessagingEndUserId = m.Id;
+
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatInput> inputs = new List<EinsteinBot_PrjLocationAndBudgets.PrechatInput>();
+        inputs.add(input);
+        Test.startTest();
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatOutput> results = EinsteinBot_PrjLocationAndBudgets.FetchProjectLocationsAndBudgets(inputs);
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testFetchProjectLocationsAndBudgets_Location() {
+       
+       Project__c project1 = new Project__c(Name = 'Project1', Location__c = 'Location1', Budget__c = '1000', Project_Code__c='123' , Show_this_project_on_WhatsApp__c = true);
+        Project__c project2 = new Project__c(Name = 'Project2', Location__c = 'Location2', Budget__c = '2000', Project_Code__c='121' ,Show_this_project_on_WhatsApp__c = true);
+        insert new List<Project__c> { project1, project2 };
+        Organization a_ORG = [Select Id, Name, IsSandbox from Organization];
+          MessagingEndUser m = New MessagingEndUser();
+        m.Name = 'TE Test USER';
+        m.MessageType = 'WhatsApp';
+        m.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI
+        m.MessagingPlatformKey = 'whatsapp:+910000000001';
+        insert m;
+        List<MessagingEndUser> m1 = New List<MessagingEndUser>();
+        m1 = [select Id from MessagingEndUser where id =: m.id ];
+        
+        Messagingsession ms = New Messagingsession();        
+        ms.Status = 'Ended';
+        ms.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI
+        ms.MessagingEndUserId = m.id;
+        insert ms;
+ 
+        EinsteinBot_PrjLocationAndBudgets.PrechatInput input = new EinsteinBot_PrjLocationAndBudgets.PrechatInput();
+        input.prjFilter = 'Location';
+        input.sMessagingEndUserId = m.Id;
+        
+
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatInput> inputs = new List<EinsteinBot_PrjLocationAndBudgets.PrechatInput>();
+        inputs.add(input);
+
+   
+        Test.startTest();
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatOutput> results = EinsteinBot_PrjLocationAndBudgets.FetchProjectLocationsAndBudgets(inputs);
+        Test.stopTest();
+
+    }
+
+    @isTest
+    static void testFetchProjectLocationsAndBudgets_ProjectListForLocation() {
+        
+        Project__c project1 = new Project__c(Name = 'Project1', Location__c = 'Location1', Budget__c = '1000', Project_Code__c='123' ,Show_this_project_on_WhatsApp__c = true);
+        Project__c project2 = new Project__c(Name = 'Project2', Location__c = 'Location2', Budget__c = '2000', Project_Code__c='121' ,Show_this_project_on_WhatsApp__c = true);
+        insert new List<Project__c> { project1, project2 };
+        
+
+       
+        EinsteinBot_PrjLocationAndBudgets.PrechatInput input = new EinsteinBot_PrjLocationAndBudgets.PrechatInput();
+        input.soperatingKeyword = 'Project List for Location';
+        input.ProjectLocation = 'Location1';
+
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatInput> inputs = new List<EinsteinBot_PrjLocationAndBudgets.PrechatInput>();
+        inputs.add(input);
+
+      
+        Test.startTest();
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatOutput> results = EinsteinBot_PrjLocationAndBudgets.FetchProjectLocationsAndBudgets(inputs);
+        Test.stopTest();
+
+        
+    }
+
+    @isTest
+    static void testFetchProjectLocationsAndBudgets_ProjectListForBudget() {
+        
+       Project__c project1 = new Project__c(Name = 'Project1', Location__c = 'Location1', Budget__c = '1000', Project_Code__c='123' , Show_this_project_on_WhatsApp__c = true);
+        Project__c project2 = new Project__c(Name = 'Project2', Location__c = 'Location2', Budget__c = '2000', Project_Code__c='121' , Show_this_project_on_WhatsApp__c = true);
+        insert new List<Project__c> { project1, project2 };
+        
+        EinsteinBot_PrjLocationAndBudgets.PrechatInput input = new EinsteinBot_PrjLocationAndBudgets.PrechatInput();
+        input.soperatingKeyword = 'Project List for Budget';
+        input.Projectbudget = '1000';
+
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatInput> inputs = new List<EinsteinBot_PrjLocationAndBudgets.PrechatInput>();
+        inputs.add(input);
+
+        
+        Test.startTest();
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatOutput> results = EinsteinBot_PrjLocationAndBudgets.FetchProjectLocationsAndBudgets(inputs);
+        Test.stopTest();
+
+       
+    }
+	
+    @isTest
+    static void testFetchProjectLocationsAndBudgets_ShowImage() {
+    Test.setMock(HttpCalloutMock.class, new createCustomerInSAPNewMock());
+    Datetime currentDatetime = Datetime.now();
+        Project__c pro = new Project__c();
+        pro.Name='test project';
+        pro.Project_Code__c='123';
+        pro.Show_this_project_on_WhatsApp__c = true;
+        insert pro;
+        Organization a_ORG = [Select Id, Name, IsSandbox from Organization];
+        Unit__c objPU1 = new Unit__c();    
+        objPU1.Name = 'TestFive';      
+        objPU1.Project__c = pro.Id;
+        objPU1.Unit_status__c='Available';
+        objPU1.Active_Inactive__c = 'Active';
+        Insert objPU1;
+        
+        
+        End_Time_for_Event__c setting = new End_Time_for_Event__c();
+        setting.SetupOwnerId = UserInfo.getOrganizationId();
+        setting.Name = 'End Time Minutes';
+        setting.End_Minutes__c = 60; // Set the value you want to test
+        insert setting;
+        
+        VMS_API__c  vmsapisetting = new VMS_API__c();
+        vmsapisetting.Name = 'VMS Invitation';
+        vmsapisetting.VMS_API_Key__c = '5nMXiIE2sg2EK4yPiIwJb8BupTs2UDsn9PPs7kCP';
+        vmsapisetting.URL__c = 'https://dev.custom-api.1upvision.com/totalenv/invitation';
+        
+        insert vmsapisetting;
+        
+        Integer addminute =Integer.valueOf(setting.End_Minutes__c);
+        
+        String strRecordTypeId = [Select Id From RecordType Where SobjectType = 'Account' and Name = 'Person Account'].Id;
+        
+        Account acc = New Account();
+        acc.Salutation = 'Mr';
+        acc.FirstName = 'test';
+        acc.LastName = 'new';
+        acc.RecordTypeId = strRecordTypeId;
+        acc.PersonEmail = 'abc@gmail.com';
+        acc.PersonMobilePhone = '8275404075';
+        insert acc;    
+        
+        Opportunity opp = New Opportunity();
+        opp.Name = 'acd';
+        opp.AccountId = acc.id;
+        opp.StageName = 'Booking Confirmed';
+        opp.CloseDate = Date.newInstance(2016, 12, 9);
+        opp.Project__c=pro.Id;
+        opp.Latest_Proposed_Date_of_Visit__c=Datetime.now();
+        insert opp;
+        
+        
+        Customer_Registration__c cr = new Customer_Registration__c();
+        cr.Last_Name__c ='test 1';
+        cr.opportunity__c = opp.Id;
+        cr.project__c = opp.project__c;
+        cr.SV_Scheduled_End_Date_Time__c = opp.Latest_Proposed_Date_of_Visit__c.addMinutes(addminute); 
+        cr.SV_Scheduled_Date_Time__c=Datetime.now();
+        cr.SV_Status__c = 'Scheduled';  
+        insert cr;
+        
+        Booking__c book = new Booking__c();
+        book.Account__c=acc.Id;
+        book.Opportunity__c=opp.Id;
+        book.Customer_Number__c = 13242;
+        book.status__c = 'Processed';
+        
+        insert book;
+        
+        Applicant_Details__c app = new Applicant_Details__c();
+       // app.Salutation__c = 'Mr';
+        app.Name='Test Applicant';
+        app.Secondary_Mobile_Number__c='0000000001';
+        app.Mobile_Number__c='0000010000';
+        app.Booking__c=book.Id;
+        app.Applicant_Number__c = 'Primary Applicant';
+        app.Email_Address__c='abc@gmail.com';
+        Insert app;
+         
+         Quotation__c quote = new Quotation__c();  
+         quote.Unit__c=objPU1.Id;
+         quote.Opportunity__c=opp.Id;
+         insert quote;
+         
+         Payment_Milestones__c pm = new Payment_Milestones__c();
+         pm.Quotation__c=quote.Id;
+         pm.Milestone_Name__c='test';
+         insert pm;
+       
+       Demand__c  de = new Demand__c();
+    //   de.Payment_Milestones__r.Name='' ;
+       de.Booking__c=book.Id;
+       insert de;
+         
+        MessagingEndUser m = New MessagingEndUser();
+        m.Name = 'TE Test USER';
+        m.MessageType = 'WhatsApp';
+        m.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI
+        m.MessagingPlatformKey = 'whatsapp:+910000000001';
+        insert m;
+        List<MessagingEndUser> m1 = New List<MessagingEndUser>();
+        m1 = [select Id from MessagingEndUser where id =: m.id ];
+        
+        Messagingsession ms = New Messagingsession();        
+        ms.Status = 'Ended';
+        ms.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI
+        ms.MessagingEndUserId = m.id;
+        insert ms;
+        List<Messagingsession> m2 = New List<Messagingsession>();
+        m2 = [select Id from Messagingsession where id =: ms.id ];
+        
+        List<EinsteinBot_FetchDemand.PrechatInput> docC = New List<EinsteinBot_FetchDemand.PrechatInput>();
+        EinsteinBot_FetchDemand.PrechatInput c = new EinsteinBot_FetchDemand.PrechatInput();
+        c.quotationId = quote.id;
+        c.MessagingSessionId = m2[0].id;
+       c.selectedPaymentMilestone=pm.Name;
+       c.bookingId=book.Id;
+       
+        Lead l = new Lead();
+        l.LastName = 'Test Lead';
+        l.Dialing_Country__c = 'India';
+        l.Country_Code_2__c = '+91';
+        l.Phone = '0000000001';
+        l.Email = 'testlead131@gmail.com';
+        l.Project__c = pro.id;
+        l.Status = 'Open';
+        l.Campaign_Code__c = 'CAMPAIGNCODE';
+        insert l;
+          Marketing_Collaterals__c collateral1 = new Marketing_Collaterals__c(
+            AttachmentId__c = '12345',
+            Project__c = pro.id
+        );
+        insert collateral1;
+       ContentVersion testContent = new ContentVersion();
+       testContent.Title = 'Customer CSOA';
+       testContent.PathOnClient = 'testfile.txt';
+       testContent.VersionData = Blob.valueOf('Test Content');
+       testContent.Show_On_Community_Portal__c=true;
+       insert testContent;
+       
+       ContentDocumentLink testLink = new ContentDocumentLink();
+       testLink.ContentDocumentId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :testContent.Id LIMIT 1].ContentDocumentId;
+       testLink.LinkedEntityId = pro.Id;
+       testLink.ShareType = 'V'; 
+       testLink.Visibility = 'AllUsers'; 
+       insert testLink;
+
+        EinsteinBot_PrjLocationAndBudgets.PrechatInput input = new EinsteinBot_PrjLocationAndBudgets.PrechatInput();
+        input.soperatingKeyword = 'show image';
+        input.selectedImage = 'Image1';
+        input.selectedProjId = pro.Id;
+        input.sMessagingEndUserId=m.id;
+                 
+
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatInput> inputs = new List<EinsteinBot_PrjLocationAndBudgets.PrechatInput>();
+        inputs.add(input);
+
+          Test.startTest();
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatOutput> results = EinsteinBot_PrjLocationAndBudgets.FetchProjectLocationsAndBudgets(inputs);
+        Test.stopTest();
+    }
+	
+    @isTest
+    static void testFetchProjectLocationsAndBudgets_LeadCreation() {
+        // Test data creation
+        Project__c project1 = new Project__c(Name = 'Project1', Location__c = 'Location1', Budget__c = '1000', Project_Code__c='123' , Show_this_project_on_WhatsApp__c = true);
+        Project__c project2 = new Project__c(Name = 'Project2', Location__c = 'Location2', Budget__c = '2000', Project_Code__c='121' , Show_this_project_on_WhatsApp__c = true);
+        insert new List<Project__c> { project1, project2 };
+        Organization a_ORG = [Select Id, Name, IsSandbox from Organization];
+        Lead l = new Lead();
+        l.LastName = 'Test Lead';
+        l.Dialing_Country__c = 'India';
+        l.Country_Code_2__c = '+91';
+        l.Phone = '9438767525';
+        l.Email = 'testlead131@gmail.com';
+        l.Project__c = project1.id;
+        l.Status = 'Open';
+        l.Campaign_Code__c = 'CAMPAIGNCODE';
+        insert l;
+        Enquiry_Details__c enquiry = new Enquiry_Details__c(
+            Last_Name__c = 'Doe',
+            Mobile_No__c = '67890',
+            Email__c = 'test@example.com',
+            Lead__c = l.id,
+            Project_Name_Text__c = 'Test Project',
+            Type__c = 'Chatbot',
+            Project_Interested__r = new Project__c(Name = 'Project A',Project_Code__c='1288')
+        );
+        insert enquiry.Project_Interested__r; 
+        insert enquiry;
+           Marketing_Collaterals__c collateral1 = new Marketing_Collaterals__c(
+            //AttachmentId__c = '069Bl000003W2bFIAS',
+            Project__c = project1.id,
+            Start_Date__c=date.Today(),
+            End_Date__c =date.Today().addDays(2)
+        );
+        insert collateral1;
+        
+          ContentVersion testContent = new ContentVersion();
+       testContent.Title = 'Customer CSOA';
+       testContent.PathOnClient = 'testfile.txt';
+       testContent.VersionData = Blob.valueOf('Test Content');
+       testContent.Show_On_Community_Portal__c=true;
+       insert testContent;
+        
+        ContentVersion cv = new ContentVersion();
+       cv.Title = 'Image1';
+       cv.PathOnClient = 'testfile.txt';
+       cv.VersionData = Blob.valueOf('Test Content');
+       cv.Show_On_Community_Portal__c=true;
+       insert cv;
+       
+       ContentDocumentLink testLink = new ContentDocumentLink();
+       testLink.ContentDocumentId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :testContent.Id LIMIT 1].ContentDocumentId;
+       testLink.LinkedEntityId = project1.Id;
+       testLink.ShareType = 'V'; 
+       testLink.Visibility = 'AllUsers'; 
+       insert testLink;
+        
+        ContentDocumentLink cdl = new ContentDocumentLink();
+       cdl.ContentDocumentId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id LIMIT 1].ContentDocumentId;
+       cdl.LinkedEntityId = project1.Id;
+       cdl.ShareType = 'V'; 
+       cdl.Visibility = 'AllUsers'; 
+       insert cdl;
+        
+   MessagingEndUser m = New MessagingEndUser();
+        m.Name = 'TE Test USER';
+        m.MessageType = 'WhatsApp';
+        m.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI
+        m.MessagingPlatformKey = 'whatsapp:+910000000001';
+        insert m;
+        List<MessagingEndUser> m1 = New List<MessagingEndUser>();
+        m1 = [select Id from MessagingEndUser where id =: m.id ];
+        
+        Messagingsession ms = New Messagingsession();        
+        ms.Status = 'Ended';
+        ms.MessagingChannelId = a_ORG.IsSandbox ? '0Mjp00000000030CAA' : '0MjOX000000BH5a0AG';// sandbox = 0Mjp00000000030CAA ; production = 0Mj2w000000bmAmCAI
+        ms.MessagingEndUserId = m.id;
+        insert ms;
+        
+        EinsteinBot_PrjLocationAndBudgets.PrechatInput input = new EinsteinBot_PrjLocationAndBudgets.PrechatInput();
+        input.soperatingKeyword = 'Lead Creation';
+        input.sProjectName = 'Project1';
+        input.sCustomerName = 'Test Customer';
+        input.sCustomerEmail = 'test@example.com';
+        input.whatsappNumberWithCode = 'whatsapp:+1234567890';
+        input.sMessagingEndUserId = m.Id;
+
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatInput> inputs = new List<EinsteinBot_PrjLocationAndBudgets.PrechatInput>();
+        inputs.add(input);
+
+      
+        Test.startTest();
+        List<EinsteinBot_PrjLocationAndBudgets.PrechatOutput> results = EinsteinBot_PrjLocationAndBudgets.FetchProjectLocationsAndBudgets(inputs);
+        Test.stopTest();
+
+       
+    }
+    
+    public class createCustomerInSAPNewMock implements HttpCalloutMock {
+        public HTTPResponse respond(HTTPRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setHeader('Content-Type', 'application/json');
+            res.setStatusCode(200);
+            res.setBody('{"CUSTOMERNO":"123456","RET_CODE":"0","MESSAGE":"Customer Created Successfully"}');
+            return res;
+        }
+    }
+
+}
