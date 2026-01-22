@@ -1,0 +1,684 @@
+<apex:component access="global" >
+    <apex:attribute name="isNewPhase" type="Boolean" description="Phase" access="global"/>
+    <apex:attribute name="prjState" type="String" description="Project State" access="global"/>
+    <apex:attribute name="noObjLetter" type="Boolean" description="No Objection Letter" access="global"/>
+    <apex:attribute name="unitOwner" type="String" description="Unit Owner" access="global"/>
+    <apex:attribute name="prjName" type="String" description="ProjectName" access="global"/>
+    <apex:attribute name="ownership" type="String" description="OwnershipUnit" access="global"/>
+    <html>
+        <head>
+            <style type="text/css" media="print">
+                @page {
+                
+                @top-center {
+                content: element(header);
+                }
+                
+                size:4in 4in;
+                margin:20mm 20mm 60mm 20mm;
+                
+                }
+                body{
+                margin:0;
+                padding:0;
+                font-family: SansSerif;
+                font-size:18px;
+                line-height:1.5;
+                }
+                @page {
+                size: 8.87in 10.0in;
+                margin:12mm;
+                margin-bottom:190px;
+                }
+                
+                
+                
+                .maintable {
+                border:1px solid #DCDCDC;       
+                border-collapse: collapse;
+                margin:0;
+                
+                }
+                .maintable tr td {
+                
+                border:1px solid #DCDCDC;
+                border-collapse: collapse;
+                }
+                
+                
+            </style>
+        </head>
+        <body>
+            
+            <body>
+                
+              
+                <tr class="maintable">
+                    <td style = "font-family:SansSerif;">CONTENTS</td>
+                </tr>
+                <table width = "100%" class="maintable" border="background-color:#969696;border-collapse: collapse;">    
+                    <tr class="maintable">
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 13px;color:black;font-weight: bold;text-align: left !important; padding:5px;">A.</th>
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 13px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: left !important; padding:5px;">PREAMBLE</th>
+                    </tr>
+                    <tr class="maintable">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.01</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Schedule "A" Property | <b>Master Development Land</b></td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Schedule "B" Property | <b>Master Development</b></td>
+                        
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.03</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Schedule "C" Property | <b>Residential Land</b></td>
+                        
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Schedule "D" Property | <b>Residential Development</b></td>
+                        
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.05</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Schedule "E" Property | <b>Project Land</b></td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.06</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Schedule "F" Property | <b>Project</b></td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.07</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Title</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.08</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Approvals and Registration under RERA</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.09</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Confirmation</td>
+                    </tr>
+                    <tr style="display:{!if(prjState != 'Maharashtra','table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.10</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Signatures</td>
+                    </tr>
+                    <tr style="display:{!if(prjState == 'Maharashtra','table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.10</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Signatures and validity</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.11</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Interpretation</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">0.12</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Definitions</td>
+                    </tr>
+                    <tr class="maintable">
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 13px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: left !important; padding:5px;">B.</th>
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 13px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: left !important; padding:5px;">SPECIFIC TERMS OF SALE ("SToS")</th>
+                    </tr>
+                    <tr class="maintable">
+                        <th style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;border-right: 1px solid #DCDCDC;text-align: center !important; padding:5px;"><b style="font-weight:normal">1.</b></th>
+                        <th style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;border-right: 1px solid #DCDCDC;text-align: left !important; padding:5px;">Allottees Information</th>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">2.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">{!unitOwner} Information</td>
+                        
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">3.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Landowners Information</td>
+                        
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">4.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Unit</td>
+                        
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: right !important; padding:5px;">a.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Unit Details</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: right !important; padding:5px;">b.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Specifications</td>
+                    </tr>
+                    <tr style="display:{!if(isNewPhase == False,'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: right !important; padding:5px;">c.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Unit Plan</td>
+                    </tr>
+                    <tr style="display:{!if(isNewPhase == True,'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: right !important; padding:5px;">c.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Amenities</td>
+                    </tr>
+                    <tr style="display:{!if(isNewPhase == True,'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: right !important; padding:5px;">d.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Unit Plan</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">5.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Commercial Terms</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">5.01</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Consideration</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">5.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Virtual Completion</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">5.03</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Payment Schedule</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">6.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Special Conditions</td>
+                    </tr>
+                    <tr class="maintable">
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 13px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: left !important; padding:5px;">C.</th>
+                        <th style = "font-family:SansSerif;background-color:#F5F5F5;border-collapse: collapse;font-size: 13px;color:black;font-weight: bold;border-right: 1px solid #DCDCDC;text-align: left !important; padding:5px;">GENERAL TERMS OF SALE ("GToS")</th>
+                    </tr>
+                    <tr  >
+                        <th style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;border-right: 1px solid #DCDCDC;text-align: center !important; padding:5px;"><b style="font-weight:normal">7.</b></th>
+                        <th style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;border-right: 1px solid #DCDCDC;text-align: left !important; padding:5px;"><b style="font-weight:normal">Consideration and Payment</b></th>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.01</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Basic Consideration</td>
+                        
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Additional Consideration</td>
+                        
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.03</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Payment Schedule</td>
+                        
+                    </tr>
+                 <!------------------------------------------Content Table changes based on Unit ownership and project name----------------------------------------------------->   
+              <!--      <tr style="display:{!if((ownership != 'JD'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Early Payments</td>
+                    </tr> -->
+                    <tr style="display:{!if((ownership != 'JD'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Timely Payments</td>
+                    </tr>
+                    <tr style="display:{!if((ownership != 'JD'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.05</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Subvention Plan</td>
+                    </tr>
+                    <tr style="display:{!if((ownership != 'JD'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.06</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No conveyance until payments cleared in full</td>
+                    </tr>
+                    
+                <!--    <tr style="display:{!if((ownership == 'JD' && prjName != 'The Magic Faraway Tree'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Early Payments</td>
+                    </tr> -->
+                    <tr style="display:{!if((ownership == 'JD' && prjName != 'The Magic Faraway Tree'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Timely Payments</td>
+                    </tr>
+                    <tr style="display:{!if((ownership == 'JD' && prjName != 'The Magic Faraway Tree'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.05</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Subvention Plan</td>
+                    </tr>
+                    <tr style="display:{!if((ownership == 'JD' && prjName != 'The Magic Faraway Tree'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.06</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No conveyance until payments cleared in full</td>
+                    </tr>
+                    
+                    
+                    <tr style="display:{!if((ownership == 'JD' && prjName == 'The Magic Faraway Tree'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Timely Payments</td>
+                    </tr>
+                    <tr style="display:{!if((ownership == 'JD' && prjName == 'The Magic Faraway Tree'),'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">7.05</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No conveyance until payments cleared in full</td>
+                    </tr>
+                   <!--------------------------------------------------------------------------------------------------------------------------------------------------------------> 
+                    
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: center !important; padding:5px;">8.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;font-weight: bold;text-align: left !important; padding:5px;">Virtual Completion, Possession and Conveyance</td>
+                    </tr>
+                    <tr  >
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.01</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Virtual Completion</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                           <apex:outputText rendered="{!NOT(isNewPhase)}">Possession in 90 days</apex:outputText> 
+                           <apex:outputText rendered="{!isNewPhase}">Notification of Possession</apex:outputText> 
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.03</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">Effective Completion Date </apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Possession in 60 days</apex:outputText> 
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">Physical presence of fixtures and fittings</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Effective Completion Date</apex:outputText>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.05</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">Delays in obtaining Government Approvals and Connections</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Physical presence of fixtures &amp; fittings</apex:outputText>
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.06</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Use of Unit before Handover</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.07</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Work on other units and Amenities</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.08</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Force Majeure</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.09</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Conveyance</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">8.10</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">Common Area Maintenance</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Complimentary Maintenance Service</apex:outputText>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: center !important; padding:5px;">9.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: left !important; padding:5px;font-weight: bold;">Design, Specifications and Warranty</td>
+                    </tr><tr>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">9.01</td>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Construction and Specifications</td>
+                    </tr><tr>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">9.02</td>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Architectural Design</td>
+                    </tr><tr>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">9.03</td>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;"><apex:outputPanel rendered="{!NOT(isNewPhase)}">Installations</apex:outputPanel><apex:outputPanel rendered="{!isNewPhase}">Installations</apex:outputPanel></td>
+                    </tr><tr>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">9.04</td> 
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Allotment of Private Areas</td>
+                    </tr><tr>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">9.05</td>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Variations</td>
+                    </tr><tr>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">9.06</td>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Materials supplied by Allottees</td>
+                    </tr><tr>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">9.07</td>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Hindrance / Obstruction to Construction</td>
+                    </tr><tr>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">9.08</td>
+                    <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Wastage / Scrap</td>
+                    </tr>
+                    <tr style="page-break-after: always;">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">9.09</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;"><apex:outputPanel rendered="{!NOT(isNewPhase)}">Warranty</apex:outputPanel><apex:outputPanel rendered="{!isNewPhase}">Warranty</apex:outputPanel></td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: center !important; padding:5px;">10.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: left !important; padding:5px;font-weight: bold;">Interior Design and Improvements</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.01</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Interior Design Options</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;"> Risk of Personalized Interior Design
+                           <!-- <apex:outputText rendered="{!NOT(isNewPhase)}">Risk of Interior Design</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Risk of Personalized Interior Design</apex:outputText>-->
+                            
+                        </td>
+                        
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.03</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;"> Restrictions on Personalized interior Design
+                            <!-- <apex:outputText rendered="{!NOT(isNewPhase)}">Restrictions on Interior Design</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Restrictions on Personalized interior Design</apex:outputText> --> 
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">Timelines</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Right of Promoters to withdraw Interior Design Options</apex:outputText>
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.05</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">Change after signoff</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Timelines</apex:outputText> 
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.06</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">Checking of Drawings and Specifications</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Change after signoff</apex:outputText> 
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.07</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">Changes affecting external appearance</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Checking of Drawings and Specifications</apex:outputText> 
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.08</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">External Agencies</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">Changes affecting external appearances</apex:outputText> 
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.09</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">
+                            <apex:outputText rendered="{!NOT(isNewPhase)}">No instructions at site</apex:outputText> 
+                            <apex:outputText rendered="{!isNewPhase}">External Agencies</apex:outputText> 
+                            
+                        </td>
+                    </tr>
+                    <!-- Two is Added only for the New Phase -->
+                     <tr style="display:{!if(isNewPhase == True,'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.10</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No instructions at site</td>
+                    </tr>
+                    
+                    <tr style="display:{!if(isNewPhase == True,'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">10.11</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Specialized Items</td>
+                    </tr>
+                    
+                    <!-- Two is Added only for the New Phase End --> 
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: center !important; padding:5px;">11.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: left !important; padding:5px;font-weight: bold;">Promoters' Representations and Warranties</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.01</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Title</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Approvals</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.03</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No Encumbrances</td>
+                    </tr>
+                    <tr >
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Laws</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.05</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Right to Enter into this Agreement</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.06</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No other Agreement</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.07</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No Restrictions for Sale</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.08</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Statutory Dues</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.09</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Notices</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">11.10</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Disclaimer on Marketing Collateral</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: center !important; padding:5px;">12.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: left !important; padding:5px;font-weight: bold;">Obligations and Rights of the Allottees after Completion</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.01</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Member of Association</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Bye laws, Rules and Regulations</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.03</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Third party transfer</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Rights of Association Members</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.05</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Co-operation</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.06</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Uses permissible in the Unit</td>
+                    </tr>
+                    <tr style="page-break-after: always;">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.07</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Maintenance and other Expenses</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.08</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Method of Calculation of Proportionate Share</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.09</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Structural Stability</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.10</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Modifications / alterations and Aesthetic appearance of the Residential Development</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.11</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Car Park</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">12.12</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Rights to common areas and facilities</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: center !important; padding:5px;">13.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: left !important; padding:5px;font-weight: bold;">Transfer and Termination</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">13.01</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Transfer of Unit</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">13.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Termination of Agreement for Sale</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: center !important; padding:5px;">14.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: left !important; padding:5px;font-weight: bold;">Intellectual Property, Filming and Non-Solicitation</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">14.01</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Copyright and Intellectual Property</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">14.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Filming Rights</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">14.03</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Non-Solicitation</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: center !important; padding:5px;">15.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;text-align: left !important; padding:5px;font-weight: bold;">Other Terms</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.01</td> 
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Particulars of Allottees</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.02</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Joint Allottees</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.03</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Change of Allottees</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.04</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">NRI, PIO, Foreign Nationals</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.05</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No Waiver</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.06</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Promoters' right to raise finance</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.07</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No Further Charge on Unit</td>
+                    </tr>
+                    <tr >
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.08</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Indemnity</td>
+                    </tr>
+                    <tr >
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.09</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Changes /Modifications</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.10</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Severance</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.11</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Entire Agreement</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.12</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Custody</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.13</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Communication and Notices</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.14</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Meeting timings and location</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.15</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Nature of Relationship</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.16</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Counterparts</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.17</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Laws of India</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">15.18</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Dispute Resolution</td>
+                    </tr>
+                    
+                </table>  
+                <table width = "100%" class="maintable" border="background-color:#969696;border-collapse: collapse;">
+                    <tr>
+                        <th style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;border-right: 1px solid #DCDCDC;text-align: left !important; padding:5px;">Schedule Properties</th>
+                    </tr>
+                </table>
+                <table width = "100%" class="maintable" border="background-color:#969696;border-collapse: collapse;">
+                    <tr>
+                        <th style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:black;border-right: 1px solid #DCDCDC;text-align: left !important; padding:5px;">Annexures</th>
+                    </tr>
+                </table>
+                <table width = "100%" class="maintable" border="background-color:#969696;border-collapse: collapse;">
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">01.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Title</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">02.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Approvals</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">03.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Interior Design Supplementary Agreement ("IDSA") (Format)</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">04.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Maintenance Services</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">05.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Warranty Terms</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">06.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Special Power-of-Attorney for execution of Deed of Declaration</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">07.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Deed of Declaration (Format)</td>
+                    </tr>
+                    <tr>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">08.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">Payment Instructions</td>
+                    </tr>
+                    <tr style="display:{!if(noObjLetter == True,'table-row','none')}">
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: center !important; padding:5px;">09.</td>
+                        <td style = "font-family:SansSerif;border-collapse: collapse;font-size: 13px;color:#4b4b4b;text-align: left !important; padding:5px;">No Objection Letter</td>
+                    </tr>  
+                    
+                </table>
+                
+            </body>
+                
+        </body>
+    </html>
+    
+</apex:component>
