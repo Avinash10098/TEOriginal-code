@@ -1,0 +1,777 @@
+<apex:page controller="saleDeedController" docType="html-5.0" showHeader="true" standardStylesheets="false" sidebar="false" applyHtmlTag="true" applyBodyTag="true">
+
+    <head>          
+       <style type="text/css" media="screen, print">
+         
+           .f-width {
+                width: 90%;
+                max-width: 1000px;
+                overflow: hidden;
+                margin: auto;
+                border: 3px solid #333;
+                border-radius: 8px;
+                padding: 2rem;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+            }
+            
+            .checkBox-party {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1.25rem;
+                padding: 0.5rem;
+                border-left: 3px solid #3498db;
+                background-color: #f8f9fa;
+                border-radius: 4px;
+            }
+           
+           	.checkBox-party-1{
+                margin-bottom: 1.25rem;
+                padding: 0.5rem;
+                border-left: 3px solid #3498db;
+                background-color: #f8f9fa;
+                border-radius: 4px;
+           }           
+            
+            .checkBox {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+                padding: 0.25rem;
+            }
+            
+            /* Enhanced checkbox styling */
+            input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+                margin-top: 2px;
+                cursor: pointer;
+                accent-color: #e74c3c;
+            }
+            
+           
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 1rem 0;
+                border-radius: 6px;
+                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            
+            table th {
+                border: 2px solid #bdc3c7;
+                font-family: 'Segoe UI', SansSerif;
+                font-size: 11pt;
+                padding: 12px 8px;
+            }
+            
+            table th:first-child {
+                background-color: #2c3e50;
+                color: white;
+                width: 50px;
+                text-align: center;
+                font-weight: bold;
+            }
+            
+            table th:last-child {
+                background-color: #ecf0f1;
+                text-align: left;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+            
+            
+            p {
+                font-size: 10pt;
+                text-align: justify;
+                font-family: 'Segoe UI', SansSerif;
+                width: 100%;
+                margin: 8px 0;
+                color: #2c3e50;
+            }
+            
+            p b {
+                color: #e74c3c;
+                font-weight: 600;
+            }
+            
+            
+            
+            
+            p:has-text("OR") {
+                text-align: center;
+                font-weight: bold;
+                color: #7f8c8d;
+                margin: 20px 0;
+                position: relative;
+            }
+            
+            p:has-text("OR"):before,
+            p:has-text("OR"):after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                width: 40%;
+                height: 1px;
+                background-color: #bdc3c7;
+            }
+            
+            p:has-text("OR"):before {
+                left: 0;
+            }
+            
+            p:has-text("OR"):after {
+                right: 0;
+            }
+            
+            .button-24 {
+                background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+                border: 1px solid #c0392b;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+                box-sizing: border-box;
+                color: #FFFFFF;
+                cursor: pointer;
+                display: inline-block;
+                font-family: 'Segoe UI', nunito, roboto, proxima-nova, "proxima nova", sans-serif;
+                font-size: 16px;
+                font-weight: 600;
+                line-height: 1.4;
+                min-height: 44px;
+                outline: 0;
+                padding: 12px 24px;
+                text-align: center;
+                text-rendering: optimizeLegibility;
+                text-transform: none;
+                user-select: none;
+                -webkit-user-select: none;
+                touch-action: manipulation;
+                vertical-align: middle;
+                transition: all 0.3s ease;
+                letter-spacing: 0.5px;
+            }
+            
+            .button-24:hover {
+                background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+                box-shadow: 0 6px 12px rgba(231, 76, 60, 0.4);
+                transform: translateY(-2px);
+            }
+            
+            .button-24:active {
+                transform: translateY(0);
+                box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+            }
+            
+            .flex-c {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 2rem;
+                padding-top: 1rem;
+                border-top: 1px solid #ecf0f1;
+            }
+            
+            
+            .footer {
+                width: 95%;
+                margin-bottom: 2rem;
+                padding: 1rem;
+                background-color: #f8f9fa;
+                border-radius: 6px;
+                border: 1px solid #dee2e6;
+            }
+            
+            
+            @media (max-width: 768px) {
+                .f-width {
+                    width: 95%;
+                    padding: 1rem;
+                }
+                
+                .checkBox-party,
+                .checkBox {
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+                
+                table th {
+                    font-size: 10pt;
+                    padding: 8px 6px;
+                }
+                
+                .button-24 {
+                    width: 100%;
+                    max-width: 200px;
+                }
+            }
+            
+            input[type="checkbox"]:focus {
+                outline: 2px solid #3498db;
+                outline-offset: 2px;
+            }
+            
+            .button-24:focus {
+                outline: 2px solid #3498db;
+                outline-offset: 2px;
+            }
+            
+            ::selection {
+                background-color: #3498db;
+                color: white;
+            }
+            .date-css{
+               padding: 8px; 
+               border-radius: 4px; 
+               border: 1px solid #ccc
+            }
+            
+            
+            html {
+                scroll-behavior: smooth;
+            }
+           
+        </style>
+    </head>
+    <body >
+        
+        <apex:outputPanel rendered="{!NOT(ISBLANK(errorMessage))}">
+        	<div style="color:red; font-weight:bold; margin:10px 0;">
+                {!errorMessage}
+            </div>
+        </apex:outputPanel>
+        
+        <apex:outputPanel rendered="{!bkList[0].Sale_Deed_Date__c == null}">
+            Sale Deed Date is Blank
+        </apex:outputPanel>
+        <!-- output pannel for if "Pursuit of a Radical Rhapsody" project and only for the phase one --->
+        <apex:outputPanel rendered="{!AND(isShowoutPannel, NOT(ISBLANK(bkList[0].Sale_Deed_Date__c)) , ISBLANK(errorMessage))}">
+             <apex:form styleClass="f-width">
+                <!---------------------------------Header and Footer---------------------------------------------------------------->
+                
+                <div class="footer" style="width:95%;">
+                    
+                    <div class="checkBox-party">
+                        <apex:inputCheckbox id="chkConfirmParty" value="{!isFirstCheckBoxPOARR}" />
+                        <span><p>Display the <b>Confirming Party</b> in the footer.</p></span>
+                    </div>
+                    <div>
+                       <apex:inputTextarea id="txtConfirmParty" value="{!ConfirmingPartyInput}" cols="60" rows="5" />
+                    </div>
+                    
+                </div>
+                 
+                <div class="footer" style="width:95%;">
+                    <div class="checkBox-party-1">
+                        <p>Select the Sales Deed date</p>
+                        <apex:input type="date" value="{!salesDeedDateForPOARRProject}" id="salesDeedDate" styleClass="date-css"/>
+                        <p id="saleDeedSentence">
+                            
+                        </p>
+                    </div>
+                 </div>
+                 
+                 <div class = "footer" style = "width:95%"> 
+                     <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0px;margin-top:10px">
+                       <!--<apex:inputCheckbox value="{!isEightCheckBoxPOARR}" id="isEightCheckBoxPOARR" /> <b>Authorized signatory</b>-->
+                       <apex:outputText ><b>Authorized signatory</b></apex:outputText>
+                    </p>
+                     <p>
+                         {!promo.Name} [PAN:{!promo.PAN__c}], a company registered under the Companies Act, 
+                            1956 and existing under the 
+                            Companies Act 2013, having its office at {!promo.Registered_office__c}, 
+                            represented by their duly authorized signatory
+                         <apex:selectList value="{!selectedOptionAuthorizedsignatory}" size="1">
+                            <apex:selectOptions value="{!pickListValuesAuthorizedsignatory}"/>
+                         </apex:selectList> authorized through Board Resolution dated {!SaleDeedDateBR}
+                     </p>
+                 </div>
+                 
+                 <div class="footer" style="width:95%;">
+                    <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0px;margin-top:10px">
+                       <apex:inputCheckbox value="{!isSevnthCheckBoxPOARR}" id="isSevnthCheckBoxPOARR" /> <b>Person’s presenting for registration</b>
+                    </p>
+                     <p>
+                        and presented for registration before the Sub-Registar by their duly authorised signatory,
+						<apex:selectList value="{!selectedOptionpresentingforregistration}" size="1">
+                            <apex:selectOptions value="{!pickListValuespresentingforregistration}"/>
+                         </apex:selectList>
+                         authorised through board resolution dated <apex:input style="margin-left:15px; margin-right:15px;" type="date" value="{!BRDateSecondPOARRProject}" id="BRDateSecondPOARRProject"/>
+                     </p>
+                 </div>
+                 
+                <table style='width: 100%;border-collapse: collapse;' cellpadding='5'>
+                    <tr>
+                        <th style='border:2px solid #D3D3D3;background-color:#333;color:white;width:30px;text-align:center;font-family:SansSerif;font-size:11pt;'>1</th>
+                        <th style='border:2px solid #D3D3D3;background-color:#EEEEEE;text-align: left;font-family:SansSerif;font-size:11pt;'>Consideration and Sale</th>
+                    </tr>
+                </table>
+                
+                <!-- <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px;margin-top:10px'><b>1.01</b></p> -->
+                
+                <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0px;margin-top:10px">
+                   <apex:inputCheckbox value="{!isseccondCheckBoxPOARR}" id="isseccondCheckBoxPOARRChecked" /> <b>For Normal Cases</b>
+                </p>
+                 
+                 <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px'>
+                     <span>
+                      <!--<apex:inputCheckbox value="{!isseccondCheckBoxPOARR}"/> -->
+                      In consideration of the Allottees having paid the entire Sale Consideration of INR {!AgreementValueWithoutTax} ({!AgreementValueWithoutTaxInWord})
+                      (“Sale Consideration”), the entire amount having been received by the Promoters on various dates including
+                      TDS amount of INR
+                      <apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="tdsAmountInput"
+                                      onkeyup="convertToWords(this.value, 'tdsAmountWords')" value="{!tdsAmountFirstPOARR}" />
+                      /- <span id="tdsAmountWords"></span>
+                      that has been paid by way of multiple Challans in respect of the Unit, the receipt of which the Promoters admit and acknowledge,
+                      the Promoters do hereby sell, grant, transfer, convey, assign and assure unto the Allottee by way of absolute sale all their right, title and interest over
+                      the Unit and hand over possession of the same subject to the terms and conditions mentioned herein relating to the use of the units, common areas, etc.
+                      to have and to hold the Unit for residential use by the Allottees, free from all claims.
+                    </span>
+                 </p>
+                 
+                 <!--<p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px;margin-top:10px'><b>1.04 Normal Cases</b></p>
+                 <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'> The Parties acknowledge and agree that stamp 
+                    duty and the registration fees is payable on the Sale Consideration or the Guideline value determined by the relevant authority, whichever is higher.
+                </p> -->
+                
+                 
+                
+                <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0px;margin-top:10px">
+                   <apex:inputCheckbox value="{!isthirdCheckBoxPOARR}" id="isthirdCheckBoxPOARR" /> <b>For Resale Cases.</b>
+                </p>
+                 
+                <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0; margin-top:10px;">
+                    The Promoters herein had entered into an Agreement for Sale dated {!agreementDateFormatedPOARR} 
+                    (hereinafter referred to as the
+                    “AfS”) with 
+                    <apex:inputText style="margin-left:15px; margin-right:15px;" value="{!beforeFatherHusband}" id="beforeFatherHusband" /> Father/Husband Name 
+                    <apex:inputText style="margin-left:15px; margin-right:15px;" value="{!afterFatherHusband}" id="afterFatherHusband" />, 
+                    hereinafter referred to as the “Original Allottees” for
+                    purchase of the said Unit for a sale consideration of INR {!AgreementValueWithoutTax} ({!AgreementValueWithoutTaxInWord})
+                    <apex:outputPanel >
+                        including Maintenance Deposit of INR <apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="maintenceDepositAmountInput"
+                                      onkeyup="convertToWords(this.value, 'maintenceDepositAmount')" value="{!maintenceDepositAmountPOARR}" />
+                      /- <span id="maintenceDepositAmount"></span>
+                    </apex:outputPanel>
+                </p>
+                
+                <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0; margin-top:10px;">
+                    ii) The Original Allottees, the Allottees, and the Promoters executed a Deed of Assignment dated <apex:input style="margin-left:15px; margin-right:15px;" type="date" value="{!salesAssignmentDatedPOARR}" id="salesAssignmentDatedPOARR"/>
+                    (hereinafter referred to as the 'DoA'), pursuant to the Memorandum of Understanding/ Sale Agreement dated {!MOUDateFormatedPOARR}, 
+                    wherein the Original Allottees assigned their rights in the Unit to the Allottees for a consideration of INR <!--{!SalesConsidaration}
+                    (in words {!SalesCinsidarationInWords})--> <apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="SalesConsidarationPOARRInput"
+                                      onkeyup="convertToWords(this.value, 'SalesConsidarationPOARR')" value="{!SalesConsidarationPOARR}" />
+                      /- <span id="SalesConsidarationPOARR"></span> (“Sale Consideration”), and confirmed through the DoA that they have no objection to the execution 
+                    of this Sale Deed in favor of the said Allottees.
+                </p>
+                
+                <!--<p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0; margin-top:10px;">
+                    iii) Accordingly, the Promoters are now executing this Sale Deed for the Unit in favour of the Allottees and the Original 
+                    Allottees are signing as a confirming party herein.
+                </p>
+                
+                <p style="font-size:10pt; font-family:SansSerif; width:100%; margin:5px 0; font-weight:bold; ">
+                   <b>OR</b> 
+                </p>
+                
+                <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0; margin-top:10px;">
+                    Accordingly, the Promoters are now executing this Sale Deed for the Unit in favour of the Allottees.
+                </p> -->
+                
+                <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0; margin-top:10px;">
+                    iv) The Parties herein confirm that the Promoters have only received a total of INR<apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="AmountreceivedPOARRInput"
+                                      onkeyup="convertToWords(this.value, 'AmountreceivedPOARR')" value="{!AmountreceivedPOARR}" />
+                      /- <span id="AmountreceivedPOARR"></span> from the Original Allottees and the Allottees under the terms of the AfS
+                    towards the purchase of the Unit, and no additional sums are received by the Promoters for the Unit.
+                </p>
+                
+                <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0; margin-top:10px;">
+                    v) Therefore, in consideration of the Allottees having paid the entire Sale Consideration of INR 
+                    <apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="AgreementValueWithoutTaxPOARR"
+                                      onkeyup="convertToWords(this.value, 'AgreementValueWithoutTaxPOARR')" value="{!AgreementValueWithoutTaxPOARR}" />
+                      /- <span id="AgreementValueWithoutTaxPOARR"></span>
+                    <!--{!AgreementValueWithoutTax} ({!AgreementValueWithoutTaxInWord})-->, the entire amount having been received by the Promoters and the Original Allottees on various
+                    dates including TDS amount of INR <apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="TDSAmountPOARRInput"
+                                      onkeyup="convertToWords(this.value, 'TDSAmountPOARR')" value="{!TDSAmountPOARR}" />
+                      /- <span id="TDSAmountPOARR"></span> that has been paid by way of multiple Challans 
+                    in respect of the Unit, the receipt of which the Promoters admit and acknowledge, the Promoters 
+                    do hereby sell, grant, transfer, convey, assign and assure unto the Allottee by way of absolute sale all their right, title 
+                    and interest over the Unit and hand over possession of the same subject to the terms and conditions mentioned herein relating 
+                    to the use of the units, common areas, etc. to have and to hold the Unit for residential use by the Allottees, free from all claims.
+                </p>  
+                
+                 
+                 <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0px; margin-top:10px; color: #e74c3c;">
+		                <apex:inputCheckbox value="{!isFourthCheckBoxPOARR}" id="isFourthCheckBoxPOARR"/><b>For Balance Payable Cases</b> 
+                </p>
+                 
+                <p style="font-size:10pt; text-align:justify; font-family:SansSerif; width:100%; margin:0; margin-top:10px;">
+                    In consideration of the Allottees having agreed to pay the total Sale Consideration of INR {!AgreementValueWithoutTax} ({!AgreementValueWithoutTaxInWord}),, 
+                    (“Sale Consideration”), the Promoters hereby acknowledge receipt of amounts aggregating to INR <apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="aggregatingAmountPOARRInput"
+                                      onkeyup="convertToWords(this.value, 'aggregatingAmountPOARR')" value="{!aggregatingAmountPOARR}" />
+                      /- <span id="aggregatingAmountPOARR"></span>, 
+                    including the TDS amount of INR  paid vide<apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="BalancePayableTDSAmountPOARRInput"
+                                      onkeyup="convertToWords(this.value, 'BalancePayableTDSAmountPOARR')" value="{!BalancePayableTDSAmountPOARR}" />
+                      /- <span id="BalancePayableTDSAmountPOARR"></span> multiple Challans in respect of the Unit.
+                    The balance amount of INR<apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="balanceAmountPOARRInput"
+                                      onkeyup="convertToWords(this.value, 'balanceAmountPOARR')" value="{!balanceAmountPOARR}" />
+                      /- <span id="balanceAmountPOARR"></span> shall be paid by the Allottees to the Promoters simultaneously with 
+                    the execution and registration of this Sale Deed, by way of Demand Draft No. <apex:inputText style="margin-left:15px; margin-right:15px;"
+                                                                                                  value="{!DemandDraftNoPOARR}" id="DemandDraftNoPOARR"/> 
+                    dated <apex:input type="date" style="margin-left:15px; margin-right:15px;" value="{!DemandDraftNoDatePOARR}" /> 
+                    drawn on <apex:inputText style="margin-left:15px; margin-right:15px;" value="{!DemandDraftBankNamePOARR}" id="DemandDraftBankNamePOARR"/> Bank in favour of the Promoters.
+                    Upon receipt and realisation of the entire Sale Consideration including the balance amounts, the Promoters do hereby sell, grant, 
+                    transfer, convey, assign and assure unto the Allottee by way of absolute sale all their right, title and interest over the Unit and 
+                    hand over possession of the same subject to the terms and conditions mentioned herein relating to the use of the units, common areas, etc. 
+                    to have and to hold the Unit for residential use by the Allottees, free from all claims.
+                    In the event the said Demand Draft is dishonoured, bounced, delayed or fails to clear for any reason whatsoever, 
+                    the Promoters shall be entitled to take appropriate legal action against the Allottees, including but not limited to initiating proceedings 
+                    for recovery of the outstanding amount, termination of this Sale Deed, withholding possession/delivery of the Unit, and/or claiming damages 
+                    including costs and expenses incurred therein, without prejudice to any other rights or remedies available to the Promoters under law or equity.
+                </p>
+                 
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px;margin-top:10px'><b>1.04</b></p>
+                 
+                 <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin-top:0px'>
+                     <apex:inputCheckbox value="{!issixthCheckBoxPOARR}" id="issixthCheckBoxPOARR" /> The Parties acknowledge and agree that stamp duty and the registration fees is payable on the Sale Consideration or the 
+                     Guideline value determined by the relevant authority, whichever is higher.
+                 </p>
+                
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px;margin-top:2rem;'>[ For Guideline value higher than Sale Consideration]</p>
+                <p style='font-size:10pt;text-align:justify;font-family:SansSerif;width:100%;margin:0px;margin-bottom:10px'>
+                    <apex:inputCheckbox value="{!isFifthCheckBoxPOARR}" id="isFifthCheckBoxPOARR" />The stamp duty, registration fee of 
+                    <apex:input style="margin-left:15px; margin-right:15px;" value="{!stampDutyPercentage}" id="stampDutyPercentage" />% is
+                    being paid on the Guidance Value of INR <apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="GuidanceValuePOARRInput"
+                                      onkeyup="convertToWords(this.value, 'GuidanceValuePOARR')" value="{!GuidanceValuePOARR}" />
+                      /- (in words <span id="GuidanceValuePOARR"></span> ) , which is higher than the Sale consideration. Total amount of
+                    INR<apex:inputText style="margin-left:15px; margin-right:15px;"
+                                      id="TotalSalesConsidarationPOARRInput"
+                                      onkeyup="convertToWords(this.value, 'TotalSalesConsidarationPOARR')" value="{!TotalSalesConsidarationPOARR}" />
+                      /- <span id="TotalSalesConsidarationPOARR"></span> paid through the multiple challan 
+                </p>
+                 
+                 <apex:commandlink action="{!directNavigateWithBookingId}" onclick="return validateConfirmingParty();" target="_blank" style="text-decoration: none; display: flex; justify-content: center; align-items: center;margin-top:1rem;">
+                                <apex:commandButton value="Generate PDF" styleClass="button-24" />
+                 </apex:commandlink>
+                 
+                 <apex:pageMessages id="messages"/>
+                 
+                <script>
+                 
+                 (function attach() {
+                        const dateInput = document.querySelector('input[id$="salesDeedDate"]');
+                        const sentence  = document.getElementById('saleDeedSentence');
+                    
+                        if (!dateInput || !sentence) return;
+                     
+                        const numberToWords = (n) => {
+                            const words = ["Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine",
+                                           "Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+                            const tens  = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+                    
+                            if (n < 20) return words[n];
+                            if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? " " + words[n%10] : "");
+                            if (n < 1000) return words[Math.floor(n/100)] + " Hundred" + (n%100 ? " " + numberToWords(n%100) : "");
+                            if (n < 1000000) return numberToWords(Math.floor(n/1000)) + " Thousand" + (n%1000 ? " " + numberToWords(n%1000) : "");
+                            return n.toString();
+                        };
+                    
+                        const numberToOrdinal = (n) => {
+                            const ordinals = {
+                                1: "First", 2: "Second", 3: "Third", 4: "Fourth", 5: "Fifth", 6: "Sixth", 7: "Seventh", 8: "Eighth", 9: "Ninth",
+                                10: "Tenth", 11: "Eleventh", 12: "Twelfth", 13: "Thirteenth", 14: "Fourteenth", 15: "Fifteenth",
+                                16: "Sixteenth", 17: "Seventeenth", 18: "Eighteenth", 19: "Nineteenth", 20: "Twentieth",
+                                21: "Twenty First", 22: "Twenty Second", 23: "Twenty Third", 24: "Twenty Fourth", 25: "Twenty Fifth",
+                                26: "Twenty Sixth", 27: "Twenty Seventh", 28: "Twenty Eighth", 29: "Twenty Ninth", 30: "Thirtieth",
+                                31: "Thirty First"
+                            };
+                            return ordinals[n] || n;
+                        };
+                    
+                        function formatLegalDate(val) {
+                            if (!val) return "";
+                    
+                            const d = new Date(val);
+                            const day = d.getDate();
+                            const month = d.toLocaleString("en-US", { month: "long" });
+                            const year = d.getFullYear();
+                     
+                     
+                            let yearWords = "";
+                            if (year >= 2000 && year < 3000) {
+                                yearWords = "Two Thousand";
+                                const remainder = year % 2000;
+                                if (remainder > 0) yearWords += " " + numberToWords(remainder);
+                            } else {
+                                yearWords = numberToWords(year);
+                            }
+                    
+                            const ordinalDay = numberToOrdinal(day);
+                            const formattedNumeric = d.toLocaleDateString("en-GB");
+                    
+                            return `${ordinalDay} day of ${month}, ${yearWords} (${formattedNumeric})`;
+                        }
+                    
+                        function renderSentence() {
+                            if (dateInput.value) {
+                                sentence.textContent =
+                                  "This SALE DEED [hereinafter referred to as the “Sale Deed”] is made and executed on this the " +
+                                  formatLegalDate(dateInput.value);
+                            }
+                        }
+                    
+                        dateInput.addEventListener("change", renderSentence);
+                        dateInput.addEventListener("input", renderSentence);
+                        renderSentence();
+                    })();
+                 
+                 
+                    function convertToWords(val, targetId) {
+                          const out = document.getElementById(targetId);
+                          if (!out) return; // guard if ID mismatch
+                        
+                          const cleaned = String(val).replace(/[^\d]/g, '');
+                          if (!cleaned) { out.textContent = ''; return; }
+                        
+                          const num = parseInt(cleaned, 10);
+                          if (isNaN(num)) { out.textContent = ''; return; }
+                        
+                          const a = ['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
+                                     'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+                          const b = ['', '', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+                        
+                          function inWords(n){
+                            if (n < 20) return a[n];
+                            if (n < 100) return b[Math.floor(n/10)] + (n%10 ? ' ' + a[n%10] : '');
+                            if (n < 1000) return a[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' and ' + inWords(n%100) : '');
+                            if (n < 100000) return inWords(Math.floor(n/1000)) + ' Thousand' + (n%1000 ? ' ' + inWords(n%1000) : '');
+                            if (n < 10000000) return inWords(Math.floor(n/100000)) + ' Lakh' + (n%100000 ? ' ' + inWords(n%100000) : '');
+                            return inWords(Math.floor(n/10000000)) + ' Crore' + (n%10000000 ? ' ' + inWords(n%10000000) : '');
+                          }
+                        
+                          out.textContent = '(Rupees ' + inWords(num) + ' only)';
+                        }
+                 
+                         function validateConfirmingParty() {
+                             // for confirming party
+                             var checkboxConfirm = document.querySelector('[id$="chkConfirmParty"]');
+                             var textareaConfirm = document.querySelector('[id$="txtConfirmParty"]');
+                             var isCheckedConfirmingParty = checkboxConfirm ? checkboxConfirm.checked : false;
+                             var inputValConfirmingParty = textareaConfirm ? textareaConfirm.value.trim() : '';
+                             
+                             // for the normal cases
+                             var checkboxSecond = document.querySelector('[id$="isseccondCheckBoxPOARRChecked"]');
+                             var tdsAmountInput = document.querySelector('[id$="tdsAmountInput"]');
+                             var isSecondChecked = checkboxSecond ? checkboxSecond.checked : false;
+                             var tdsVal = tdsAmountInput ? tdsAmountInput.value.trim() : '';
+                             
+                             // for the Resales Cases
+                             var checkboxthird = document.querySelector('[id$="isthirdCheckBoxPOARR"]');
+                             var ischeckboxthird = checkboxthird ? checkboxthird.checked : false;
+                             
+                             var beforeFatherHusband = document.querySelector('[id$="beforeFatherHusband"]');
+                             var beforeFatherHusbandVal = beforeFatherHusband ? beforeFatherHusband.value.trim() : '';
+                             var afterFatherHusband = document.querySelector('[id$="afterFatherHusband"]');
+                             var afterFatherHusbandVal = afterFatherHusband ? afterFatherHusband.value.trim() : '';
+                             
+                             var AmountreceivedPOARRInput = document.querySelector('[id$="AmountreceivedPOARRInput"]');
+                             var AmountreceivedPOARRInputVal = AmountreceivedPOARRInput ? AmountreceivedPOARRInput.value.trim() : '';
+                             var TDSAmountPOARRInput = document.querySelector('[id$="TDSAmountPOARRInput"]');
+                             var TDSAmountPOARRInputVal = TDSAmountPOARRInput ? TDSAmountPOARRInput.value.trim() : '';
+                             
+                             // For Balance Payable Cases
+                             
+                             var checkboxforth = document.querySelector('[id$="isFourthCheckBoxPOARR"]');
+                             var ischeckboxforth = checkboxforth ? checkboxforth.checked : false;
+                             
+                             var aggregatingAmountPOARRInput = document.querySelector('[id$="aggregatingAmountPOARRInput"]');
+                             var aggregatingAmountPOARRInputVal = aggregatingAmountPOARRInput ? aggregatingAmountPOARRInput.value.trim() : '';
+                             
+                             var BalancePayableTDSAmountPOARRInput = document.querySelector('[id$="BalancePayableTDSAmountPOARRInput"]');
+                             var BalancePayableTDSAmountPOARRInputVal = BalancePayableTDSAmountPOARRInput ? BalancePayableTDSAmountPOARRInput.value.trim() : '';
+                             
+                             var balanceAmountPOARRInput = document.querySelector('[id$="balanceAmountPOARRInput"]');
+                             var balanceAmountPOARRInputVal = balanceAmountPOARRInput ? balanceAmountPOARRInput.value.trim() : '';
+                             
+                             var DemandDraftNoPOARR = document.querySelector('[id$="DemandDraftNoPOARR"]');
+                             var DemandDraftNoPOARRVal = DemandDraftNoPOARR ? DemandDraftNoPOARR.value.trim() : '';
+                             
+                             var DemandDraftBankNamePOARR = document.querySelector('[id$="DemandDraftBankNamePOARR"]');
+                             var DemandDraftBankNamePOARRVal = DemandDraftBankNamePOARR ? DemandDraftBankNamePOARR.value.trim() : '';
+                             
+                             
+                             //For Guideline value higher than Sale Consideration
+                             
+                             var checkboxfifth = document.querySelector('[id$="isFifthCheckBoxPOARR"]');
+                             var ischeckboxfifth = checkboxfifth ? checkboxfifth.checked : false;
+                             
+                             var stampDutyPercentage = document.querySelector('[id$="stampDutyPercentage"]');
+                             var stampDutyPercentageVal = stampDutyPercentage ? stampDutyPercentage.value.trim() : '';
+                             
+                             var GuidanceValuePOARRInput = document.querySelector('[id$="GuidanceValuePOARRInput"]');
+                             var GuidanceValuePOARRInputVal = GuidanceValuePOARRInput ? GuidanceValuePOARRInput.value.trim() : '';
+                             
+                             var TotalSalesConsidarationPOARRInput = document.querySelector('[id$="TotalSalesConsidarationPOARRInput"]');
+                             var TotalSalesConsidarationPOARRInputVal = TotalSalesConsidarationPOARRInput ? TotalSalesConsidarationPOARRInput.value.trim() : '';
+                             
+                             var checkboxsixth = document.querySelector('[id$="issixthCheckBoxPOARR"]');
+                             var ischeckboxsixth = checkboxsixth ? checkboxsixth.checked : false;
+                             
+                             
+                             var checkboxSeven = document.querySelector('[id$="isSevnthCheckBoxPOARR"]');
+                             var ischeckboxSeven = checkboxSeven ? checkboxSeven.checked : false;
+                             
+                             const anyChecked = isCheckedConfirmingParty || isSecondChecked || ischeckboxthird || ischeckboxforth || ischeckboxfifth || ischeckboxsixth || ischeckboxSeven;
+                             if (!anyChecked) {
+                                 alert('Please select at least one option/case by ticking a checkbox before generating the PDF.');
+                                 return false;
+                             }
+                             
+                             
+                             if (isCheckedConfirmingParty && inputValConfirmingParty === '') {
+                                 alert('Please enter Confirming Party details.');
+                                 if (textareaConfirm) {
+                                     textareaConfirm.focus();
+                                 }
+                                 return false;
+                             }
+                             
+                             if (isSecondChecked) {
+                                 if (tdsVal === '' || isNaN(Number(tdsVal)) || Number(tdsVal) === 0) {
+                                     alert('Please enter a valid TDS Amount for the Normal Case (non-zero number).');
+                                     if (tdsAmountInput) {
+                                         tdsAmountInput.focus();
+                                     }
+                                     return false;
+                                 }
+                             }
+                             
+                             if (ischeckboxthird) {
+                                 if (beforeFatherHusbandVal === '') {
+                                     alert('Please enter beforeFatherHusbandVal');
+                                     if (beforeFatherHusband) {
+                                         beforeFatherHusband.focus();
+                                     }
+                                     return false;
+                                 }
+                                 
+                                 if (afterFatherHusbandVal === '') {
+                                     alert('Please enter beforeFatherHusbandVal');
+                                     if (afterFatherHusband) {
+                                         afterFatherHusband.focus();
+                                     }
+                                     return false;
+                                 }
+                                 if (AmountreceivedPOARRInputVal === '' || isNaN(Number(AmountreceivedPOARRInputVal)) || Number(AmountreceivedPOARRInputVal) === 0) {
+                                     alert('Please enter a valid Received Amount for the Resales case (non-zero number).');
+                                     if (AmountreceivedPOARRInput) {
+                                         AmountreceivedPOARRInput.focus();
+                                     }
+                                     return false;
+                                 }
+                                 
+                                 if (TDSAmountPOARRInputVal === '' || isNaN(Number(TDSAmountPOARRInputVal)) || Number(TDSAmountPOARRInputVal) === 0) {
+                                     alert('Please enter a valid TDS Amount for the Resales case (non-zero number).');
+                                     if (TDSAmountPOARRInput) {
+                                         TDSAmountPOARRInput.focus();
+                                     }
+                                     return false;
+                                 }
+                                 
+                             }
+                             
+                             if(ischeckboxforth){
+                             	if (aggregatingAmountPOARRInputVal === '' || isNaN(Number(aggregatingAmountPOARRInputVal)) || Number(aggregatingAmountPOARRInputVal) === 0) {
+                                     alert('Please enter a valid Aggregating Amount for the Resales case (non-zero number).');
+                                     if (aggregatingAmountPOARRInput) {
+                                         aggregatingAmountPOARRInput.focus();
+                                     }
+                                     return false;
+                                 }
+                                 
+                                 if (BalancePayableTDSAmountPOARRInputVal === '' || isNaN(Number(BalancePayableTDSAmountPOARRInputVal)) || Number(BalancePayableTDSAmountPOARRInputVal) === 0) {
+                                     alert('Please enter a valid TDS Amount for the Balance Payable case (non-zero number).');
+                                     if (BalancePayableTDSAmountPOARRInput) {
+                                         BalancePayableTDSAmountPOARRInput.focus();
+                                     }
+                                     return false;
+                                 }
+                                 
+                                 if (balanceAmountPOARRInputVal === '' || isNaN(Number(balanceAmountPOARRInputVal)) || Number(balanceAmountPOARRInputVal) === 0) {
+                                     alert('Please enter a valid Balance Amount for the Balance Payable case (non-zero number).');
+                                     if (balanceAmountPOARRInput) {
+                                         balanceAmountPOARRInput.focus();
+                                     }
+                                     return false;
+                                 }
+                                 
+                                 if (DemandDraftNoPOARRVal === '' || isNaN(Number(DemandDraftNoPOARRVal)) || Number(DemandDraftNoPOARRVal) === 0) {
+                                     alert('Please enter a valid Demand Draft Number for the Balance Payable case (non-zero number).');
+                                     if (DemandDraftNoPOARR) {
+                                         DemandDraftNoPOARR.focus();
+                                     }
+                                     return false;
+                                 }
+                                 
+                                 if (DemandDraftBankNamePOARRVal === '') {
+                                     alert('Please enter valid Demand Draf Bank');
+                                     if (DemandDraftBankNamePOARR) {
+                                         DemandDraftBankNamePOARR.focus();
+                                     }
+                                     return false;
+                                 }
+                             }
+                             
+                             if(ischeckboxfifth){
+                             	if (stampDutyPercentageVal === '' || isNaN(Number(stampDutyPercentageVal)) || Number(stampDutyPercentageVal) === 0) {
+                                     alert('Please enter a valid stamp duty.');
+                                     if (stampDutyPercentage) {
+                                         stampDutyPercentage.focus();
+                                     }
+                                     return false;
+                                 }
+                                 
+                                 if (GuidanceValuePOARRInputVal === '' || isNaN(Number(GuidanceValuePOARRInputVal)) || Number(GuidanceValuePOARRInputVal) === 0) {
+                                     alert('Please enter a valid Guidance Value.');
+                                     if (GuidanceValuePOARRInput) {
+                                         GuidanceValuePOARRInput.focus();
+                                     }
+                                     return false;
+                                 }
+                                 
+                                 if (TotalSalesConsidarationPOARRInputVal === '' || isNaN(Number(TotalSalesConsidarationPOARRInputVal)) || Number(TotalSalesConsidarationPOARRInputVal) === 0) {
+                                     alert('Please enter a valid Total Sales Considaration.');
+                                     if (TotalSalesConsidarationPOARRInput) {
+                                         TotalSalesConsidarationPOARRInput.focus();
+                                     }
+                                     return false;
+                                 }
+                             }
+                             
+                             
+                             return true;
+                         }
+            </script>
+                 
+            </apex:form>
+            
+        </apex:outputPanel>
+        <!-- output pannel for if "Pursuit of a Radical Rhapsody" project and only for the phase one END --->
+         
+    </body>
+    
+</apex:page>
