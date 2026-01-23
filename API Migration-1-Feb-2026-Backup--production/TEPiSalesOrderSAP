@@ -1,0 +1,261 @@
+public class TEPiSalesOrderSAP{
+    @future(callout=true)
+    public static void SalesOrder(Id bId){ 
+        System.debug('Inside SalesOrder');
+        List<Booking__c> booklist = [Select id, Name,Quotation__r.Towards_Consideration__c,Quotation__r.Towards_Land__c,Project__r.Company_Code__c,Customer_Number__c,
+                                     Unit__r.Tower__r.Cluster__r.SAP_Plant_Code__c,Sales_Order_Number__c,Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,Project_Unit__c,Booking_Date__c
+                                                 from Booking__c where id =: bId ];
+        API_Log__c api = new API_Log__c();
+        Booking__c book = new Booking__c();
+        Datetime d = booklist[0].Booking_Date__c;
+		String dt = DateTime.newInstance(d.year(),d.month(),d.day()).format('d.MM.YYYY');
+        system.debug('Date' +dt);
+        String SONumber = '';
+        if(booklist[0].Sales_Order_Number__c != null || booklist[0].Sales_Order_Number__c != ''){
+            SONumber = Booklist[0].Sales_Order_Number__c;
+        }
+        
+   		 string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+        ' xmlns:sal="http://total-environment/PI/SalesOrder"> <soapenv:Header/> <soapenv:Body> ' + 
+        ' <sal:SalesOrderReq> <item> <!--Optional:--> <AUART>ZHOM</AUART> <!--Optional:--> <VKORG>'+ booklist[0].Project__r.Company_Code__c +'</VKORG> <!--Optional:--> <VTWEG>10</VTWEG> <!--Optional:--> ' +
+        ' <SPART>HS</SPART> <!--Optional:--> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <POSNR>000010</POSNR> <!--Optional:--> <KUNNR>'+ booklist[0].Customer_Number__c +'</KUNNR> <!--Optional:--> ' +
+        ' <BSTKD></BSTKD> <!--Optional:--> <BSTDK></BSTDK> <!--Optional:--> <MATNR>HOMESALES</MATNR> <!--Optional:--> <ARKTX>'+ booklist[0].Project_Unit__c +'</ARKTX> <!--Optional:--> '+
+        ' <KWMENG>1</KWMENG> <!--Optional:--> <WERKS>'+ booklist[0].Unit__r.Tower__r.Cluster__r.SAP_Plant_Code__c +'</WERKS> <!--Optional:--> <PS_PSP_PNR>'+ booklist[0].Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c +'</PS_PSP_PNR> <!--Optional:--> <SO_URL></SO_URL> '+ 
+        ' <!--Optional:--> <REASON>002</REASON> <!--Optional:--> <DOC_DATE>'+ +dt +'</DOC_DATE> <!--Optional:--> <IHREZ>'+ booklist[0].Name +'</IHREZ> ' + 
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZLND</KSCHL> <!--Optional:--> <KBETR>'+ booklist[0].Quotation__r.Towards_Land__c +'</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZOCN</KSCHL> <!--Optional:--> <KBETR>'+ booklist[0].Quotation__r.Towards_Consideration__c +'</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZMAN</KSCHL> <!--Optional:--> <KBETR>0</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZREM</KSCHL> <!--Optional:--> <KBETR>0</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZCRP</KSCHL> <!--Optional:--> <KBETR>0</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZCOS</KSCHL> <!--Optional:--> <KBETR>0</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZVAT</KSCHL> <!--Optional:--> <KBETR>0</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZSER</KSCHL> <!--Optional:--> <KBETR>0</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZSBC</KSCHL> <!--Optional:--> <KBETR>0</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZKKC</KSCHL> <!--Optional:--> <KBETR>0</KBETR> </item> ' +
+        ' <item> <VBELN>'+SONumber+'</VBELN> <!--Optional:--> <KPOSN>10</KPOSN> <!--Optional:--> <KSCHL>ZTHR</KSCHL> <!--Optional:--> <KBETR>0</KBETR> </item> ' +
+        ' </item> </sal:SalesOrderReq> </soapenv:Body> </soapenv:Envelope>';
+        
+        system.debug('Request' +body);
+    
+//string body;
+String eventEndPoint = '';
+ 
+HttpRequest req = new HttpRequest();
+//13.228.235.198 Sandbox 13.228.217.109 Production
+req.setEndpoint(endpoint());
+req.setMethod('POST');
+//Blob headerValue = Blob.valueOf('body');
+//String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+req.setHeader('Authorization', authorization());
+req.setHeader('Content-Type', 'application/xml');
+req.setBody(body);
+//req.setTimeout(6000);       
+Http http = new Http();
+HTTPResponse res = new HTTPResponse();
+
+system.debug('res::'+res.getBody());
+if(!Test.IsRunningTest()){       
+  res = http.send(req);      
+        
+        ////////////////////////////////////////////////
+        String Salesdocno;
+        String Res_Code;
+        String Message;
+        
+         XmlStreamReader reader = new XmlStreamReader(res.getBody());
+		 if (res.getStatusCode() == 200){
+      //Proceed only if it is Success
+      while (reader.hasNext()){
+          if (XmlTag.START_ELEMENT == reader.getEventType()){
+            if ('SALES_DOC_NO'.equals(reader.getLocalName())){
+                Salesdocno = getValueFromTag(reader);
+            }
+            if ('RET_CODE'.equals(reader.getLocalName())){
+                Res_Code = getValueFromTag(reader);
+            }
+            if ('MESSAGE'.equals(reader.getLocalName())){
+                Message = getValueFromTag(reader);
+            }
+              system.debug('salesdocno::' +Salesdocno);
+          }
+          reader.next();
+    }
+    }  
+        try{
+        if(Salesdocno != null && Res_Code != '1'){
+            book.Id = bId;
+            book.Sales_Order_Number__c = Salesdocno;
+            update book;
+            
+            system.debug('book.Sales_Order_Number__c:::'+book.Sales_Order_Number__c);
+        }
+        }catch(DmlException e) {
+   		 System.debug('The following exception has occurred: ' + e.getMessage());
+		} 
+       
+        api.Message__c = Message;
+        api.Response_Code__c = Res_Code;
+        api.Booking__c = bId;
+        api.Response__c = res.getBody();
+        api.Request__c = req.getBody();
+        api.API_Name__c = 'Sales Order API';
+        insert api;
+		}else{
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            
+        }
+        
+        
+    }
+    
+    private static String getValueFromTag(XMLStreamReader reader) {
+        String DataValue;
+        while (reader.hasNext()) {
+            if (XmlTag.END_ELEMENT == reader.getEventType()) {
+                break;
+            } else if (XmlTag.CHARACTERS == reader.getEventType() || XmlTag.CDATA == reader.getEventType()) {
+                DataValue = reader.getText();
+            }
+            reader.next();
+        }
+        return DataValue;
+    }
+    
+    public static String authorization() {
+            String authHeader;
+            SAP_Credential__mdt sapSetting;
+            sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                                from SAP_Credential__mdt 
+                                where QualifiedApiName = 'Sales_Order_API'];
+            authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+            return authHeader;
+    }
+    
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Sales_Order_API'];
+        system.debug('f:::'+fiSetting.Endpoint__c);
+        return fiSetting.Endpoint__c;
+    }
+}
