@@ -1,0 +1,2010 @@
+// Test Class : TestSapIntegrationServices
+// changing api version from 52 to 57 on 23/03/2023 ---- 12.53pm
+public class TotalEnvPiCustomerinvCreMemo {
+    /*@future(callout = true)  
+    public static void CustomerInvCredMemo(Id DId){
+        List<Demand__c> dlist = new List<Demand__c>();
+        dlist = [Select id,Name,Booking__r.Project__r.Company_Code__c,Booking__r.Project__r.Business_Place__c,Due_Date__c,Payment_Milestones__r.Milestone_Name__c,Quotation__c,Booking__r.Customer_Number__c,Invoice_Date__c
+                 ,Total_Amount_Demanded__c,Total_Amount_with_Tax_Demanded__c,Total_Tax_Demanded__c,CurrencyIsoCode,Booking__r.Sales_Order_Number__c,Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,
+                 Towards_Land__c,Towards_Construction__c,Charge_1_Lookup__r.Tax_Rate__c,Demand_Unique_ID__c from Demand__c where id =: Did ];
+        system.debug('Demand List:'+ dlist[0]);
+        system.debug('Project COde'+ dlist[0].Booking__r.Project__r.Company_Code__c);
+        
+        Decimal sgst = dlist[0].Total_Tax_Demanded__c/2;
+        Decimal cgst = dlist[0].Total_Tax_Demanded__c/2;
+        
+        system.debug('TaxName:'+dlist[0].Charge_1_Lookup__r.Tax_Rate__c);
+        List<Tax_Slab__c> tlist = [Select id,Name,SAP_code__c,Tax_Name__c From Tax_Slab__c where Tax_Name__c =: dlist[0].Charge_1_Lookup__r.Tax_Rate__c and Charge_Type__c != 'Cheque Bounce' and Charge_Type__c != 'Brokerage Reversal' and From_Date__c <= TODAY and (To_Date__c >= TODAY OR To_Date__c = null)];
+        system.debug('Tax name:'+ tlist);
+        String dat = SAPIntegrationAPI.DateFormate(dlist[0].Invoice_Date__c);
+        
+        string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+dlist[0].Booking__r.Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>'+dat+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+dlist[0].Demand_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+dlist[0].Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+dlist[0].Total_Amount_with_Tax_Demanded__c+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>'+dlist[0].Payment_Milestones__r.Milestone_Name__c+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+dlist[0].Booking__r.Sales_Order_Number__c+'</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+dlist[0].Booking__r.Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL>ZLND</KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+dlist[0].Towards_Land__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item> '+
+            
+            '<item> <!--Optional:--> <KSCHL>ZOCN</KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+dlist[0].Towards_Construction__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Construction</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item>'+
+
+			'<item> <!--Optional:--> <KSCHL>ZKKC</KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+sgst+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>Towards SGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+			' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL>ZTHR</KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+cgst+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+			' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+        
+        
+        
+        /*
+        string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>1000</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>20.08.2021</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>20.08.2021</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>95589</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>1269</KUNNR> <!--Optional:--> <WRBTR>812280</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>1st Structural Slab</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>40002183</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>KARN</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL>ZLND</KSCHL> <!--Optional:-->'+
+            ' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H0</ZUONR> </item> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>483500</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Construction</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>43515</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards CGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>43515</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards SGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+			*/
+        
+        /*   
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item> </item> ; */
+        
+        //string body;
+       /* String eventEndPoint = '';
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('http://13.228.235.198:50000/XISOAPAdapter/MessageServlet?senderParty=&senderService=BS_FUGUE_QAS&receiverParty=&receiverService=&interface=CusInvCrMemo_Out&interfaceNamespace=http://total-environment/PI/CustomerInvoiceAndCreditMemo');
+        req.setMethod('POST');
+        req.setTimeout(6000);
+        //Blob headerValue = Blob.valueOf('body');
+        //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+        req.setHeader('Authorization', SAPIntegrationServices.authorization());
+        req.setHeader('Content-Type', 'application/xml');
+        req.setBody(body);
+        Http http = new Http();
+        HTTPResponse res = http.send(req);
+        system.debug('res::'+res.getBody());
+        
+        
+        
+        ///////////////Response Parsing/////////////////
+        XmlStreamReader reader = new XmlStreamReader(res.getBody());
+        system.debug('Reader:'+reader);
+        String Message = '';
+        String RetCode = '';
+        String AccountingDocumentNumber = '';
+        String ReferenceDocumentNumber = '';
+        String PostingDateintheDocument = '';
+        if (res.getStatusCode() == 200){
+            //Proceed only if it is Success
+            while (reader.hasNext()){
+                if (XmlTag.START_ELEMENT == reader.getEventType()){
+                    
+                    if ('BELNR'.equals(reader.getLocalName())){
+                         AccountingDocumentNumber = getValueFromTag(reader);
+                        system.debug('BELNR:'+AccountingDocumentNumber);
+                    }else if('XBLNR'.equals(reader.getLocalName())){
+                         ReferenceDocumentNumber = getValueFromTag(reader);
+                        system.debug('XBLNR:'+ReferenceDocumentNumber);
+                    }else if('WRBTR'.equals(reader.getLocalName())){
+                        String AmountinDocumentCurrency = getValueFromTag(reader);
+                        system.debug('WRBTR:'+AmountinDocumentCurrency);
+                    }else if('BUDAT'.equals(reader.getLocalName())){
+                         PostingDateintheDocument = getValueFromTag(reader);
+                        system.debug('BUDAT:'+PostingDateintheDocument);
+                    }else if('FUGUEID'.equals(reader.getLocalName())){
+                        String Fugueid = getValueFromTag(reader);
+                        system.debug('FUGUEID:'+Fugueid);
+                    }else if('MESSAGE'.equals(reader.getLocalName())){
+                         Message = getValueFromTag(reader);
+                        system.debug('MESSAGE:'+Message);
+                    }else if('RETCODE'.equals(reader.getLocalName())){
+                         RetCode = getValueFromTag(reader);
+                        system.debug('RETCODE:'+RetCode);
+                    }
+                }
+                 reader.next();
+            }
+        }
+        
+        ////////////////////API Log///////////////////////
+        API_Log__c ap = new API_Log__c();
+        ap.API_Name__c = 'Invoice API';
+        ap.Request__c = body;
+        ap.Response__c = res.getBody();
+        ap.Message__c = Message;
+        ap.Response_Code__c = RetCode;
+        ap.Demand__c = DId;
+        insert ap;
+        
+        if(ReferenceDocumentNumber != '' && PostingDateintheDocument != ''){
+            dlist[0].SAP_Invoice_No__c = ReferenceDocumentNumber;
+			dlist[0].SAP_Posting_Date__c = date.valueOf(PostingDateintheDocument);
+            update dlist;
+        }
+ 
+    }*/
+    
+    ///////////////////////////////For credit Memo//////////////////////////////////////////
+    
+    /*@future(callout = true)  
+    public static void CustomerCredMemo(Id RId){
+        List<Receipt__c> rlist = new List<Receipt__c>();
+        rlist = [Select id,Name,Project__r.Company_Code__c,Sub_Type_Credit_Note__c,Project_Unit__c,Booking__r.Customer_Number__c,Receipt_Date__c,Amount_Rs__c,Receipt_Unique_ID__c,
+                 Booking__r.Sales_Order_Number__c,Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,Project__r.State_Region_Code__c,Project__r.Business_Place__c,HSN_SAC_Code__c from Receipt__c where id =: RId ];
+        //system.debug('Demand List:'+ String.valueOf(rlist[0].Invoice_Date__c));
+        //system.debug('TaxName:'+rlist[0].Charge_1_Lookup__r.Tax_Rate__c);
+        //List<Tax_Slab__c> tlist = [Select id,Name,SAP_code__c,Tax_Name__c From Tax_Slab__c where Tax_Name__c =: dlist[0].Charge_1_Lookup__r.Tax_Rate__c and Charge_Type__c != 'Cheque Bounce' and Charge_Type__c != 'Brokerage Reversal' and From_Date__c <= TODAY and (To_Date__c >= TODAY OR To_Date__c = null)];
+        //system.debug('Tax name:'+ tlist);
+        String dat = SAPIntegrationAPI.DateFormate(date.today());
+        //Decimal sgst = dlist[0].Total_Tax_Demanded__c/2;
+        //Decimal cgst = dlist[0].Total_Tax_Demanded__c/2;
+        
+        string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>G</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+rlist[0].Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>GC</BLART> <!--Optional:--> '+
+            '<BUDAT>'+dat+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+rlist[0].Receipt_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+rlist[0].Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+rlist[0].Amount_Rs__c+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>'+rlist[0].Sub_Type_Credit_Note__c+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+rlist[0].Booking__r.Sales_Order_Number__c+'</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP>'+rlist[0].Project__r.State_Region_Code__c+'</PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+rlist[0].Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+ 
+            ' <WRBTR>'+rlist[0].Amount_Rs__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+rlist[0].Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>'+rlist[0].Sub_Type_Credit_Note__c+'</SGTXT> <!--Optional:--> <STAWN>'+rlist[0].HSN_SAC_Code__c+'</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR></ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+        
+        /*
+        string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>1000</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>20.08.2021</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>20.08.2021</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>95589</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>1269</KUNNR> <!--Optional:--> <WRBTR>812280</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>1st Structural Slab</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>40002183</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>KARN</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL>ZLND</KSCHL> <!--Optional:-->'+
+            ' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H0</ZUONR> </item> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>483500</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Construction</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>43515</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards CGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>43515</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards SGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+			*/
+        
+        /*   
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item> </item> ; */
+        
+        //string body;
+       /* String eventEndPoint = '';
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('http://13.228.235.198:50000/XISOAPAdapter/MessageServlet?senderParty=&senderService=BS_FUGUE_QAS&receiverParty=&receiverService=&interface=CusInvCrMemo_Out&interfaceNamespace=http://total-environment/PI/CustomerInvoiceAndCreditMemo');
+        req.setMethod('POST');
+        req.setTimeout(6000);
+        //Blob headerValue = Blob.valueOf('body');
+        //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+        req.setHeader('Authorization', SAPIntegrationServices.authorization());
+        req.setHeader('Content-Type', 'application/xml');
+        req.setBody(body);
+        Http http = new Http();
+        HTTPResponse res = http.send(req);
+        system.debug('res::'+res.getBody());
+        
+        
+        ///////////////Response Parsing/////////////////
+        XmlStreamReader reader = new XmlStreamReader(res.getBody());
+        system.debug('Reader:'+reader);
+        String Message = '';
+        String RETCode = '';
+        String AccountingDocumentNumber = '';
+            
+        if (res.getStatusCode() == 200){
+            //Proceed only if it is Success
+            while (reader.hasNext()){
+                if (XmlTag.START_ELEMENT == reader.getEventType()){
+                    
+                        
+                    if ('BELNR'.equals(reader.getLocalName())){
+                         AccountingDocumentNumber = getValueFromTag(reader);
+                        system.debug('BELNR:'+AccountingDocumentNumber);
+                    }else if('XBLNR'.equals(reader.getLocalName())){
+                        String ReferenceDocumentNumber = getValueFromTag(reader);
+                        system.debug('XBLNR:'+ReferenceDocumentNumber);
+                    }else if('WRBTR'.equals(reader.getLocalName())){
+                        String AmountinDocumentCurrency = getValueFromTag(reader);
+                        system.debug('WRBTR:'+AmountinDocumentCurrency);
+                    }else if('BUDAT'.equals(reader.getLocalName())){
+                        String PostingDateintheDocument = getValueFromTag(reader);
+                        system.debug('BUDAT:'+PostingDateintheDocument);
+                    }else if('FUGUEID'.equals(reader.getLocalName())){
+                        String Fugueid = getValueFromTag(reader);
+                        system.debug('FUGUEID:'+Fugueid);
+                    }else if('MESSAGE'.equals(reader.getLocalName())){
+                         Message = getValueFromTag(reader);
+                        system.debug('MESSAGE:'+Message);
+                    }else if('RETCODE'.equals(reader.getLocalName())){
+                         RETCode = getValueFromTag(reader);
+                        system.debug('RETCODE:'+RETCode);
+                    }
+                }
+                 reader.next();
+            }
+            
+        }
+        ////////////////////API Log///////////////////////
+        API_Log__c ap = new API_Log__c();
+        ap.API_Name__c = 'Credit Note API';
+        ap.Message__c = Message;
+        ap.Response_Code__c = RETCode;
+        ap.Request__c = body;
+        ap.Response__c = res.getBody();
+        ap.Receipt__c = RId;
+        insert ap;
+        ////////////////////////////////////////////////
+        if(AccountingDocumentNumber !=''){
+            rlist[0].Accounting_Document_Number__c = AccountingDocumentNumber;
+            rlist[0].SAP_Posting_Date__c = Date.today();
+            update rlist;
+        }
+ 
+    }*/
+    
+    ///////////////////////BULK Receipt credit note//////////////////////////
+    
+     @future(callout = true)  
+    public static void CustomerCredMemo(set<Id> RId){
+        List<Receipt__c> rlist = new List<Receipt__c>();
+        rlist = [Select id,Name,Project__r.Company_Code__c,Sub_Type_Credit_Note__c,Project_Unit__c,Booking__r.Customer_Number__c,Receipt_Date__c,Amount_Rs__c,Receipt_Unique_ID__c,
+                 Booking__r.Sales_Order_Number__c,Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,Project__r.State_Region_Code__c,Project__r.Business_Place__c,HSN_SAC_Code__c,
+                 Is_Back_Dated__c,Back_Date_Posting_Date__c,Description__c from Receipt__c where id =: RId ];
+        //system.debug('Demand List:'+ String.valueOf(rlist[0].Invoice_Date__c));
+        //system.debug('TaxName:'+rlist[0].Charge_1_Lookup__r.Tax_Rate__c);
+        //List<Tax_Slab__c> tlist = [Select id,Name,SAP_code__c,Tax_Name__c From Tax_Slab__c where Tax_Name__c =: dlist[0].Charge_1_Lookup__r.Tax_Rate__c and Charge_Type__c != 'Cheque Bounce' and Charge_Type__c != 'Brokerage Reversal' and From_Date__c <= TODAY and (To_Date__c >= TODAY OR To_Date__c = null)];
+        //system.debug('Tax name:'+ tlist);
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        List<Receipt__c> receiptUpdate = new List<Receipt__c>();
+        String dat;
+        if(rlist[0].Is_Back_Dated__c ==  True){
+             dat = SAPIntegrationAPI.DateFormate(rlist[0].Back_Date_Posting_Date__c);
+        }else{
+             dat = SAPIntegrationAPI.DateFormate(date.today());
+        }
+    //    String dat = SAPIntegrationAPI.DateFormate(date.today());
+        
+        if(rlist != null && rlist.size() >0){
+            
+            for(Receipt__c r : rlist){
+                String GLCode = '';
+                if(r.Sub_Type_Credit_Note__c == 'Subvention'){
+                    GLCode = '252320';
+                }
+                if(r.Sub_Type_Credit_Note__c == 'TDS'){
+                    GLCode = '128210';
+                }
+                if(r.Sub_Type_Credit_Note__c == 'Compensation'){
+                    GLCode = '500480';
+                }
+                if(r.Sub_Type_Credit_Note__c == 'Account Transfer'){
+                    GLCode = '252330';
+                }
+                if(r.Sub_Type_Credit_Note__c == 'NPV/Other Discount' || r.Sub_Type_Credit_Note__c == 'Interior Design'){
+                    GLCode = '528600';
+                 // GLCode = '252100';
+                }
+                if(r.Sub_Type_Credit_Note__c == 'Pre EMI Reimbursement'){
+                    GLCode = '527440';
+                }
+                String salesOrNo = '' ;
+                String posnr  = '';
+                    if(r.Sub_Type_Credit_Note__c == 'NPV/Other Discount'){
+                        salesOrNo = '';
+                        posnr = '';
+                    }else{
+                        salesOrNo = r.Booking__r.Sales_Order_Number__c;
+                        posnr = '10';
+                    }
+                String concatStr = r.Sub_Type_Credit_Note__c + r.Description__c;
+                String subTypeAndDesc ;
+                 subTypeAndDesc = concatStr.length() >= 50 ?  concatStr.substring(0,49) : concatStr ;
+                
+        string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>G</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+r.Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>GC</BLART> <!--Optional:--> '+
+            '<BUDAT>'+dat+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+r.Receipt_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+r.Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+r.Amount_Rs__c+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>'+subTypeAndDesc+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+salesOrNo+'</VBELN> <!--Optional:--> <POSNR>'+posnr+'</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP>'+r.Project__r.State_Region_Code__c+'</PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+r.Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+ 
+            ' <WRBTR>'+r.Amount_Rs__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>'+subTypeAndDesc+'</SGTXT> <!--Optional:--> <STAWN>'+r.HSN_SAC_Code__c+'</STAWN> <!--Optional:--> <HKONT>'+GLCode+'</HKONT> <!--Optional:-->'+
+            ' <ZUONR></ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+        
+        /*
+        string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>1000</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>20.08.2021</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>20.08.2021</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>95589</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>1269</KUNNR> <!--Optional:--> <WRBTR>812280</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>1st Structural Slab</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>40002183</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>KARN</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL>ZLND</KSCHL> <!--Optional:-->'+
+            ' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H0</ZUONR> </item> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>483500</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Construction</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>43515</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards CGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>43515</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards SGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+			*/
+        
+        /*   
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item> </item> ; */
+        
+        //string body;
+        String eventEndPoint = '';
+        HttpRequest req = new HttpRequest();
+        //13.228.235.198 Sandbox 13.228.217.109 Production
+        req.setEndpoint(endpoint());
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        //Blob headerValue = Blob.valueOf('body');
+        //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+        req.setHeader('Authorization', authorization());
+        req.setHeader('Content-Type', 'application/xml');
+        req.setBody(body);
+        Http http = new Http();
+        HTTPResponse res = new HTTPResponse();
+        if(!Test.IsRunningTest()){ 
+        res = http.send(req);
+        system.debug('res::'+res.getBody());
+        
+        
+        ///////////////Response Parsing/////////////////
+        XmlStreamReader reader = new XmlStreamReader(res.getBody());
+        system.debug('Reader:'+reader);
+        String Message = '';
+        String RETCode = '';
+        String AccountingDocumentNumber = '';
+        String PostingDateintheDocument = '';
+            
+        if (res.getStatusCode() == 200){
+            //Proceed only if it is Success
+            while (reader.hasNext()){
+                if (XmlTag.START_ELEMENT == reader.getEventType()){
+                    
+                        
+                    if ('BELNR'.equals(reader.getLocalName())){
+                         AccountingDocumentNumber = getValueFromTag(reader);
+                        system.debug('BELNR:'+AccountingDocumentNumber);
+                    }else if('XBLNR'.equals(reader.getLocalName())){
+                        String ReferenceDocumentNumber = getValueFromTag(reader);
+                        system.debug('XBLNR:'+ReferenceDocumentNumber);
+                    }else if('WRBTR'.equals(reader.getLocalName())){
+                        String AmountinDocumentCurrency = getValueFromTag(reader);
+                        system.debug('WRBTR:'+AmountinDocumentCurrency);
+                    }else if('BUDAT'.equals(reader.getLocalName())){
+                         PostingDateintheDocument = getValueFromTag(reader);
+                        system.debug('BUDAT:'+PostingDateintheDocument);
+                    }else if('FUGUEID'.equals(reader.getLocalName())){
+                        String Fugueid = getValueFromTag(reader);
+                        system.debug('FUGUEID:'+Fugueid);
+                    }else if('MESSAGE'.equals(reader.getLocalName())){
+                         Message = getValueFromTag(reader);
+                        system.debug('MESSAGE:'+Message);
+                    }else if('RETCODE'.equals(reader.getLocalName())){
+                         RETCode = getValueFromTag(reader);
+                        system.debug('RETCODE:'+RETCode);
+                    }
+                }
+                 reader.next();
+            }
+            
+        }
+        ////////////////////API Log///////////////////////
+        API_Log__c ap = new API_Log__c();
+        ap.API_Name__c = 'Credit Note API';
+        ap.Message__c = Message;
+        ap.Response_Code__c = RETCode;
+        ap.Request__c = body;
+        ap.Response__c = res.getBody();
+        ap.Receipt__c = r.Id;
+        loglist.add(ap);
+        ////////////////////////////////////////////////
+        if(AccountingDocumentNumber !='' && AccountingDocumentNumber != Null){
+            r.Accounting_Document_Number__c = AccountingDocumentNumber;
+        //    r.SAP_Posting_Date__c = Date.today();
+        	r.SAP_Posting_Date__c = Date.valueOf(PostingDateintheDocument);
+            receiptUpdate.add(r);
+        }
+            }
+                else{
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                    res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                    res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');    
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                    res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                    res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');
+                	res.setBody('Dummy');    
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    res.setBody('Dummy');
+                    
+                }
+        }
+            
+    }
+        if(!loglist.isEmpty()){
+            insert loglist;
+            update receiptUpdate;
+        }
+ 
+    }
+    
+    
+    ////////////////////////BULK Demand/////////////////////////////
+    
+     @future(callout = true)  
+    public static void CustomerInvMemo(set<Id> DId){
+        System.debug('Inside CustomerInvMemo');
+        String body ;
+        List<Demand__c> dlist = new List<Demand__c>();
+        List<Payment_Milestones__c> pmlist = new List<Payment_Milestones__c>();
+        List<Applicant_Details__c> aplist = new List<Applicant_Details__c>();
+        dlist = [Select id,Name,Booking__r.Project__r.Company_Code__c,Booking__r.Project__r.Business_Place__c,Due_Date__c,Payment_Milestones__c,Payment_Milestones__r.Milestone_Name__c,Quotation__c,Booking__r.Customer_Number__c,Invoice_Date__c
+                 ,Total_Amount_Demanded__c,Total_Amount_with_Tax_Demanded__c,Total_Tax_Demanded__c,CurrencyIsoCode,Booking__r.Sales_Order_Number__c,Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,
+                 Towards_Land__c,Towards_Construction__c,Charge_1_Lookup__r.Tax_Rate__c,Demand_Unique_ID__c,Payment_Milestones__r.Towards_Land_Legacy__c,
+                 Payment_Milestones__r.Towards_Construction_Legacy__c,Payment_Milestones__r.Towards_Maintainence_Fund_legacy__c,Payment_Milestones__r.SGST__c,Payment_Milestones__r.CGST__c,
+                 Payment_Milestones__r.Is_Legacy_Data__c,Back_Date_Posting_Date__c,Payment_Milestones__r.Is_Back_Dated__c,Payment_Milestones__r.Towards_Clubhouse_Membership__c,
+                 Unit__r.Permitted_Use__c from Demand__c where id =: Did ];
+        
+        
+        system.debug('Aplist' +aplist);
+        List<Demand__c> dlistupdate = new List<Demand__c>();
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        
+        
+        if(dlist != null && dlist.size() >0){
+            
+        for(Demand__c d : dlist){
+        aplist = [Select id ,Name, GSTIN__c,Booking__c,Applicant_Number__c from Applicant_Details__c where Booking__c =: dlist[0].Booking__c and Applicant_Number__c = 'Primary Applicant'];
+        String GLcgst = '';
+        String GLsgst = '';
+        system.debug('aplist[0].GSTIN__c' +aplist[0].GSTIN__c);
+        if(aplist[0].GSTIN__c != null && aplist[0].GSTIN__c != '' ){
+            GLcgst = '271005';
+            GLsgst = '271010';
+        }else{
+            GLcgst = '271020';
+            GLsgst = '271025';
+        }  
+        system.debug('GL Codes'+GLcgst+ 'sgst' +GLsgst);
+        system.debug('Demand List:'+ d);
+        system.debug('Project COde'+ d.Booking__r.Project__r.Company_Code__c);
+        
+        Decimal sgst = d.Total_Tax_Demanded__c/2;
+        Decimal cgst = d.Total_Tax_Demanded__c/2;
+        
+        system.debug('TaxName:'+d.Charge_1_Lookup__r.Tax_Rate__c);
+        List<Tax_Slab__c> tlist = [Select id,Name,SAP_code__c,Tax_Name__c From Tax_Slab__c where Tax_Rate__c =: d.Charge_1_Lookup__r.Tax_Rate__c and Charge_Type__c != 'Cheque Bounce' and Charge_Type__c != 'Brokerage Reversal' and From_Date__c <= TODAY and (To_Date__c >= TODAY OR To_Date__c = null)];
+        system.debug('Tax name:'+ tlist);
+            String dat;
+            if(dlist[0].Payment_Milestones__r.Is_Back_Dated__c == True){
+                 dat = SAPIntegrationAPI.DateFormate(dlist[0].Back_Date_Posting_Date__c);
+            }else{
+                 dat = SAPIntegrationAPI.DateFormate(system.today());
+            }
+    //    String dat = SAPIntegrationAPI.DateFormate(system.today());
+            
+            if(d.Payment_Milestones__r.Is_Legacy_Data__c == False){
+         body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+d.Booking__r.Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>'+dat+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+d.Demand_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+d.Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+d.Total_Amount_with_Tax_Demanded__c+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>'+d.Payment_Milestones__r.Milestone_Name__c+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+d.Booking__r.Sales_Order_Number__c+'</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+d.Booking__r.Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+d.Towards_Land__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+d.Towards_Construction__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Construction</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item>'+
+
+			'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+sgst+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>Towards SGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>'+GLsgst+'</HKONT> <!--Optional:-->'+
+			' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+cgst+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>Towards CGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>'+GLcgst+'</HKONT> <!--Optional:-->'+
+			' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+            }else{
+            Decimal Totalamt = 0;
+            Decimal LandLegacy = 0;
+            if(d.Payment_Milestones__r.Towards_Land_Legacy__c != null){
+                LandLegacy = d.Payment_Milestones__r.Towards_Land_Legacy__c;
+            }
+            Decimal constructionLegacy = 0;
+            if(d.Payment_Milestones__r.Towards_Construction_Legacy__c != null){
+                constructionLegacy = d.Payment_Milestones__r.Towards_Construction_Legacy__c;
+            }
+            Decimal clubHouseMembershipLegacy = 0;
+            if(d.Payment_Milestones__r.Towards_Clubhouse_Membership__c != null){
+                clubHouseMembershipLegacy = d.Payment_Milestones__r.Towards_Clubhouse_Membership__c;
+            }
+
+            Decimal MFLegacy = 0;
+            if(d.Payment_Milestones__r.Towards_Maintainence_Fund_legacy__c != null){
+                MFLegacy = d.Payment_Milestones__r.Towards_Maintainence_Fund_legacy__c;
+            }
+            Decimal sgstlegacy = 0;
+            Decimal cgstlegacy = 0;
+            if(d.Payment_Milestones__r.SGST__c != null){
+                    sgstlegacy = d.Payment_Milestones__r.SGST__c;
+                }
+            if(d.Payment_Milestones__r.CGST__c != null){
+                    cgstlegacy = d.Payment_Milestones__r.CGST__c;
+                }
+                string saleOrder = d.Booking__r.Sales_Order_Number__c;
+                string posnr = '10';
+                if(d.Unit__r.Permitted_Use__c == 'Plotted Development'){
+                    saleOrder = '';
+                    posnr = '';
+                }
+             /*   if(constructionLegacy == 0 && MFLegacy == 0){
+                    body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+d.Booking__r.Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>'+dat+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+d.Demand_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+d.Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+LandLegacy+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>'+d.Payment_Milestones__r.Milestone_Name__c+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+saleOrder+'</VBELN> <!--Optional:--> <POSNR>'+posnr+'</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+d.Booking__r.Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+                  
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+LandLegacy+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+			' <ZUONR>H0</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>'; 
+              }*/
+           // else{
+                  Totalamt = LandLegacy + constructionLegacy + clubHouseMembershipLegacy + MFLegacy + sgstlegacy + cgstlegacy;
+                  
+                   body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+d.Booking__r.Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>'+dat+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+d.Demand_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+d.Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+Totalamt+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>'+d.Payment_Milestones__r.Milestone_Name__c+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+saleOrder+'</VBELN> <!--Optional:--> <POSNR>'+posnr+'</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+d.Booking__r.Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+LandLegacy+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H0</ZUONR> </item> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+constructionLegacy+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Construction</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item> '+
+                       
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+clubHouseMembershipLegacy+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Clubhouse Membership</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item> '+
+                 
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+MFLegacy+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards MaintainenceFund</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252500</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item> '+
+                 
+			'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+sgstlegacy+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>Towards SGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>'+GLsgst+'</HKONT> <!--Optional:-->'+
+			' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+cgstlegacy+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>Towards CGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>'+GLcgst+'</HKONT> <!--Optional:-->'+
+			' <ZUONR>H3</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>'; 
+                    
+          //      }
+             
+        
+            }
+        
+        /*
+        string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>1000</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>20.08.2021</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>20.08.2021</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>95589</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>1269</KUNNR> <!--Optional:--> <WRBTR>812280</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>1st Structural Slab</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>40002183</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>KARN</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL>ZLND</KSCHL> <!--Optional:-->'+
+            ' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H0</ZUONR> </item> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>483500</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Construction</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>43515</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards CGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>43515</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>0043</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards SGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+			*/
+        
+        /*   
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item>'+
+
+'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+' <WRBTR>241750</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+dlist[0].Project__r.Project_Code__c+'</PROJK>'+
+' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+' <ZUONR>H0</ZUONR> </item> </item> ; */
+        
+        //string body;
+        String eventEndPoint = '';
+        HttpRequest req = new HttpRequest();
+        //13.228.235.198 Sandbox 13.228.217.109 Production
+        req.setEndpoint(endpoint());
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        //Blob headerValue = Blob.valueOf('body');
+        //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+        req.setHeader('Authorization', authorization());
+        req.setHeader('Content-Type', 'application/xml');
+        req.setBody(body);
+        Http http = new Http();
+        HTTPResponse res = new HTTPResponse();    
+            if(!Test.IsRunningTest()){ 
+        res = http.send(req);
+        system.debug('res::'+res.getBody());
+        
+        
+        
+        ///////////////Response Parsing/////////////////
+        XmlStreamReader reader = new XmlStreamReader(res.getBody());
+        system.debug('Reader:'+reader);
+        String Message = '';
+        String RetCode = '';
+        String AccountingDocumentNumber = '';
+        String ReferenceDocumentNumber = '';
+        String PostingDateintheDocument = '';
+        if (res.getStatusCode() == 200){
+            //Proceed only if it is Success
+            while (reader.hasNext()){
+                if (XmlTag.START_ELEMENT == reader.getEventType()){
+                    
+                    if ('BELNR'.equals(reader.getLocalName())){
+                         AccountingDocumentNumber = getValueFromTag(reader);
+                        system.debug('BELNR:'+AccountingDocumentNumber);
+                    }else if('XBLNR'.equals(reader.getLocalName())){
+                         ReferenceDocumentNumber = getValueFromTag(reader);
+                        system.debug('XBLNR:'+ReferenceDocumentNumber);
+                    }else if('WRBTR'.equals(reader.getLocalName())){
+                        String AmountinDocumentCurrency = getValueFromTag(reader);
+                        system.debug('WRBTR:'+AmountinDocumentCurrency);
+                    }else if('BUDAT'.equals(reader.getLocalName())){
+                         PostingDateintheDocument = getValueFromTag(reader);
+                        system.debug('BUDAT:'+PostingDateintheDocument);
+                    }else if('FUGUEID'.equals(reader.getLocalName())){
+                        String Fugueid = getValueFromTag(reader);
+                        system.debug('FUGUEID:'+Fugueid);
+                    }else if('MESSAGE'.equals(reader.getLocalName())){
+                         Message = getValueFromTag(reader);
+                        system.debug('MESSAGE:'+Message);
+                    }else if('RETCODE'.equals(reader.getLocalName())){
+                         RetCode = getValueFromTag(reader);
+                        system.debug('RETCODE:'+RetCode);
+                    }
+                }
+                 reader.next();
+            }
+        }
+        
+        ////////////////////API Log///////////////////////
+        API_Log__c ap = new API_Log__c();
+        ap.API_Name__c = 'Invoice API';
+        ap.Request__c = body;
+        ap.Response__c = res.getBody();
+        ap.Message__c = Message;
+        ap.Response_Code__c = RetCode;
+        ap.Demand__c = d.id;
+        loglist.add(ap);
+        
+        if(ReferenceDocumentNumber != '' && PostingDateintheDocument != '' && AccountingDocumentNumber != Null){
+            d.SAP_Invoice_No__c = ReferenceDocumentNumber;
+			d.SAP_Posting_Date__c = date.valueOf(PostingDateintheDocument);
+            d.Accounting_Document_Number__c = AccountingDocumentNumber;
+            dlistupdate.add(d);
+        }
+            }
+            else{
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+            }
+        }
+        }
+        if(!loglist.isEmpty()){
+            insert loglist;
+            update dlistupdate;
+        }
+ 
+    }
+    
+    ////////////////////////////////////Customization API Call////////////////////////
+    @future(callout = true)  
+    public static void CustomerInvCustomization(set<Id> DId){
+        String body ;
+        List<Demand__c> dlist = new List<Demand__c>();
+        List<Payment_Milestones__c> pmlist = new List<Payment_Milestones__c>();
+        List<Applicant_Details__c> aplist = new List<Applicant_Details__c>();
+        dlist = [Select id,Name,Booking__r.Project__r.Company_Code__c,Booking__r.Project__r.Business_Place__c,Due_Date__c,Payment_Milestones__c,Payment_Milestones__r.Milestone_Name__c,Quotation__c,Booking__r.Customer_Number__c,Invoice_Date__c
+                 ,Total_Amount_Demanded__c,Total_Amount_with_Tax_Demanded__c,Total_Tax_Demanded__c,CurrencyIsoCode,Booking__r.Sales_Order_Number__c,Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,
+                 Towards_Land__c,Towards_Construction__c,Charge_1_Lookup__r.Tax_Rate__c,Demand_Unique_ID__c,Payment_Milestones__r.Towards_Land_Legacy__c,
+                 Payment_Milestones__r.Towards_Construction_Legacy__c,Payment_Milestones__r.Towards_Maintainence_Fund_legacy__c,Payment_Milestones__r.SGST__c,Payment_Milestones__r.CGST__c,
+                 Payment_Milestones__r.Is_Legacy_Data__c,Customization_Demand__c,Customization_Payment_Milestones__r.Milestone_Name__c,
+                 Back_Date_Posting_Date__c,Customization_Payment_Milestones__r.Is_Back_Dated__c from Demand__c where id =: Did ];
+        
+        
+        system.debug('Aplist' +aplist);
+        List<Demand__c> dlistupdate = new List<Demand__c>();
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        
+        
+        if(dlist != null && dlist.size() >0){
+            
+        for(Demand__c d : dlist){
+        aplist = [Select id ,Name, GSTIN__c,Booking__c,Applicant_Number__c from Applicant_Details__c where Booking__c =: dlist[0].Booking__c and Applicant_Number__c = 'Primary Applicant'];
+        String GLcgst = '';
+        String GLsgst = '';
+        system.debug('aplist[0].GSTIN__c' +aplist[0].GSTIN__c);
+        if(aplist[0].GSTIN__c != null && aplist[0].GSTIN__c != '' ){
+            GLcgst = '271005';
+            GLsgst = '271010';
+        }else{
+            GLcgst = '271020';
+            GLsgst = '271025';
+        }  
+        system.debug('GL Codes'+GLcgst+ 'sgst' +GLsgst);
+        system.debug('Demand List:'+ d);
+        system.debug('Project COde'+ d.Booking__r.Project__r.Company_Code__c);
+        
+        Decimal sgst = d.Total_Tax_Demanded__c/2;
+        Decimal cgst = d.Total_Tax_Demanded__c/2;
+        
+        system.debug('TaxName:'+d.Charge_1_Lookup__r.Tax_Rate__c);
+        List<Tax_Slab__c> tlist = [Select id,Name,SAP_code__c,Tax_Name__c From Tax_Slab__c where Charge_Type__c = 'Interior Charges'and From_Date__c <= TODAY and (To_Date__c >= TODAY OR To_Date__c = null)];
+        system.debug('Tax name:'+ tlist);
+     //   String dat = SAPIntegrationAPI.DateFormate(d.Invoice_Date__c);
+     //   sending todays date when making customization demand api call
+     	String dat;
+            if(dlist[0].Customization_Payment_Milestones__r.Is_Back_Dated__c == True){
+                dat = SAPIntegrationAPI.DateFormate(dlist[0].Back_Date_Posting_Date__c);
+            }else{
+                dat = SAPIntegrationAPI.DateFormate(system.today());
+            }
+      //  String dat = SAPIntegrationAPI.DateFormate(system.today());
+            
+         body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+d.Booking__r.Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>'+dat+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+d.Demand_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+d.Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+d.Total_Amount_with_Tax_Demanded__c+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH>C</ZLSCH> <!--Optional:--> <SGTXT>'+d.Customization_Payment_Milestones__r.Milestone_Name__c+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+d.Booking__r.Sales_Order_Number__c+'</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+d.Booking__r.Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+            
+        /*    '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+d.Towards_Land__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Land</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item> '+
+        */    
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+d.Total_Amount_Demanded__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>Towards Interior Design</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>252100</HKONT> <!--Optional:-->'+
+            ' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item>'+
+
+			'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+sgst+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>Towards SGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>'+GLsgst+'</HKONT> <!--Optional:-->'+
+			' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+cgst+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>Towards CGST</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>'+GLcgst+'</HKONT> <!--Optional:-->'+
+			' <ZUONR>'+tlist[0].SAP_code__c+'</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+           
+        
+        
+        
+        //string body;
+        String eventEndPoint = '';
+        HttpRequest req = new HttpRequest();
+        //13.228.235.198 Sandbox 13.228.217.109 Production
+        req.setEndpoint(endpoint());
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        //req.setTimeout(6000);
+        //Blob headerValue = Blob.valueOf('body');
+        //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+        req.setHeader('Authorization', authorization());
+        req.setHeader('Content-Type', 'application/xml');
+        req.setBody(body);
+        Http http = new Http();
+        HTTPResponse res = new HTTPResponse();    
+            if(!Test.IsRunningTest()){ 
+        res = http.send(req);
+        system.debug('res::'+res.getBody());
+        
+        
+        
+        ///////////////Response Parsing/////////////////
+        XmlStreamReader reader = new XmlStreamReader(res.getBody());
+        system.debug('Reader:'+reader);
+        String Message = '';
+        String RetCode = '';
+        String AccountingDocumentNumber = '';
+        String ReferenceDocumentNumber = '';
+        String PostingDateintheDocument = '';
+        if (res.getStatusCode() == 200){
+            //Proceed only if it is Success
+            while (reader.hasNext()){
+                if (XmlTag.START_ELEMENT == reader.getEventType()){
+                    
+                    if ('BELNR'.equals(reader.getLocalName())){
+                         AccountingDocumentNumber = getValueFromTag(reader);
+                        system.debug('BELNR:'+AccountingDocumentNumber);
+                    }else if('XBLNR'.equals(reader.getLocalName())){
+                         ReferenceDocumentNumber = getValueFromTag(reader);
+                        system.debug('XBLNR:'+ReferenceDocumentNumber);
+                    }else if('WRBTR'.equals(reader.getLocalName())){
+                        String AmountinDocumentCurrency = getValueFromTag(reader);
+                        system.debug('WRBTR:'+AmountinDocumentCurrency);
+                    }else if('BUDAT'.equals(reader.getLocalName())){
+                         PostingDateintheDocument = getValueFromTag(reader);
+                        system.debug('BUDAT:'+PostingDateintheDocument);
+                    }else if('FUGUEID'.equals(reader.getLocalName())){
+                        String Fugueid = getValueFromTag(reader);
+                        system.debug('FUGUEID:'+Fugueid);
+                    }else if('MESSAGE'.equals(reader.getLocalName())){
+                         Message = getValueFromTag(reader);
+                        system.debug('MESSAGE:'+Message);
+                    }else if('RETCODE'.equals(reader.getLocalName())){
+                         RetCode = getValueFromTag(reader);
+                        system.debug('RETCODE:'+RetCode);
+                    }
+                }
+                 reader.next();
+            }
+        }
+        
+        ////////////////////API Log///////////////////////
+        API_Log__c ap = new API_Log__c();
+        ap.API_Name__c = 'Invoice API';
+        ap.Request__c = body;
+        ap.Response__c = res.getBody();
+        ap.Message__c = Message;
+        ap.Response_Code__c = RetCode;
+        ap.Demand__c = d.id;
+        loglist.add(ap);
+        
+        if(ReferenceDocumentNumber != '' && PostingDateintheDocument != '' && AccountingDocumentNumber != Null){
+            d.SAP_Invoice_No__c = ReferenceDocumentNumber;
+			d.SAP_Posting_Date__c = date.valueOf(PostingDateintheDocument);
+            d.Accounting_Document_Number__c = AccountingDocumentNumber;
+            dlistupdate.add(d);
+        }
+            }
+            else{
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+            }
+        }
+        }
+        if(!loglist.isEmpty()){
+            insert loglist;
+            update dlistupdate;
+        }
+ 
+    }
+    
+    
+    /////////////////////////////Debit Note API//////////////////////////////////////
+    
+    @future(callout = true)  
+    public static void CustomerDebitInvMemo(set<Id> DId){
+        List<Demand__c> dlist = new List<Demand__c>();
+        List<Applicant_Details__c> aplist = new List<Applicant_Details__c>();
+        dlist = [Select id,Name,Booking__r.Project__r.Company_Code__c,Booking__r.Project__r.Business_Place__c,Due_Date__c,Payment_Milestones__r.Milestone_Name__c,Quotation__c,Booking__r.Customer_Number__c,Invoice_Date__c
+                 ,Total_Amount_Demanded__c,Total_Amount_with_Tax_Demanded__c,Total_Tax_Demanded__c,CurrencyIsoCode,Booking__r.Sales_Order_Number__c,Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,
+                 Debit_Demanded__c,Debit_Type__c,Debit_CGST__c,Debit_SGST__c,Demand_Unique_ID__c,Booking__r.Project_Unit__c,Is_Back_Dated__c,
+                 Back_Date_Posting_Date__c,Remarks__c from Demand__c where id =: Did ];
+        
+        
+        system.debug('Aplist' +aplist);
+        List<Demand__c> dlistupdate = new List<Demand__c>();
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        
+        
+        if(dlist != null && dlist.size() >0){
+            
+        for(Demand__c d : dlist){
+           String GLCode = '';
+           if(d.Debit_Type__c == 'Cancellation' || d.Debit_Type__c == 'Brokerage Reversal'){
+                GLCode = '426000';
+            }
+            else if(d.Debit_Type__c == 'Transfer'){
+                GLCode = '428000';
+            }
+            else if(d.Debit_Type__c == 'Bank Charge'){
+                GLCode = '429000';
+            }
+            else if(d.Debit_Type__c == 'Interest Charges'){
+                GLCode = '420100';
+            }
+            else if(d.Debit_Type__c == 'TDS'){
+                GLCode = '271800';
+            }
+            else if(d.Debit_Type__c == 'Account Transfer'){
+                    GLCode = '252330';
+            }
+            else if(d.Debit_Type__c == 'Franking Charges'){
+                    GLCode = '272630';
+            }
+            
+             Decimal CGST = math.abs(d.Debit_CGST__c.setscale(0,RoundingMode.HALF_UP));
+             Decimal SGST = math.abs(d.Debit_SGST__c.setscale(0,RoundingMode.HALF_UP));
+             Decimal TotalwithTax = d.Debit_Demanded__c + CGST + SGST;
+             system.debug('TotalwithTax::'+TotalwithTax);
+            Date tdate = System.Date.today();
+        	String dat;
+            String todaysDate;
+            if(dlist[0].Is_Back_Dated__c == True){
+                 dat = SAPIntegrationAPI.DateFormate(dlist[0].Back_Date_Posting_Date__c);
+                 todaysDate = SAPIntegrationAPI.DateFormate(dlist[0].Back_Date_Posting_Date__c);
+            }else{
+                 dat = SAPIntegrationAPI.DateFormate(d.Invoice_Date__c);
+                 todaysDate = SAPIntegrationAPI.DateFormate(tdate);
+            }
+            String concatStr = d.Booking__r.Project_Unit__c +'-'+d.Remarks__c;
+            String ProCodeUnitNoRemarks = '';
+            ProCodeUnitNoRemarks = concatStr.length() >= 50 ?  concatStr.substring(0,49) : concatStr ;
+            String DocType = d.Debit_Type__c == 'TDS' ? 'DZ' : 'DA' ;
+            string body = '';
+            if(d.Debit_Type__c == 'TDS' || d.Debit_Type__c == 'Franking Charges'){
+                 body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+d.Booking__r.Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>'+DocType+'</BLART> <!--Optional:--> '+
+            '<BUDAT>'+todaysDate+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+d.Demand_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+d.Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+TotalwithTax+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH></ZLSCH> <!--Optional:--> <SGTXT>'+ProCodeUnitNoRemarks+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+d.Booking__r.Sales_Order_Number__c+'</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+d.Booking__r.Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+d.Debit_Demanded__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>'+ProCodeUnitNoRemarks+'</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>'+GLCode+'</HKONT> <!--Optional:-->'+
+            ' <ZUONR>'+d.Booking__r.Project_Unit__c+'</ZUONR> </item> '+
+            
+			'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+CGST+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>RD-CGST OUTPUT</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>271005</HKONT> <!--Optional:-->'+
+			' <ZUONR>'+d.Booking__r.Project_Unit__c+'</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+SGST+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>RD-SGST OUTPUT</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>271010</HKONT> <!--Optional:-->'+
+			' <ZUONR>'+d.Booking__r.Project_Unit__c+'</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+            }
+            else if (d.Debit_Type__c == 'Account Transfer'){
+        	 body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+d.Booking__r.Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>GJ</BLART> <!--Optional:--> '+
+            '<BUDAT>'+todaysDate+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+d.Demand_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+d.Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+TotalwithTax+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH></ZLSCH> <!--Optional:--> <SGTXT>'+d.Debit_Type__c+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+d.Booking__r.Sales_Order_Number__c+'</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+d.Booking__r.Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+d.Debit_Demanded__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>'+d.Debit_Type__c+'</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>'+GLCode+'</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item> '+
+            
+			'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+CGST+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>RD-CGST OUTPUT</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>271005</HKONT> <!--Optional:-->'+
+			' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+SGST+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>RD-SGST OUTPUT</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>271010</HKONT> <!--Optional:-->'+
+			' <ZUONR>H3</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+        
+            }   
+            else{
+                 body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '+
+            'xmlns:cus="http://total-environment/PI/CustomerInvoiceAndCreditMemo"> <soapenv:Header/> <soapenv:Body> '+
+            '<cus:CusInvCrMemoReq>  <item>  <BUSCS>R</BUSCS> '+
+            '<!--Optional:--> <BUKRS>'+d.Booking__r.Project__r.Company_Code__c+'</BUKRS> <!--Optional:--> <BELNR></BELNR> <!--Optional:--> <GJAHR></GJAHR> '+
+            '<!--Optional:--> <BLDAT>'+dat+'</BLDAT> <!--Optional:--> <BLART>GA</BLART> <!--Optional:--> '+
+            '<BUDAT>'+todaysDate+'</BUDAT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <BKTXT>'+d.Demand_Unique_ID__c+'</BKTXT>'+
+            ' <!--Optional:--> <KUNNR>'+d.Booking__r.Customer_Number__c+'</KUNNR> <!--Optional:--> <WRBTR>'+TotalwithTax+'</WRBTR> <!--Optional:--> <ZTERM>0001</ZTERM>'+
+            ' <!--Optional:--> <ZLSCH></ZLSCH> <!--Optional:--> <SGTXT>'+d.Debit_Type__c+'</SGTXT> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:-->'+
+            ' <WAERS>INR</WAERS> <!--Optional:--> <VBELN>'+d.Booking__r.Sales_Order_Number__c+'</VBELN> <!--Optional:--> <POSNR>10</POSNR> <!--Optional:-->'+
+            ' <DEL_FLAG></DEL_FLAG> <!--Optional:--> <GST_PART></GST_PART> <!--Optional:--> <PLC_SUP></PLC_SUP> <!--Optional:-->'+
+            ' <BUPLA>'+d.Booking__r.Project__r.Business_Place__c+'</BUPLA> <!--Zero or more repetitions:--> '+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+            ' <WRBTR>'+d.Debit_Demanded__c+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+            ' <!--Optional:--> <SGTXT>'+d.Debit_Type__c+'</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>'+GLCode+'</HKONT> <!--Optional:-->'+
+            ' <ZUONR>H3</ZUONR> </item> '+
+            
+			'<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+CGST+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>RD-CGST OUTPUT</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>271005</HKONT> <!--Optional:-->'+
+			' <ZUONR>H3</ZUONR> </item>'+
+            
+            '<item> <!--Optional:--> <KSCHL></KSCHL> <!--Optional:-->'+
+			' <WRBTR>'+SGST+'</WRBTR> <!--Optional:--> <KOSTL></KOSTL> <!--Optional:--> <MWSKZ></MWSKZ> <!--Optional:--> <PROJK>'+d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'</PROJK>'+
+			' <!--Optional:--> <SGTXT>RD-SGST OUTPUT</SGTXT> <!--Optional:--> <STAWN>9954</STAWN> <!--Optional:--> <HKONT>271010</HKONT> <!--Optional:-->'+
+			' <ZUONR>H3</ZUONR> </item> </item> </cus:CusInvCrMemoReq> </soapenv:Body> </soapenv:Envelope>';
+        
+            }
+       
+        
+        //string body;
+        String eventEndPoint = '';
+        HttpRequest req = new HttpRequest();
+        //13.228.235.198 Sandbox 13.228.217.109 Production
+        req.setEndpoint(endpoint());
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        //Blob headerValue = Blob.valueOf('body');
+        //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+        req.setHeader('Authorization', authorization());
+        req.setHeader('Content-Type', 'application/xml');
+        req.setBody(body);
+        Http http = new Http();
+        HTTPResponse res = new HTTPResponse();    
+            if(!Test.IsRunningTest()){ 
+        res = http.send(req);
+        system.debug('res::'+res.getBody());
+        
+        
+        
+        ///////////////Response Parsing/////////////////
+        XmlStreamReader reader = new XmlStreamReader(res.getBody());
+        system.debug('Reader:'+reader);
+        String Message = '';
+        String RetCode = '';
+        String AccountingDocumentNumber = '';
+        String ReferenceDocumentNumber = '';
+        String PostingDateintheDocument = '';
+        if (res.getStatusCode() == 200){
+            //Proceed only if it is Success
+            while (reader.hasNext()){
+                if (XmlTag.START_ELEMENT == reader.getEventType()){
+                    
+                    if ('BELNR'.equals(reader.getLocalName())){
+                         AccountingDocumentNumber = getValueFromTag(reader);
+                        system.debug('BELNR:'+AccountingDocumentNumber);
+                    }else if('XBLNR'.equals(reader.getLocalName())){
+                         ReferenceDocumentNumber = getValueFromTag(reader);
+                        system.debug('XBLNR:'+ReferenceDocumentNumber);
+                    }else if('WRBTR'.equals(reader.getLocalName())){
+                        String AmountinDocumentCurrency = getValueFromTag(reader);
+                        system.debug('WRBTR:'+AmountinDocumentCurrency);
+                    }else if('BUDAT'.equals(reader.getLocalName())){
+                         PostingDateintheDocument = getValueFromTag(reader);
+                        system.debug('BUDAT:'+PostingDateintheDocument);
+                    }else if('FUGUEID'.equals(reader.getLocalName())){
+                        String Fugueid = getValueFromTag(reader);
+                        system.debug('FUGUEID:'+Fugueid);
+                    }else if('MESSAGE'.equals(reader.getLocalName())){
+                         Message = getValueFromTag(reader);
+                        system.debug('MESSAGE:'+Message);
+                    }else if('RETCODE'.equals(reader.getLocalName())){
+                         RetCode = getValueFromTag(reader);
+                        system.debug('RETCODE:'+RetCode);
+                    }
+                }
+                 reader.next();
+            }
+        }
+        
+        ////////////////////API Log///////////////////////
+        API_Log__c ap = new API_Log__c();
+        ap.API_Name__c = 'Debit Note API';
+        ap.Request__c = body;
+        ap.Response__c = res.getBody();
+        ap.Message__c = Message;
+        ap.Response_Code__c = RetCode;
+        ap.Demand__c = d.id;
+        loglist.add(ap);
+        
+        if(ReferenceDocumentNumber != '' && PostingDateintheDocument != '' && AccountingDocumentNumber != Null && AccountingDocumentNumber != ''){
+            d.SAP_Invoice_No__c = ReferenceDocumentNumber;
+			d.SAP_Posting_Date__c = date.valueOf(PostingDateintheDocument);
+            d.Accounting_Document_Number__c = AccountingDocumentNumber;
+            dlistupdate.add(d);
+        }
+            }
+            else{
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+                res.setBody('Dummy');
+            }
+        }
+        }
+        if(!loglist.isEmpty()){
+            insert loglist;
+            update dlistupdate;
+        }
+ 
+    }
+    
+    
+    
+    private static String getValueFromTag(XMLStreamReader reader) {
+        String DataValue;
+        while (reader.hasNext()) {
+            if (XmlTag.END_ELEMENT == reader.getEventType()) {
+                break;
+            } else if (XmlTag.CHARACTERS == reader.getEventType() || XmlTag.CDATA == reader.getEventType()) {
+                DataValue = reader.getText();
+            }
+            reader.next();
+        }
+        return DataValue;
+    }
+    public static String authorization() {
+            String authHeader;
+            SAP_Credential__mdt sapSetting;
+            sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                                from SAP_Credential__mdt 
+                                where QualifiedApiName = 'Invoice_Credit_Memo'];
+            authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+            return authHeader;
+    }
+    
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Invoice_Credit_Memo'];
+        system.debug('f:::'+fiSetting.Endpoint__c);
+        return fiSetting.Endpoint__c;
+    }
+}
