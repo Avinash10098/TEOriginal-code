@@ -1,0 +1,217 @@
+public with sharing class SAPIntegrationServices
+{
+    public static String authorization() {
+            String authHeader;
+            SAP_Credential__mdt sapSetting;
+            sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                                from SAP_Credential__mdt 
+                                where QualifiedApiName = 'Create_Customer'];
+            authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+            return authHeader;
+    }
+    
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Create_Customer'];
+        system.debug('f:::'+fiSetting.Endpoint__c);
+        return fiSetting.Endpoint__c;
+    }
+    
+    @future(callout = true)   
+    public static void createCustomerInSAP(Id bId)
+    {
+        System.debug('Create Customer');
+        /*totalEnvironmentPiCreatecustomer3.HTTPS_Port apiCallOunt = new totalEnvironmentPiCreatecustomer3.HTTPS_Port();
+        totalEnvironmentPiCreatecustomer3.itemres_element[] apiResponse = new totalEnvironmentPiCreatecustomer3.itemres_element[]{};
+        totalEnvironmentPiCreatecustomer3.itemreq_element request_x = new totalEnvironmentPiCreatecustomer3.itemreq_element();
+        list<totalEnvironmentPiCreatecustomer3.itemreq_element> listItemElement = new list<totalEnvironmentPiCreatecustomer3.itemreq_element>();*/
+        //List<totalEnvironmentPiCreatecustomer3.CreateCustomerRes> callOutResponse = new List<totalEnvironmentPiCreatecustomer3.CreateCustomerRes>();
+        
+        List<Applicant_Details__c> appDetails = [Select id, Name, Booking__r.Project__r.Company_Code__c, Salutation__c,Booking__r.Customer_Number__c,
+                                                 street__c, Street_2__c, Street_3__c, Street_4__c, Street_5__c,Mobile_Number__c,
+                                                 Country__c, city__c, Pincode__c,Applicant_Unique_No__c,Booking__r.Project_Unit__c
+                                                 from applicant_details__c where booking__c =: bId and Applicant_Number__c = 'Primary Applicant' ];
+        Booking__c bk = new Booking__c();
+        API_Log__c api = new API_Log__c();
+        String CustomerNo = '';
+        if(appDetails[0].Booking__r.Customer_Number__c != null){
+            CustomerNo = String.valueOf(appDetails[0].Booking__r.Customer_Number__c) ;
+        }
+        
+        Map <String, Country_Code__c> countrycode = Country_Code__c.getAll();
+        
+        totalEnvironmentPiCreatecustomer.HTTPS_Port apiCallOunt = new totalEnvironmentPiCreatecustomer.HTTPS_Port();
+        totalEnvironmentPiCreatecustomer.item_element[] apiResponse = new totalEnvironmentPiCreatecustomer.item_element[]{};
+        totalEnvironmentPiCreatecustomer.item_element request_x = new totalEnvironmentPiCreatecustomer.item_element();
+        list<totalEnvironmentPiCreatecustomer.item_element> listItemElement = new list<totalEnvironmentPiCreatecustomer.item_element>();
+        system.debug('AppDetails' +appDetails);
+        for(Applicant_details__c ap : appDetails)
+        {
+            request_x.CUSTOMERNO = CustomerNo ;
+            request_x.ACCGRP = '0001';
+            request_x.COMPCODE = string.valueof(ap.Booking__r.Project__r.Company_Code__c);
+            request_x.SALESORG = string.valueof(ap.Booking__r.Project__r.Company_Code__c);
+            request_x.DISTCHANNEL ='10';
+            request_x.DIV ='10';
+            
+            if(ap.Salutation__c == 'Mr.')
+                request_x.TITLE ='0002';
+            if(ap.Salutation__c == 'Ms.')
+                request_x.TITLE ='0001';
+            if(ap.Salutation__c == 'Company')
+                request_x.TITLE ='0003';
+            if(ap.Salutation__c == 'Mrs.')
+                request_x.TITLE ='0006';
+            if(ap.Salutation__c == 'Dr.')
+                request_x.TITLE ='0007';
+            if(ap.Salutation__c == 'Prof.')
+                request_x.TITLE = '0008';
+            if(ap.Salutation__c == 'M/s.')
+                request_x.TITLE = '0006';
+            if(ap.Salutation__c == 'Mr and Mrs.')
+                request_x.TITLE = '0005';
+                
+            request_x.NAME =ap.Name;
+            request_x.SEARCHTERM= ap.Booking__r.Project_Unit__c;
+            request_x.FUGUECUS= ap.Applicant_Unique_No__c;
+            request_x.STREET= ap.street__c;
+            request_x.STREET2= ap.Street_2__c;
+            request_x.STREET3= ap.Street_3__c;
+            request_x.STREET4= ap.Street_4__c;
+            request_x.STREET5= ap.Street_5__c;
+            request_x.CITY= ap.city__c;
+            request_x.POSTALCODE= string.valueof(ap.Pincode__c);
+            String con = ap.Country__c;
+            String con1='';
+            if(countrycode.containskey(con)){
+                con1 = countrycode.get(con).Country_Code__c;
+            }
+            system.debug('COUNTRY CODE' + con1);
+            request_x.COUNTRY= con1;
+            request_x.TELEPH1= ap.Mobile_Number__c;
+            request_x.FAXNUMBER='';
+            request_x.RECACCOUNT='0000123100';
+            request_x.CURRENCY_x='INR';
+            request_x.CUSTSTATGRP='1';
+            request_x.CUSTPRICPROC='1';
+            request_x.ACCTASSGGR='01';
+            request_x.PAYTTERMS='0001';
+            request_x.DELIPLANT='';
+            request_x.SORTKEY='076';
+            request_x.SALESGRP='';
+            request_x.SALESOFC='';
+            request_x.Field1='';
+            request_x.Field2='';
+            request_x.Field3='';
+            request_x.Field4='';
+            request_x.Field5='';
+            request_x.STCD3='';
+            request_x.REGION='';
+            request_x.FUGUEID='';
+            request_x.ALAND='';
+            request_x.TATYP='';
+            request_x.TAKLD='';
+            
+            listItemElement.add(request_x);
+        }
+        //totalEnvironmentPiCreatecustomer tep = new totalEnvironmentPiCreatecustomer();
+        if(!test.isRunningTest()){
+        apiResponse = apiCallOunt.CreateCustomer_Out(listItemElement);
+        system.debug('Createcustomer' +apiResponse[0].CUSTOMERNO);
+        String tempRequest = JSON.serializePretty(request_x);
+        
+        try{
+        if(apiResponse[0].CUSTOMERNO != null && apiResponse[0].RET_CODE != '1'){
+            bk.Id = bId;
+            bk.Customer_Number__c =  integer.ValueOf(apiResponse[0].CUSTOMERNO);
+            system.debug('bk.Customer_Number__c:::'+bk.Customer_Number__c);
+            update bk;
+        }
+        }catch(DmlException e) {
+   		 System.debug('The following exception has occurred: ' + e.getMessage());
+		}
+        
+        try{
+        	api.API_Name__c = 'Customer Number API';
+            api.Message__c = apiResponse[0].MESSAGE;
+            api.Response_Code__c = apiResponse[0].RET_CODE;
+       		api.Booking__c = bId;
+            api.Response__c = String.valueOf(apiResponse);
+            api.Request__c = tempRequest;
+            insert api;
+        
+        }catch(DmlException e) {
+   		 System.debug('The following exception has occurred: ' + e.getMessage());
+		}
+        
+        
+        }else{
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            system.debug('ABCD');
+            
+        }
+    }
+        
+   
+    
+   
+}
