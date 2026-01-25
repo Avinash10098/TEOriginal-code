@@ -1,0 +1,97 @@
+trigger trgDemandSAP on Demand__c (after insert, after Update) { 
+    
+    if(Trigger.isInsert && Trigger.isAfter){
+        set<Id> DemandId = new set<Id>();
+        for(Demand__c d : trigger.new) {
+            if((d.Debit_Type__c == '' || d.Debit_Type__c == null) && d.Customization_Demand__c == false){
+                DemandId.add(d.Id);
+                system.debug('Demand::'+d.id);
+            }
+        }
+        if(!DemandId.isEmpty()){
+            if(!Test.isRunningTest())
+                System.enqueueJob(new SAP_customerInvCreMemo(DemandId)); 
+        }
+    }
+    
+    /////////////////////////////Customization Demand/////////////////////
+    
+    if(Trigger.isInsert && Trigger.isAfter){
+        set<Id> CustdemandId = new set<Id>();
+        for(Demand__c d : trigger.new) {
+            if(d.Customization_Demand__c == true){
+                CustdemandId.add(d.Id);
+                system.debug('Demand::'+d.id);
+            }
+        }
+        if(!CustdemandId.isEmpty()){
+            System.debug('Inside');
+            System.enqueueJob(new SAP_InvCustomization(CustdemandId));
+        }
+    }
+    
+    /////////////////////////////Debit Note API hit//////////////////////
+    
+    if(Trigger.isUpdate && Trigger.isAfter){
+        set<Id> DemandId = new set<Id>();
+        set<Id> dId4CustPayout = new set<Id>();
+        for(Demand__c d : trigger.new) {
+            system.debug('DebitType::'+d.Debit_Type__c);
+            if(d.Debit_Type__c != null && d.Debit_Type__c != 'TDS' && d.Debit_Type__c != 'Pre-EMI Reimbursement' && d.Debit_Type__c != 'Compensation'
+               && trigger.oldMap.get(d.id).Approval_Status_Debit_Note__c != trigger.newMap.get(d.id).Approval_Status_Debit_Note__c 
+               && d.Approval_Status_Debit_Note__c == 'Accepted'){
+                   DemandId.add(d.Id);
+                   system.debug('Debit note::'+d.id);
+               }
+        /*    else if(d.Debit_Type__c != null && d.Debit_Type__c == 'TDS' && d.Debit_Type__c == 'Pre-EMI Reimbursement' && d.Debit_Type__c == 'Compensation'
+                    && d.Approval_Status_Debit_Note__c == 'Accepted' && 
+                    trigger.oldMap.get(d.id).Bank_Masters__c != trigger.newMap.get(d.id).Bank_Masters__c  && d.Bank_Masters__c != Null){
+                        dId4CustPayout.add(d.Id);
+                    }  */
+        }
+        if(!DemandId.isEmpty()){
+            System.enqueueJob(new SAP_customerDebitMemo(DemandId));
+        }
+     /*   if(!dId4CustPayout.isEmpty()){
+            // Call customer payout API
+            System.enqueueJob(new SAP_CustomerPayoutQueable(dId4CustPayout));    
+        } */
+    }
+    
+        if(Trigger.isInsert && Trigger.isAfter){
+            set<Id> DemandId = new set<Id>();
+            for(Demand__c d : trigger.new) {
+                system.debug('DebitType::'+d.Debit_Type__c);
+                if(d.Debit_Type__c != null && d.Approval_Status_Debit_Note__c == 'Accepted' && d.Debit_Type__c == 'Account Transfer'){
+                    DemandId.add(d.Id);
+                    system.debug('Debit note::'+d.id);
+                }
+                //   else if(d.Debit_Type__c != null && d.Debit_Type__c == 'TDS' && d.Accounting_Document_Number__c == Null){
+                //       DemandId.add(d.Id);
+                //   }
+            }
+            if(!DemandId.isEmpty()){
+                System.enqueueJob(new SAP_customerDebitMemo(DemandId));
+            }
+        }
+    
+    /////////////////////////////Transfer API hit//////////////////////
+    
+    if(Trigger.isAfter && Trigger.isUpdate){
+        set<Id> did =new set<Id>();
+   //     if(checkRecursion.isFirstRun()){
+            for(Demand__c d : Trigger.new){
+                if(trigger.oldMap.get(d.id).Is_Transferred__c != trigger.newMap.get(d.id).Is_Transferred__c && d.Is_Transferred__c == True){
+                    if(((d.Debit_Type__c == '' || d.Debit_Type__c == null) && d.Demand_Status__c == 'Raised') || (d.Debit_Type__c != null && d.Approval_Status_Debit_Note__c == 'Accepted')){
+                        did.add(d.id);
+                    }
+                }
+                system.debug('receiptid'+did);
+            }
+            if(!did.isEmpty()){
+                //TEPITransferProcess_Req.TransferInvoice(did);
+                System.enqueueJob(new SAP_TransferInvoices(did));
+            }
+   //     }
+    }
+}
