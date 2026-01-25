@@ -1,0 +1,91 @@
+public class SendToSAPController {
+    public String bookId {get;set;} 
+    public List<Booking__c> bookList;
+    Public Boolean error{get;set;}
+    
+    public SendToSAPController(){
+        
+        
+    if(ApexPages.currentPage().getParameters().get('Id') != null && ApexPages.currentPage().getParameters().get('Id') != '') {
+            bookId = ApexPages.currentPage().getParameters().get('Id');
+        }
+        system.debug('BookID' +bookId);
+       
+        
+        
+    }
+    
+    public void CallAPI(){
+        error = false;
+         bookList = [Select id ,Customer_Number__c,Sales_Order_Number__c from Booking__c where id =:bookId ];
+        
+        if(bookList[0].Customer_Number__c == null){
+            //System.enqueueJob(new SAP_CreateCustomerQueable(bookId));
+            SAPIntegrationServices.createCustomerInSAP(bookId);
+             ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Success, Create Customer API is Triggered'));
+            System.debug('Inside IF');
+        }else{ 
+             ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Customer is already created in SAP');
+                ApexPages.addMessage(myMsg);
+                error = true;
+            System.debug('Inside Else');
+            
+        }
+        if(bookList[0].Sales_Order_Number__c == null && bookList[0].Customer_Number__c != null){
+            //System.enqueueJob(new SAP_CreateCustomerQueable(bookId));
+            TEPiSalesOrderSAP.SalesOrder(bookId);
+             ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Success, Sales Order API is Triggered'));
+            System.debug('Inside IF');
+        }else{ 
+             ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Sales Order Number is already created in SAP');
+                ApexPages.addMessage(myMsg);
+                error = true;
+            System.debug('Inside Else');
+            
+        }
+    }
+    
+    public void CallChangeOrderSOAPI(){
+        
+         bookList = [Select id ,Customer_Number__c,Sales_Order_Number__c from Booking__c where id =:bookId ];
+        
+
+        if(bookList[0].Sales_Order_Number__c != null && bookList[0].Customer_Number__c != null){
+            //System.enqueueJob(new SAP_CreateCustomerQueable(bookId));
+            TEPiSalesOrderSAP.SalesOrder(bookId);
+             ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Sales Order Updated Successfully'));
+            System.debug('Inside IF');
+        }else{ 
+             ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Sales Order Number or Customer Number is Missing');
+                ApexPages.addMessage(myMsg);
+                
+            System.debug('Inside Else');
+            
+        }
+    }
+    
+    public void CallChangeOrderApplicantAPI(){
+        
+         bookList = [Select id ,Customer_Number__c,Sales_Order_Number__c,Change_Order_Applicant__c from Booking__c where id =:bookId ];
+        
+
+        if(bookList[0].Customer_Number__c != null && bookList[0].Change_Order_Applicant__c == true){
+            //System.enqueueJob(new SAP_CreateCustomerQueable(bookId));
+            SAPIntegrationServices.createCustomerInSAP(bookId);
+             ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Customer is Updated Successfully'));
+            System.debug('Inside IF');
+        }else{ 
+             ApexPages.Message myMsg = new ApexPages.Message(ApexPages.Severity.Error,'Customer Number is Missing or Change Order Applicant has not been Initiated');
+                ApexPages.addMessage(myMsg);
+                
+            System.debug('Inside Else');
+            
+        }
+    }
+    
+    public PageReference Home() {
+        PageReference newpage = new Pagereference('/lightning/r/Opportunity/'+bookId+'/view');
+        return newpage;
+    }
+
+}
