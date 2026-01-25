@@ -1,0 +1,65 @@
+public class sendCustPaymentToSAPController {
+    public String did {get;set;} 
+    public List<Demand__c> dlist;
+    Public String msg{get;set;}
+    Public Boolean error{get;set;}
+    public Set<id> setid;
+    public sendCustPaymentToSAPController(){
+        setid = new Set<id>();
+        
+        if(ApexPages.currentPage().getParameters().get('Id') != null && ApexPages.currentPage().getParameters().get('Id') != '') {
+            did = ApexPages.currentPage().getParameters().get('Id');
+        }
+        system.debug('did' +did);
+    }
+    
+    public void CallAPI(){
+        error = false;
+        dlist = [Select id ,SAP_Invoice_No__c,Debit_Type__c,Approval_Status_Debit_Note__c,Customization_Demand__c,Accounting_Document_Number__c,Bank_Masters__c
+                 from Demand__c where id =:did ];
+        System.debug('dlist::'+dlist);
+        Demand__c rec = new Demand__c();
+        rec = [Select id ,SAP_Invoice_No__c from Demand__c where id =:did ];
+        system.debug('rec'+rec);
+        if(rec != null){
+            setid.add(did);
+        }
+        
+        //**************************************************************************************************************************************
+        
+        if(dlist[0].Debit_Type__c != null && dlist[0].Accounting_Document_Number__c == null &&
+           (dlist[0].Debit_Type__c == 'TDS' || dlist[0].Debit_Type__c == 'Pre-EMI Reimbursement' || dlist[0].Debit_Type__c == 'Refund' ||
+            dlist[0].Debit_Type__c == 'Compensation' || dlist[0].Approval_Status_Debit_Note__c == 'Accepted'))
+        {
+            if(dlist[0].Bank_Masters__c != null){
+                system.debug('Inside if');
+                CustomerPayoutAPI.CustomerPayoutMethod(setid);
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Success, Customer Payment API is Triggered'));
+            }
+            else{
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.Error,'ERROR, Use Send to SAP button'));
+            }
+            
+        }
+        else{
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.Error,'Error, Customer Payment API Not Triggered')); 
+        }
+    }
+    
+    
+    public PageReference Home() {
+        PageReference newpage = new Pagereference('/lightning/r/Opportunity/'+did+'/view');
+        return newpage;
+    }
+    
+    public  void abcd(){
+        integer i=1;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+    }
+    
+}
