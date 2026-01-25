@@ -1,0 +1,129 @@
+Public class QuotationTagToBooking{
+    public string qId {get;set;}
+    public List<Demand__c> dList;
+    public List<Payment_Milestones__c> pmList;
+    
+    public QuotationTagToBooking(){
+        qId = ApexPages.currentPage().getParameters().get('id');
+        
+    }
+    
+    public void tagBooking(){
+        Set<Id> listId = new Set<Id>();
+        dList = new List<Demand__c>();
+        pmList = new List<Payment_Milestones__c>();
+        List<Quotation__C> qList = [select id,name,Booking__C,Booking__r.Quotation__c,Total_Agreement_Value_Bucket__c,Change_Order_Approval_Status__c,
+                                    Quote_Status__c,TotalAdditionalCarpark__c,TotalEarmarkedCarpark__c from Quotation__c where id=:qId];
+        
+        dList = [Select id,name,Milestone_Name_formula__c,Payment_Milestones__c,Quotation__c from Demand__c where Booking__c =:qList[0].Booking__c ];
+        pmList = [Select id,name,Milestone_Name__c,Quotation__c from Payment_Milestones__c where Quotation__c =:qId ];
+        
+        List<Opportunity> oppList = [Select id,Amount from Opportunity where Booking__c =: qList[0].Booking__C];
+        
+        if(qList[0].Change_Order_Approval_Status__c != 'Approved'){
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR, 'Change Order Approval is Not Approved'));
+            return;
+        }
+        if(qList[0].Quote_Status__c != 'Valid'){
+        //    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL, 'Quote Status is Approval Pending'));
+        //    return;
+        }
+        if(qList != null && !qList.isEmpty()){
+            //Updating old quotation
+            Quotation__c quo = new Quotation__c();
+            quo.Quote_Status__c = 'Expired';
+            quo.Id = qList[0].Booking__r.Quotation__c;
+            update quo;
+            
+            //Updating new Quotation
+            Quotation__c qnew = new Quotation__c();
+            qnew.id = qId;
+            qnew.Quote_Status__c = 'Valid';
+            update qnew;
+            
+            //Query Specification and tag it to this new quotation------16/04/2025
+            //Below code creates copies of Specification_Copy__c and Specification_LineItem_Copy__c records and inserts them as new  records
+            //by populating the quotation lookup field with the new Change Order Quote Id.
+            Specification_Copy__c specCopy;
+            if (qList[0].Booking__r.Quotation__c != null) {
+                
+                // Get all field names dynamically for Specification__c
+                Map<String, Schema.SObjectField> specFieldMap = Schema.getGlobalDescribe().get('Specification__c').getDescribe().fields.getMap();
+                List<String> specFieldNames = new List<String>(specFieldMap.keySet());
+                String quoteId = qList[0].Booking__r.Quotation__c;
+                // Query the Specification__c record dynamically
+                String specSoql = 'SELECT ' + String.join(specFieldNames, ',') + ' FROM Specification_Copy__c WHERE Quotation__c = :quoteId LIMIT 1';
+                List<Specification_Copy__c> specCopyList = Database.query(specSoql);
+                
+                if (!specCopyList.isEmpty()) {
+                    specCopy = specCopyList[0].clone(false,false,false,false);
+                    specCopy.Quotation__c = qId;
+                    insert specCopy;
+                }
+                if(specCopyList.size() > 0){
+                    string specCopyId = specCopyList[0].id;
+                    // Get all field names dynamically for Specification_LineItem__c
+                    Map<String, Schema.SObjectField> lineItemFieldMap = Schema.getGlobalDescribe().get('Specification_LineItem_Copy__c').getDescribe().fields.getMap();
+                    List<String> lineItemFieldNames = new List<String>(lineItemFieldMap.keySet());
+                    
+                    // Query child Specification_LineItem__c records dynamically
+                    String lineItemSoql = 'SELECT ' + String.join(lineItemFieldNames, ',') + ' FROM Specification_LineItem_Copy__c WHERE Specification_Copy__c = :specCopyId';
+                    
+                    // Clone and insert new Specification_LineItem_Copy__c records
+                    List<Specification_LineItem_Copy__c> lineItemCopies = new List<Specification_LineItem_Copy__c>();
+                    List<Specification_LineItem_Copy__c> CopiesToUpdate = new List<Specification_LineItem_Copy__c>();
+                    lineItemCopies = Database.query(lineItemSoql);
+                    
+                    
+                    for (Specification_LineItem_Copy__c lineItem : lineItemCopies) {
+                        Specification_LineItem_Copy__c lineItemCopy = new Specification_LineItem_Copy__c();
+                        lineItemCopy = lineItem.clone(false,false,false,false);
+                        lineItemCopy.Specification_Copy__c = specCopy.id; // Set the new parent Id (Specification_Copy__c)
+                        CopiesToUpdate.add(lineItemCopy);
+                    }
+                    
+                    if (!CopiesToUpdate.isEmpty()) {
+                        insert CopiesToUpdate; // Bulk insert child records
+                    }
+                }
+            }
+            //----------------------------------------------------------16/04/2025
+            
+            Booking__C b = new Booking__c();
+            b.id = qList[0].Booking__C;
+            b.Quotation__c = qId;
+            b.Agreement_Value__c = qList[0].Total_Agreement_Value_Bucket__c;
+            b.No_of_Additional_Parking__c = qList[0].TotalAdditionalCarpark__c;
+            b.No_of_Earmarked_Parking__c = qList[0].TotalEarmarkedCarpark__c;
+            update b;
+            
+            Opportunity opp = new Opportunity();
+            opp.Id = oppList[0].id;
+            opp.Amount = qList[0].Total_Agreement_Value_Bucket__c;
+            update opp;
+            
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.Confirm, ' Quotation tagged successfully.'));
+            List<Demand__c> dListToUpdate = new List<Demand__c>();
+            for(Demand__c d :dList){
+                for(Payment_Milestones__c pm :pmList){
+                    if(d.Milestone_Name_formula__c == pm.Milestone_Name__c){
+                        d.Payment_Milestones__c = pm.id;
+                        d.Quotation__c = pm.Quotation__c;
+                        dListToUpdate.add(d);
+                        break; // Exit inner loop after the first match 28/10/2024
+                    }
+                }
+            }
+            if(dListToUpdate.size() > 0){
+                update dListToUpdate;
+            }
+        }else{
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL, ' Some Internal Error.'));
+        }
+    }
+    public PageReference Home() {  
+      
+        return new PageReference('/'+qId); 
+          
+    }
+}
