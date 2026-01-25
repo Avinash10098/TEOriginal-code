@@ -1,0 +1,13 @@
+trigger trgCreateCustomerSAP on Booking__c (after insert) {
+   Public Id Book;
+    
+    for(Booking__c bk : Trigger.new){
+      Book = bk.id;
+        
+    }
+    if(String.isNotBlank(Book)){
+        
+    System.enqueueJob(new SAP_CreateCustomerQueable(Book)); 
+    }
+         
+}
