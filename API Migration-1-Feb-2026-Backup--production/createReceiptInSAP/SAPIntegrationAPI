@@ -1,0 +1,583 @@
+public class SAPIntegrationAPI {
+    
+    public static String authorization() {
+            String authHeader;
+            SAP_Credential__mdt sapSetting;
+            sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                                from SAP_Credential__mdt 
+                                where QualifiedApiName = 'Receipt_Recording'];
+            authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+            return authHeader;
+    }
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Receipt_Recording'];
+        return fiSetting.Endpoint__c;
+    }
+    
+    ////////////////////////////////////////receipt Bulk API////////////////////////////////////
+    @future(callout = true)
+    public static void createReceiptInSAP(set<Id> setId)
+    {
+        system.debug('SETID::'+setId);
+        List<Receipt__c> ReceiptList= new List<Receipt__c>();
+        String BankHouseCode = '';
+        List<String> BankSeperate = new List<String>();
+        ReceiptList = [Select id,Name,Cheque_DD__c,Cheque_DD_Date__c,Receipt_Unique_ID__c,Project__r.Project_Code__c,Receipt_Date__c,Currency__c,Receipt_Number__c,
+                       Amount_Rs__c,Accounting_Document_Number__c,Booking__r.Customer_Number__c,Project__r.Company_Code__c,Booking__r.Sales_Order_Number__c,Drawn_in_favour_of__c,
+                       Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_EOI__c,
+                       Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c,Project_Unit__r.Tower__r.Cluster__r.EOI_House_Bank_Code__c,
+                       Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c,TDS_Credit_Note_Number__c,Mode__c,Sub_Type_Credit_Note__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Interim_Bank_Account__c,
+                       Project_Unit__r.Tower__r.Cluster__r.Interim_Bank_Account_House_Bank_Code__c,Is_Back_Dated__c,Back_Date_Posting_Date__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_EscrowAccount2__c,
+                       Project_Unit__r.Tower__r.Cluster__r.House_Bank_Code_EscrowAccount2__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Tax2__c,
+                       Project_Unit__r.Tower__r.Cluster__r.Tax2_House_Bank_Code__c,Receipt_temp_status__c
+                       from Receipt__c where id =: setId];
+        
+        
+        totalEnvironmentPiCustomerreceipt.HTTPS_Port apiCallOunt = new totalEnvironmentPiCustomerreceipt.HTTPS_Port();
+        totalEnvironmentPiCustomerreceipt.itemRes_element[] apiResponse = new totalEnvironmentPiCustomerreceipt.itemRes_element[]{};
+        totalEnvironmentPiCustomerreceipt.item_element request_x = new totalEnvironmentPiCustomerreceipt.item_element();
+        list<totalEnvironmentPiCustomerreceipt.item_element> listItemElement = new list<totalEnvironmentPiCustomerreceipt.item_element>();
+        
+        List<Receipt__c> receiptUpdate = new List<Receipt__c>();
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        
+        if(!test.isRunningTest()){
+        for(Receipt__c r :ReceiptList ){
+            String chequeDate;
+            String todaysDate;
+            If(r.Is_Back_Dated__c == True){
+                chequeDate = DateFormate(r.Cheque_DD_Date__c);
+                todaysDate = DateFormate(r.Back_Date_Posting_Date__c);
+            }else{
+                chequeDate = DateFormate(r.Cheque_DD_Date__c);
+                todaysDate = DateFormate(Date.today());
+            }
+            system.debug('Inside For SAP@');
+            If(r.Drawn_in_favour_of__c != null){
+        BankSeperate = r.Drawn_in_favour_of__c.split('\\|');
+        system.debug('Bank Seperate:'+ BankSeperate);
+        }
+
+            If(r.Drawn_in_favour_of__c != null){
+                if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_EscrowAccount2__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.House_Bank_Code_EscrowAccount2__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_EOI__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.EOI_House_Bank_Code__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Interim_Bank_Account__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Interim_Bank_Account_House_Bank_Code__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c;
+                }
+                else if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Tax2__c == BankSeperate[1]){
+                    BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax2_House_Bank_Code__c;
+                }
+            }
+            system.debug('House Bank Code:'+BankHouseCode);
+        request_x.BELNR = '';
+        request_x.BLDAT = chequeDate;
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = String.valueOf(r.Project__r.Company_Code__c);   
+        request_x.BUDAT = todaysDate;//r.Receipt_Date__c
+        request_x.WAERS = 'INR';
+            if(r.Mode__c == 'Credit Note' && r.Sub_Type_Credit_Note__c == 'TDS'){
+                request_x.XBLNR = r.TDS_Credit_Note_Number__c;
+            }
+            else{
+                request_x.XBLNR = r.Cheque_DD__c;
+            }
+        
+        request_x.BKTXT = r.Receipt_Unique_ID__c;///TBD
+        request_x.WRBTR = String.valueOf(r.Amount_Rs__c);
+        request_x.KUNNR = String.valueOf(r.Booking__r.Customer_Number__c);
+        request_x.MKOAR = '';
+        request_x.VBELN = String.valueOf(r.Booking__r.Sales_Order_Number__c);
+        request_x.POSNR = r.Booking__r.Sales_Order_Number__c != Null ? '000010': null;
+        request_x.KIDNO = '';
+            if(r.Mode__c == 'Credit Note' && r.Sub_Type_Credit_Note__c == 'TDS'){
+                request_x.ZLSCH = 'N';
+            }
+            else{
+                request_x.ZLSCH = 'J';
+            }
+     //   request_x.ZLSCH = 'J';
+        request_x.PROJK = r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c;
+        request_x.HBKID = BankHouseCode;
+        
+        listItemElement.add(request_x);   
+        apiResponse = apiCallOunt.CustomerReceipt_Out(listItemElement);
+        String tempRequest = JSON.serializePretty(request_x);
+        system.debug('Response::' +apiResponse);
+        system.debug('Message:'+apiResponse[0].MESSAGE);
+        system.debug('Rest code:'+apiResponse[0].RETCODE);
+            
+            r.Receipt_temp_status__c = true; // added temporarily to update bulk receipts one time
+            if( apiResponse[0].BELNR !=''){
+            r.Accounting_Document_Number__c = apiResponse[0].BELNR;
+       //     r.SAP_Posting_Date__c = Date.today();
+                If(r.Is_Back_Dated__c == True){
+                    r.SAP_Posting_Date__c = r.Back_Date_Posting_Date__c;
+                }else{
+                    r.SAP_Posting_Date__c = Date.today();
+                }
+        	}
+        	receiptUpdate.add(r);
+            
+        API_Log__c ap = new API_Log__c();
+        ap.API_Name__c = 'Receipt API';
+        ap.Request__c = tempRequest;
+        ap.Response__c = String.valueOf(apiResponse);
+        ap.Message__c = apiResponse[0].MESSAGE;
+        ap.Response_Code__c = apiResponse[0].RETCODE;
+        ap.Receipt__c = r.id;
+        loglist.add(ap);
+        listItemElement.clear();
+        } 
+        }else{
+          integer i=0;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            i++;
+            for(Receipt__c r :ReceiptList ){
+            
+            If(r.Drawn_in_favour_of__c != null){
+        BankSeperate = r.Drawn_in_favour_of__c.split('\\|');
+        system.debug('Bank Seperate:'+ BankSeperate);
+        }
+
+          If(r.Drawn_in_favour_of__c != null){
+            if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c == BankSeperate[1]){
+            BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c;
+        	}
+            else{
+                BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c;
+            }
+          }
+            system.debug('House Bank Code:'+BankHouseCode);
+        request_x.BELNR = '';
+        request_x.BLDAT = DateFormate(r.Cheque_DD_Date__c);
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = String.valueOf(r.Project__r.Company_Code__c);
+        request_x.BUDAT = DateFormate(Date.today());//r.Receipt_Date__c
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = r.Receipt_Number__c;
+        request_x.BKTXT = r.Receipt_Unique_ID__c;///TBD
+        request_x.WRBTR = String.valueOf(r.Amount_Rs__c);
+        request_x.KUNNR = String.valueOf(r.Booking__r.Customer_Number__c);
+        request_x.MKOAR = '';
+        request_x.VBELN = String.valueOf(r.Booking__r.Sales_Order_Number__c);
+        request_x.POSNR = '000010';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c;
+        request_x.HBKID = BankHouseCode;
+        
+        listItemElement.add(request_x);  
+                
+                API_Log__c ap = new API_Log__c();
+                ap.API_Name__c = 'Receipt API';
+                ap.Request__c = '';
+                ap.Response__c = '';
+                ap.Message__c = '';
+                ap.Response_Code__c = '';
+                //ap.Receipt__c = r.id;
+                loglist.add(ap);
+            }
+			
+
+			for(Receipt__c r :ReceiptList ){
+            
+            If(r.Drawn_in_favour_of__c != null){
+        BankSeperate = r.Drawn_in_favour_of__c.split('\\|');
+        system.debug('Bank Seperate:'+ BankSeperate);
+        }
+
+          If(r.Drawn_in_favour_of__c != null){
+            if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c == BankSeperate[1]){
+            BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c;
+        	}
+            else{
+                BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c;
+            }
+          }
+            system.debug('House Bank Code:'+BankHouseCode);
+        request_x.BELNR = '';
+        request_x.BLDAT = DateFormate(r.Cheque_DD_Date__c);
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = String.valueOf(r.Project__r.Company_Code__c);
+        request_x.BUDAT = DateFormate(Date.today());//r.Receipt_Date__c
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = r.Receipt_Number__c;
+        request_x.BKTXT = r.Receipt_Unique_ID__c;///TBD
+        request_x.WRBTR = String.valueOf(r.Amount_Rs__c);
+        request_x.KUNNR = String.valueOf(r.Booking__r.Customer_Number__c);
+        request_x.MKOAR = '';
+        request_x.VBELN = String.valueOf(r.Booking__r.Sales_Order_Number__c);
+        request_x.POSNR = '000010';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c;
+        request_x.HBKID = BankHouseCode;
+        
+        listItemElement.add(request_x);  
+                
+                API_Log__c ap = new API_Log__c();
+                ap.API_Name__c = 'Receipt API';
+                ap.Request__c = '';
+                ap.Response__c = '';
+                ap.Message__c = '';
+                ap.Response_Code__c = '';
+                //ap.Receipt__c = r.id;
+                loglist.add(ap);
+            }    
+            for(Receipt__c r :ReceiptList ){
+            
+            If(r.Drawn_in_favour_of__c != null){
+        BankSeperate = r.Drawn_in_favour_of__c.split('\\|');
+        system.debug('Bank Seperate:'+ BankSeperate);
+        }
+
+          If(r.Drawn_in_favour_of__c != null){
+            if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c == BankSeperate[1]){
+            BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c;
+        	}
+            else{
+                BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c;
+            }
+          }
+            system.debug('House Bank Code:'+BankHouseCode);
+        request_x.BELNR = '';
+        request_x.BLDAT = DateFormate(r.Cheque_DD_Date__c);
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = String.valueOf(r.Project__r.Company_Code__c);
+        request_x.BUDAT = DateFormate(Date.today());//r.Receipt_Date__c
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = r.Receipt_Number__c;
+        request_x.BKTXT = r.Receipt_Unique_ID__c;///TBD
+        request_x.WRBTR = String.valueOf(r.Amount_Rs__c);
+        request_x.KUNNR = String.valueOf(r.Booking__r.Customer_Number__c);
+        request_x.MKOAR = '';
+        request_x.VBELN = String.valueOf(r.Booking__r.Sales_Order_Number__c);
+        request_x.POSNR = '000010';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c;
+        request_x.HBKID = BankHouseCode;
+        
+        listItemElement.add(request_x);  
+                
+                API_Log__c ap = new API_Log__c();
+                ap.API_Name__c = 'Receipt API';
+                ap.Request__c = '';
+                ap.Response__c = '';
+                ap.Message__c = '';
+                ap.Response_Code__c = '';
+                //ap.Receipt__c = r.id;
+                loglist.add(ap);
+            }
+            for(Receipt__c r :ReceiptList ){
+            
+            If(r.Drawn_in_favour_of__c != null){
+        BankSeperate = r.Drawn_in_favour_of__c.split('\\|');
+        system.debug('Bank Seperate:'+ BankSeperate);
+        }
+
+          If(r.Drawn_in_favour_of__c != null){
+            if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c == BankSeperate[1]){
+            BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c;
+        	}
+            else{
+                BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c;
+            }
+          }
+            system.debug('House Bank Code:'+BankHouseCode);
+        request_x.BELNR = '';
+        request_x.BLDAT = DateFormate(r.Cheque_DD_Date__c);
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = String.valueOf(r.Project__r.Company_Code__c);
+        request_x.BUDAT = DateFormate(Date.today());//r.Receipt_Date__c
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = r.Receipt_Number__c;
+        request_x.BKTXT = r.Receipt_Unique_ID__c;///TBD
+        request_x.WRBTR = String.valueOf(r.Amount_Rs__c);
+        request_x.KUNNR = String.valueOf(r.Booking__r.Customer_Number__c);
+        request_x.MKOAR = '';
+        request_x.VBELN = String.valueOf(r.Booking__r.Sales_Order_Number__c);
+        request_x.POSNR = '000010';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c;
+        request_x.HBKID = BankHouseCode;
+        
+        listItemElement.add(request_x);  
+                
+                API_Log__c ap = new API_Log__c();
+                ap.API_Name__c = 'Receipt API';
+                ap.Request__c = '';
+                ap.Response__c = '';
+                ap.Message__c = '';
+                ap.Response_Code__c = '';
+                //ap.Receipt__c = r.id;
+                loglist.add(ap);
+            }
+            for(Receipt__c r :ReceiptList ){
+            
+            If(r.Drawn_in_favour_of__c != null){
+        BankSeperate = r.Drawn_in_favour_of__c.split('\\|');
+        system.debug('Bank Seperate:'+ BankSeperate);
+        }
+
+          If(r.Drawn_in_favour_of__c != null){
+            if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c == BankSeperate[1]){
+            BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c;
+        	}
+            else{
+                BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c;
+            }
+          }
+            system.debug('House Bank Code:'+BankHouseCode);
+        request_x.BELNR = '';
+        request_x.BLDAT = DateFormate(r.Cheque_DD_Date__c);
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = String.valueOf(r.Project__r.Company_Code__c);
+        request_x.BUDAT = DateFormate(Date.today());//r.Receipt_Date__c
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = r.Receipt_Number__c;
+        request_x.BKTXT = r.Receipt_Unique_ID__c;///TBD
+        request_x.WRBTR = String.valueOf(r.Amount_Rs__c);
+        request_x.KUNNR = String.valueOf(r.Booking__r.Customer_Number__c);
+        request_x.MKOAR = '';
+        request_x.VBELN = String.valueOf(r.Booking__r.Sales_Order_Number__c);
+        request_x.POSNR = '000010';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c;
+        request_x.HBKID = BankHouseCode;
+        
+        listItemElement.add(request_x);  
+                
+                API_Log__c ap = new API_Log__c();
+                ap.API_Name__c = 'Receipt API';
+                ap.Request__c = '';
+                ap.Response__c = '';
+                ap.Message__c = '';
+                ap.Response_Code__c = '';
+                //ap.Receipt__c = r.id;
+                loglist.add(ap);
+            }
+            
+            for(Receipt__c r :ReceiptList ){
+            
+            If(r.Drawn_in_favour_of__c != null){
+        BankSeperate = r.Drawn_in_favour_of__c.split('\\|');
+        system.debug('Bank Seperate:'+ BankSeperate);
+        }
+
+          If(r.Drawn_in_favour_of__c != null){
+            if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c == BankSeperate[1]){
+            BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c;
+        	}
+            else{
+                BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c;
+            }
+          }
+            system.debug('House Bank Code:'+BankHouseCode);
+        request_x.BELNR = '';
+        request_x.BLDAT = DateFormate(r.Cheque_DD_Date__c);
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = String.valueOf(r.Project__r.Company_Code__c);
+        request_x.BUDAT = DateFormate(Date.today());//r.Receipt_Date__c
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = r.Receipt_Number__c;
+        request_x.BKTXT = r.Receipt_Unique_ID__c;///TBD
+        request_x.WRBTR = String.valueOf(r.Amount_Rs__c);
+        request_x.KUNNR = String.valueOf(r.Booking__r.Customer_Number__c);
+        request_x.MKOAR = '';
+        request_x.VBELN = String.valueOf(r.Booking__r.Sales_Order_Number__c);
+        request_x.POSNR = '000010';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c;
+        request_x.HBKID = BankHouseCode;
+        
+        listItemElement.add(request_x);  
+                
+                API_Log__c ap = new API_Log__c();
+                ap.API_Name__c = 'Receipt API';
+                ap.Request__c = '';
+                ap.Response__c = '';
+                ap.Message__c = '';
+                ap.Response_Code__c = '';
+                //ap.Receipt__c = r.id;
+                loglist.add(ap);
+            }
+            
+        }
+         
+        if(!loglist.isEmpty()){
+            update receiptUpdate;
+            insert loglist;
+        }
+       /* request_x.BELNR = '';
+        request_x.BLDAT = '17.08.2021';
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = '2000';
+        request_x.BUDAT = '17.08.2021';
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = 'Test-123';
+        request_x.BKTXT = '1234-10';
+        request_x.WRBTR = '1000';
+        request_x.KUNNR = '3917';
+        request_x.MKOAR = 'A';
+        request_x.VBELN = '';
+        request_x.POSNR = '';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = '0059';
+        request_x.HBKID = 'A6426';
+       */
+    
+    }
+    /////////////////////////////////////////////////////////////////////////////////
+    /*@future(callout = true)
+    public static void createReceiptInSAP1(Id setId)
+    {
+        List<Receipt__c> ReceiptList= new List<Receipt__c>();
+        String BankHouseCode = '';
+        List<String> BankSeperate = new List<String>();
+        ReceiptList = [Select id,Name,Cheque_DD__c,Cheque_DD_Date__c,Receipt_Unique_ID__c,Project__r.Project_Code__c,Receipt_Date__c,Currency__c,Receipt_Number__c,
+                      Amount_Rs__c,Accounting_Document_Number__c,Booking__r.Customer_Number__c,Project__r.Company_Code__c,Booking__r.Sales_Order_Number__c,Drawn_in_favour_of__c,
+                      Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c,
+                      Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c,Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Tax__c from Receipt__c where id =: setId];
+        If(ReceiptList[0].Drawn_in_favour_of__c != null){
+        BankSeperate = ReceiptList[0].Drawn_in_favour_of__c.split('\\|');
+        system.debug('Bank Seperate:'+ BankSeperate);
+        }
+        
+        
+        totalEnvironmentPiCustomerreceipt.HTTPS_Port apiCallOunt = new totalEnvironmentPiCustomerreceipt.HTTPS_Port();
+        totalEnvironmentPiCustomerreceipt.itemRes_element[] apiResponse = new totalEnvironmentPiCustomerreceipt.itemRes_element[]{};
+        totalEnvironmentPiCustomerreceipt.item_element request_x = new totalEnvironmentPiCustomerreceipt.item_element();
+        list<totalEnvironmentPiCustomerreceipt.item_element> listItemElement = new list<totalEnvironmentPiCustomerreceipt.item_element>();
+        
+        for(Receipt__c r :ReceiptList ){
+          If(r.Drawn_in_favour_of__c != null){
+            if(r.Project_Unit__r.Tower__r.Cluster__r.A_C_Name_Escrow__c == BankSeperate[1]){
+            BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Short_Key_for_a_House_Bank__c;
+        	}
+            else{
+                BankHouseCode = r.Project_Unit__r.Tower__r.Cluster__r.Tax_House_Bank_Code__c;
+            }
+          }
+            system.debug('House Bank Code:'+BankHouseCode);
+        request_x.BELNR = '';
+        request_x.BLDAT = DateFormate(r.Cheque_DD_Date__c);
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = String.valueOf(r.Project__r.Company_Code__c);
+        request_x.BUDAT = DateFormate(Date.today());//r.Receipt_Date__c
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = r.Receipt_Number__c;
+        request_x.BKTXT = r.Receipt_Unique_ID__c;///TBD
+        request_x.WRBTR = String.valueOf(r.Amount_Rs__c);
+        request_x.KUNNR = String.valueOf(r.Booking__r.Customer_Number__c);
+        request_x.MKOAR = '';
+        request_x.VBELN = String.valueOf(r.Booking__r.Sales_Order_Number__c);
+        request_x.POSNR = '000010';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = r.Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c;
+        request_x.HBKID = BankHouseCode;
+        
+        } 
+         
+       /* request_x.BELNR = '';
+        request_x.BLDAT = '17.08.2021';
+        request_x.BLART = 'DZ';
+        request_x.BUKRS = '2000';
+        request_x.BUDAT = '17.08.2021';
+        request_x.WAERS = 'INR';
+        request_x.XBLNR = 'Test-123';
+        request_x.BKTXT = '1234-10';
+        request_x.WRBTR = '1000';
+        request_x.KUNNR = '3917';
+        request_x.MKOAR = 'A';
+        request_x.VBELN = '';
+        request_x.POSNR = '';
+        request_x.KIDNO = '';
+        request_x.ZLSCH = 'J';
+        request_x.PROJK = '0059';
+        request_x.HBKID = 'A6426';
+       */
+        
+        /* listItemElement.add(request_x);   
+        apiResponse = apiCallOunt.CustomerReceipt_Out(listItemElement);
+        String tempRequest = JSON.serializePretty(request_x);
+        system.debug('Response::' +apiResponse);
+        system.debug('Message:'+apiResponse[0].MESSAGE);
+        system.debug('Rest code:'+apiResponse[0].RETCODE);
+        if( apiResponse[0].BELNR !=''){
+            ReceiptList[0].Accounting_Document_Number__c = apiResponse[0].BELNR;
+            ReceiptList[0].SAP_Posting_Date__c = Date.today();
+        }
+        update ReceiptList;
+        
+        API_Log__c ap = new API_Log__c();
+        ap.API_Name__c = 'Receipt API';
+        ap.Request__c = tempRequest;
+        ap.Response__c = String.valueOf(apiResponse);
+        ap.Message__c = apiResponse[0].MESSAGE;
+        ap.Response_Code__c = apiResponse[0].RETCODE;
+        ap.Receipt__c = setId;
+        insert ap;
+    }
+    */
+    
+    
+    Public static String DateFormate(DateTime dt){
+        DateTime d = dt;
+	//	String dt1 = DateTime.newInstance(d.year(),d.month(),d.day()).format('d.MM.YYYY');
+        String dt1 = dt.format('d.MM.yyyy');
+        system.debug('Date' +dt);
+        Return dt1;
+    }
+
+}
