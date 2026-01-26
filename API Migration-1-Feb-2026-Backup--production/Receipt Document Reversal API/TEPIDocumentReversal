@@ -1,0 +1,452 @@
+public class TEPIDocumentReversal {
+    @future(callout=true)
+    public static void docreversal(set<Id> rId){ 
+        
+        List<Receipt__c> ReceiptList= new List<Receipt__c>();
+        ReceiptList = [Select id,Name
+                       ,Accounting_Document_Number__c,Booking__r.Customer_Number__c,Project__r.Company_Code__c,Booking__r.Sales_Order_Number__c,
+                      SAP_Posting_Date__c,Document_Reversal_Number__c,Receipt_Unique_ID__c,Is_Reversal_Back_Dated__c,Back_Dated_Reversal__c from Receipt__c where id =: rId];
+        system.debug('receiptList' +ReceiptList);
+        System.debug('sap posting data' +ReceiptList[0].SAP_Posting_Date__c);
+        String currentFiscalYear = [SELECT FiscalYearSettings.Name FROM Period WHERE Type = 'Year' AND StartDate <= TODAY AND EndDate >= TODAY].FiscalYearSettings.Name;
+        Datetime d;
+        if(ReceiptList[0].Is_Reversal_Back_Dated__c == True){
+            d = ReceiptList[0].Back_Dated_Reversal__c;
+        }else{
+            d = System.today();
+        }
+        
+        String dt = DateTime.newInstance(d.year(),d.month(),d.day()).format('d.MM.YYYY');
+        string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:doc="http://total-environment/PI/DocumentReversalPost"> '+
+            ' <soapenv:Header/> <soapenv:Body> <doc:DocRevPostReq> <!--Zero or more repetitions:--> <item> <!--Optional:--> <BELNR>'+ ReceiptList[0].Accounting_Document_Number__c +'</BELNR> <!--Optional:--> <BUKRS>'+ ReceiptList[0].Project__r.Company_Code__c +'</BUKRS> <!--Optional:--> '+
+            ' <GJAHR>'+currentFiscalYear+'</GJAHR> <!--Optional:--> <STGRD>02</STGRD> <!--Optional:--> <BUDAT>'+ dt +'</BUDAT> <!--Optional:--> <MONAT></MONAT> '+
+            ' <!--Optional:--> <BKTXT></BKTXT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <XREF1_HD>'+ ReceiptList[0].Receipt_Unique_ID__c +'</XREF1_HD> <!--Optional:--> '+
+            ' <XREF2_HD></XREF2_HD> </item> </doc:DocRevPostReq> </soapenv:Body> </soapenv:Envelope> ';
+        
+        //string body;
+        String eventEndPoint = '';
+        HttpRequest req = new HttpRequest();
+        //13.228.235.198 Sandbox 13.228.217.109 Production
+        //req.setEndpoint('http://13.228.235.198:50000/XISOAPAdapter/MessageServlet?senderParty=&senderService=BS_FUGUE_QAS&receiverParty=&receiverService=&interface=DocRevPost_Out&interfaceNamespace=http://total-environment/PI/DocumentReversalPost');
+        req.setEndpoint(endpoint());
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        //Blob headerValue = Blob.valueOf('body');
+        //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+        req.setHeader('Authorization', authorization());
+        req.setHeader('Content-Type', 'application/xml');
+        req.setBody(body);
+        Http http = new Http();
+        HTTPResponse res = new HTTPResponse();
+        
+        
+        if(!Test.IsRunningTest()){       
+            res = http.send(req); 
+          system.debug('res::'+res.getBody());  
+            
+            
+            /////////////////////////////////////////////////////
+            String docreversalno;
+            String Res_Code;
+            String Message;
+            
+            XmlStreamReader reader = new XmlStreamReader(res.getBody());
+            if (res.getStatusCode() == 200){
+                //Proceed only if it is Success
+                while (reader.hasNext()){
+                    if (XmlTag.START_ELEMENT == reader.getEventType()){
+                        if ('BELNR'.equals(reader.getLocalName())){
+                            docreversalno = getValueFromTag(reader);
+                        }
+                        if ('RETCODE'.equals(reader.getLocalName())){
+                            Res_Code = getValueFromTag(reader);
+                        }
+                        if ('MESSAGE'.equals(reader.getLocalName())){
+                            Message = getValueFromTag(reader);
+                        }
+                        
+                    }
+                    reader.next();
+                }
+            }  
+            API_Log__c api = new API_Log__c();
+            api.Message__c = Message;
+            api.Request__c = req.getBody();
+            api.Response__c = res.getBody();
+            api.Response_Code__c = Res_Code;
+            api.API_Name__c = 'Receipt Document Reversal API';
+            api.Receipt__c = ReceiptList[0].id;
+            insert api;
+            
+            if(docreversalno != null){
+                ReceiptList[0].Document_Reversal_Number__c = docreversalno;
+                update ReceiptList;
+            }
+        }else{
+            
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            
+        }
+        
+    }
+    
+    @future(callout=true)
+    public static void docreversalDemand(Id dId){ 
+        
+        List<Demand__c> DemandList= new List<Demand__c>();
+        DemandList = [Select id,Name
+                       ,Accounting_Document_Number__c,Booking__r.Project__r.Company_Code__c,SAP_Posting_Date__c,Demand_Unique_ID__c,
+                      Document_Reversal_Number__c,Is_Reversal_Back_Dated__c,Back_Dated_Reversal__c from Demand__c where id =: dId];
+        system.debug('DemandList' +DemandList);
+        System.debug('sap posting data' +DemandList[0].SAP_Posting_Date__c);
+        String currentFiscalYear = [SELECT FiscalYearSettings.Name FROM Period WHERE Type = 'Year' AND StartDate <= TODAY AND EndDate >= TODAY].FiscalYearSettings.Name;
+       // Datetime d = DemandList[0].SAP_Posting_Date__c;
+        Datetime d ;
+        if(DemandList[0].Is_Reversal_Back_Dated__c == True){
+            d = DemandList[0].Back_Dated_Reversal__c;
+        }else{
+            d = System.today();
+        }
+        
+        String dt = DateTime.newInstance(d.year(),d.month(),d.day()).format('d.MM.YYYY');
+        string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:doc="http://total-environment/PI/DocumentReversalPost"> '+
+            ' <soapenv:Header/> <soapenv:Body> <doc:DocRevPostReq> <!--Zero or more repetitions:--> <item> <!--Optional:--> <BELNR>'+ DemandList[0].Accounting_Document_Number__c +'</BELNR> <!--Optional:--> <BUKRS>'+ DemandList[0].Booking__r.Project__r.Company_Code__c +'</BUKRS> <!--Optional:--> '+
+            ' <GJAHR>'+currentFiscalYear+'</GJAHR> <!--Optional:--> <STGRD>02</STGRD> <!--Optional:--> <BUDAT>'+ dt +'</BUDAT> <!--Optional:--> <MONAT></MONAT> '+
+            ' <!--Optional:--> <BKTXT></BKTXT> <!--Optional:--> <XBLNR></XBLNR> <!--Optional:--> <XREF1_HD>'+ DemandList[0].Demand_Unique_ID__c +'</XREF1_HD> <!--Optional:--> '+
+            ' <XREF2_HD></XREF2_HD> </item> </doc:DocRevPostReq> </soapenv:Body> </soapenv:Envelope> ';
+        
+        //string body;
+        String eventEndPoint = '';
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(endpoint());
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        //Blob headerValue = Blob.valueOf('body');
+        //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+        req.setHeader('Authorization', authorization());
+        req.setHeader('Content-Type', 'application/xml');
+        req.setBody(body);
+        Http http = new Http();
+        HTTPResponse res = new HTTPResponse();
+        
+        
+        if(!Test.IsRunningTest()){       
+            res = http.send(req); 
+          system.debug('res::'+res.getBody());  
+            
+            
+            /////////////////////////////////////////////////////
+            String docreversalno;
+            String Res_Code;
+            String Message;
+            
+            XmlStreamReader reader = new XmlStreamReader(res.getBody());
+            if (res.getStatusCode() == 200){
+                //Proceed only if it is Success
+                while (reader.hasNext()){
+                    if (XmlTag.START_ELEMENT == reader.getEventType()){
+                        if ('BELNR'.equals(reader.getLocalName())){
+                            docreversalno = getValueFromTag(reader);
+                        }
+                        if ('RETCODE'.equals(reader.getLocalName())){
+                            Res_Code = getValueFromTag(reader);
+                        }
+                        if ('MESSAGE'.equals(reader.getLocalName())){
+                            Message = getValueFromTag(reader);
+                        }
+                        
+                    }
+                    reader.next();
+                }
+            }  
+            API_Log__c api = new API_Log__c();
+            api.Message__c = Message;
+            api.Request__c = req.getBody();
+            api.Response__c = res.getBody();
+            api.Response_Code__c = Res_Code;
+            api.API_Name__c = 'Demand Document Reversal API';
+            api.Demand__c = DemandList[0].id;
+            insert api;
+            
+            if(docreversalno != null){
+                DemandList[0].Document_Reversal_Number__c = docreversalno;
+                update DemandList;
+            }
+        }else{
+            
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            res.setBody('Dummy');
+            
+        }
+        
+    }
+    
+    private static String getValueFromTag(XMLStreamReader reader) {
+        String DataValue;
+        while (reader.hasNext()) {
+            if (XmlTag.END_ELEMENT == reader.getEventType()) {
+                break;
+            } else if (XmlTag.CHARACTERS == reader.getEventType() || XmlTag.CDATA == reader.getEventType()) {
+                DataValue = reader.getText();
+            }
+            reader.next();
+        }
+        return DataValue;
+    }
+    
+    public static String authorization() {
+            String authHeader;
+            SAP_Credential__mdt sapSetting;
+            sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                                from SAP_Credential__mdt 
+                                where QualifiedApiName = 'Document_Reversal'];
+            authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+            return authHeader;
+    }
+    
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Document_Reversal'];
+        system.debug('f:::'+fiSetting.Endpoint__c);
+        return fiSetting.Endpoint__c;
+    }
+}
