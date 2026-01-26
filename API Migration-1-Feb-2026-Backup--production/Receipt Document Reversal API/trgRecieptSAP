@@ -1,0 +1,116 @@
+trigger trgRecieptSAP on Receipt__c (before update, after Insert, after Update) {
+    
+    /*if(Trigger.isBefore && Trigger.isUpdate ){
+         for(Receipt__c rc : Trigger.new){
+        if(rc.Receipt_Status__c == 'Cleared' && rc.Banking__c == 'Payment Successful' && trigger.oldmap.get(rc.id).Banking__c != 'Payment Successful')
+        { 
+                
+            sendReceipt.sendMails(rc.Id);
+        }  
+      }
+    }*/
+    /////////////////////////////////For Receipt Recording//////////////////////////////
+    if(Trigger.isAfter && Trigger.isUpdate ){
+     set<Id> RId = new set<Id>();
+    for(Receipt__c rc : Trigger.new){
+        system.debug('Receipt Id:'+rc.Name);
+        system.debug('OLDMAP:'+ trigger.oldMap.get(rc.id).Reason_for_rejection_new__c);
+        system.debug('NEWMAP:'+ trigger.newMap.get(rc.id).Reason_for_rejection_new__c);
+              
+        if(trigger.oldMap.get(rc.id).Reason_for_rejection_new__c != trigger.newMap.get(rc.id).Reason_for_rejection_new__c && rc.Reason_for_rejection_new__c == 'Accepted' && rc.Mode__c != 'Credit Note'){
+           RId.add(rc.id); 
+        }
+        system.debug('setId@@'+RId);
+    }
+    
+    if(!RId.isEmpty()){
+        System.enqueueJob(new SAP_CreateReceiptInSAP(RId));
+    }
+    }
+    //////////////////////////////////////For Document Reversal///////////////////////////
+    
+    if(Trigger.isAfter && Trigger.isUpdate ){
+    
+    set<Id> receiptid =new set<Id>();
+     for(Receipt__c rc : Trigger.new){
+         
+        if(trigger.oldMap.get(rc.id).Banking__c != trigger.newMap.get(rc.id).Banking__c && (rc.Banking__c == 'Payment Failed - Insufficient Funds' || rc.Banking__c == 'Payment Failed – Signature mismatch'
+           || rc.Banking__c == 'Payment Failed – Stop payment by client' || rc.Banking__c == 'Payment Failed – Overwriting'
+           || rc.Banking__c == 'Payment Failed – Amount Mismatch' || rc.Banking__c == 'PDC' || rc.Banking__c == 'Duplicate Record' || rc.Banking__c == 'Wrong Reference' || rc.Banking__c == 'Others')){
+               if(rc.Document_Reversal_Number__c == Null){
+                   receiptid.add(rc.id); 
+               }
+           
+            system.debug('Payment Status'+rc.Banking__c);
+        }
+        system.debug('receiptid'+receiptid);
+    }
+    
+    if(!receiptid.isEmpty()){
+         System.enqueueJob(new SAP_DocumentReversalQueable(receiptid)); 
+    }
+    }
+    
+    ///////////////////////////////For Credit Note///////////////////////////////
+    if(Trigger.isAfter && Trigger.isUpdate){
+    set<Id> rcid =new set<Id>();
+    set<Id> rcidCrNote =new set<Id>();    
+     for(Receipt__c rc : Trigger.new){
+         if(trigger.oldMap.get(rc.id).Banking__c != trigger.newMap.get(rc.id).Banking__c && rc.Banking__c == 'Payment Successful' && rc.Mode__c == 'Credit Note' 
+            && rc.Sub_Type_Credit_Note__c != 'TDS' &&  rc.Sub_Type_Credit_Note__c != 'Subvention Compensation'){
+             rcid.add(rc.id);
+        }
+        system.debug('receiptid'+rcid);
+     //******************************************************************************************************************   
+         if(trigger.oldMap.get(rc.id).Banking__c != trigger.newMap.get(rc.id).Banking__c && rc.Banking__c == 'Payment Successful' && rc.Mode__c == 'Credit Note' && rc.Sub_Type_Credit_Note__c == 'TDS'){
+             rcidCrNote.add(rc.id);
+        }
+        system.debug('receiptidforCreditNote'+rcidCrNote);
+     //******************************************************************************************************************    
+    }
+    
+    if(!rcid.isEmpty()){
+         System.enqueueJob(new SAP_CreateCreditNoteQueable(rcid));
+    }
+        if(!rcidCrNote.isEmpty()){
+         System.enqueueJob(new SAP_CreateRecInSAPwithCreditNoteNum(rcidCrNote));
+    }
+        
+    }
+    
+    /////////////////////////////Demand Reversal Receipt creation API hit//////////////////////
+   /* if(Trigger.isAfter && Trigger.isInsert){
+    Id rcid;
+     for(Receipt__c rc : Trigger.new){
+         if(rc.Reason_for_rejection_new__c == 'Accepted' ){
+             rcid = rc.id;
+        }
+        system.debug('receiptid'+rcid);
+    }
+    
+    if(rcid != null){
+         SAPIntegrationAPI.createReceiptInSAP(rcid);
+    }
+    }*/
+    
+    /////////////////////////////Transfer API hit//////////////////////
+    
+    if(Trigger.isAfter && Trigger.isUpdate){
+        set<Id> rcid =new set<Id>();
+        if(checkRecursion.isFirstRun()){
+            for(Receipt__c rc : Trigger.new){
+                if(trigger.oldMap.get(rc.id).Is_Transferred__c != trigger.newMap.get(rc.id).Is_Transferred__c && rc.Is_Transferred__c == True){
+                    if((rc.Mode__c == 'Credit Note' && rc.Approval_Status_Credit_Note__c == 'Accepted') || (rc.Mode__c != 'Credit Note' && rc.Receipt_Status__c == 'Cleared')){
+                        rcid.add(rc.id);   
+                    }
+                }
+                system.debug('receiptid'+rcid);
+            }
+            if(!rcid.isEmpty()){
+                //TEPITransferProcess_Req.TransferReceipts(rcid);
+                System.enqueueJob(new SAP_TransferReceipts(rcid));
+            }
+        }
+    }
+    
+}
