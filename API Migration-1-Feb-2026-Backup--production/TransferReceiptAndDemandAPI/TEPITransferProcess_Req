@@ -1,0 +1,470 @@
+public class TEPITransferProcess_Req {
+    @future(callout = true)  
+    public static void TransferReceipts(set<Id> RId){
+        
+        List<Receipt__c> rlist = new List<Receipt__c>();
+        rlist = [Select id,Name,Project__r.Company_Code__c,Sub_Type_Credit_Note__c,Project_Unit__r.Name,Booking__r.Customer_Number__c,Receipt_Date__c,Amount_Rs__c,Receipt_Unique_ID__c,Receipt_Number__c,
+                 Booking__r.Sales_Order_Number__c,Project_Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,Project__r.State_Region_Code__c,Project__r.Business_Place__c,HSN_SAC_Code__c,Cheque_DD_Date__c,
+                 Booking__r.Opportunity__r.Old_Booking__r.Unit__r.Name,Booking__r.Opportunity__r.Old_Booking__r.Cancelled_Unit__c,Booking__r.Opportunity__r.Old_Booking__r.Customer_Number_Str__c,
+                 Booking__r.Opportunity__r.Old_Booking__r.Project__r.Company_Code__c,Booking__r.Customer_Number_Str__c,Cheque_DD__c from Receipt__c where id IN: RId ];
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        List<Receipt__c> receiptUpdate = new List<Receipt__c>();
+        String dat = SAPIntegrationAPI.DateFormate(date.today());
+        
+        if(rlist != null && rlist.size() >0){
+            
+            for(Receipt__c r : rlist){
+                
+                string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tran="http://total-environment/PI/TransferProcess">'+
+                    '<soapenv:Header/><soapenv:Body><tran:TransferProcess_Req><!--Zero or more repetitions:--><item>'+
+                    '<!--Optional:--><BLDAT>'+SAPIntegrationAPI.DateFormate(r.Cheque_DD_Date__c)+'</BLDAT><!--Optional:--><BUKRS>'+r.Project__r.Company_Code__c+'</BUKRS><!--Optional:--><BUDAT>'+dat+'</BUDAT>'+
+                    '<!--Optional:--><BLART>DZ</BLART><!--Optional:--><WAERS>INR</WAERS><!--Optional:--><XBLNR>'+r.Cheque_DD__c+'</XBLNR><!--Optional:--><BKTXT></BKTXT>'+
+                    '<!--Optional:--><KUNNR>'+r.Booking__r.Opportunity__r.Old_Booking__r.Customer_Number_Str__c+'</KUNNR><!--Optional:--><WRBTR>'+r.Amount_Rs__c+'</WRBTR><!--Optional:--><KUNNR1>'+r.Booking__r.Customer_Number_Str__c+'</KUNNR1><!--Optional:-->'+
+                    '<BUKRS1>'+r.Booking__r.Opportunity__r.Old_Booking__r.Project__r.Company_Code__c+'</BUKRS1><!--Optional:--><ZFBDT>'+dat+'</ZFBDT><!--Optional:--><ZLSCH>T</ZLSCH><!--Optional:--><SGTXT>Transfer from unit'+r.Booking__r.Opportunity__r.Old_Booking__r.Cancelled_Unit__c+'('+r.Booking__r.Opportunity__r.Old_Booking__r.Customer_Number_Str__c+') to unit'+r.Project_Unit__r.Name+'('+r.Booking__r.Customer_Number__c+')</SGTXT>'+
+                    '</item></tran:TransferProcess_Req></soapenv:Body></soapenv:Envelope>';
+                
+                String eventEndPoint = '';
+                HttpRequest req = new HttpRequest();
+                //13.228.235.198 Sandbox 13.228.217.109 Production
+                //req.setEndpoint('http://13.228.235.198:50000/XISOAPAdapter/MessageServlet?senderParty=&senderService=BS_FUGUE_QAS&receiverParty=&receiverService=&interface=TransferProcess_Out&interfaceNamespace=http://total-environment/PI/TransferProcess');
+                req.setEndpoint(endpoint());
+                req.setMethod('POST');
+                req.setTimeout(6000);
+                //Blob headerValue = Blob.valueOf('body');
+                //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+                req.setHeader('Authorization', authorization());
+                req.setHeader('Content-Type', 'application/xml');
+                req.setBody(body);
+                Http http = new Http();
+                HTTPResponse res = new HTTPResponse();
+                if(!Test.IsRunningTest()){ 
+                    res = http.send(req);
+                    system.debug('res::'+res.getBody());
+                    ///////////////Response Parsing/////////////////
+                    XmlStreamReader reader = new XmlStreamReader(res.getBody());
+                    system.debug('Reader:'+reader);
+                    String Message = '';
+                    String RETCode = '';
+                    String AccountingDocumentNumber = '';
+                    
+                    if (res.getStatusCode() == 200){
+                        //Proceed only if it is Success
+                        while (reader.hasNext()){
+                            if (XmlTag.START_ELEMENT == reader.getEventType()){
+                                
+                                
+                                if ('BELNR'.equals(reader.getLocalName())){
+                                    AccountingDocumentNumber = getValueFromTag(reader);
+                                    system.debug('BELNR:'+AccountingDocumentNumber);
+                                }else if('BUKRS'.equals(reader.getLocalName())){
+                                    String ReferenceDocumentNumber = getValueFromTag(reader);
+                                    system.debug('BUKRS:'+ReferenceDocumentNumber);
+                                }else if('BELNR1'.equals(reader.getLocalName())){
+                                    String AmountinDocumentCurrency = getValueFromTag(reader);
+                                    system.debug('BELNR1:'+AmountinDocumentCurrency);
+                                }else if('BUKRS1'.equals(reader.getLocalName())){
+                                    String PostingDateintheDocument = getValueFromTag(reader);
+                                    system.debug('BUKRS1:'+PostingDateintheDocument);
+                                }else if('MESSAGE'.equals(reader.getLocalName())){
+                                    Message = getValueFromTag(reader);
+                                    system.debug('MESSAGE:'+Message);
+                                }else if('RETCODE'.equals(reader.getLocalName())){
+                                    RETCode = getValueFromTag(reader);
+                                    system.debug('RETCODE:'+RETCode);
+                                }
+                            }
+                            reader.next();
+                        }
+                        
+                    }
+                    ////////////////////API Log///////////////////////
+                    API_Log__c ap = new API_Log__c();
+                    ap.API_Name__c = 'Transfer API';
+                    ap.Message__c = Message;
+                    ap.Response_Code__c = RETCode;
+                    ap.Request__c = body;
+                    ap.Response__c = res.getBody();
+                    ap.Receipt__c = r.Id;
+                    loglist.add(ap);
+                    ////////////////////////////////////////////////
+                    if(AccountingDocumentNumber !=''){
+                        r.Accounting_Document_Number__c = AccountingDocumentNumber;
+                        r.SAP_Posting_Date__c = Date.today();
+                        receiptUpdate.add(r);
+                    }
+                }else{
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   
+                }
+            }
+        }
+        if(!loglist.isEmpty()){
+            insert loglist;
+            update receiptUpdate;
+        }
+        
+        
+        
+    }
+    
+     @future(callout = true)  
+    public static void TransferInvoice(set<Id> DId){
+        
+        List<Demand__c> dlist = new List<Demand__c>();
+        List<Applicant_Details__c> aplist = new List<Applicant_Details__c>();
+        dlist = [Select id,Name,Booking__r.Project__r.Company_Code__c,Booking__r.Project__r.Business_Place__c,Due_Date__c,Payment_Milestones__r.Milestone_Name__c,Quotation__c,Booking__r.Customer_Number__c,Invoice_Date__c
+                 ,Total_Amount_Demanded__c,Total_Amount_with_Tax_Demanded__c,Total_Tax_Demanded__c,CurrencyIsoCode,Booking__r.Sales_Order_Number__c,Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,
+                 Debit_Demanded__c,Debit_Type__c,Debit_CGST__c,Debit_SGST__c,Demand_Unique_ID__c,Booking__r.Opportunity__r.Old_Booking__r.Customer_Number_Str__c,Booking__r.Opportunity__r.Old_Booking__r.Cancelled_Unit__c,
+                 Booking__r.Opportunity__r.Old_Booking__r.Unit__r.Name,Booking__r.Unit__r.Name,Booking__r.Opportunity__r.Old_Booking__r.Project__r.Company_Code__c,SAP_Invoice_No__c from Demand__c where id IN: DId ];
+        
+        
+        system.debug('Aplist' +aplist);
+        List<Demand__c> dlistupdate = new List<Demand__c>();
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        String dat = SAPIntegrationAPI.DateFormate(date.today());
+        
+        if(dlist != null && dlist.size() >0){
+            
+            for(Demand__c d : dlist){
+                string body = '<?xml version=\'1.0\' ?> <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tran="http://total-environment/PI/TransferProcess">'+
+                    '<soapenv:Header/><soapenv:Body><tran:TransferProcess_Req><!--Zero or more repetitions:--><item>'+
+                    '<!--Optional:--><BLDAT>'+SAPIntegrationAPI.DateFormate(Date.today())+'</BLDAT><!--Optional:--><BUKRS>'+d.Booking__r.Project__r.Company_Code__c+'</BUKRS><!--Optional:--><BUDAT>'+dat+'</BUDAT>'+
+                    '<!--Optional:--><BLART>SA</BLART><!--Optional:--><WAERS>INR</WAERS><!--Optional:--><XBLNR>'+d.SAP_Invoice_No__c+'</XBLNR><!--Optional:--><BKTXT></BKTXT>'+
+                    '<!--Optional:--><KUNNR>'+d.Booking__r.Customer_Number__c+'</KUNNR><!--Optional:--><WRBTR>'+d.Total_Amount_with_Tax_Demanded__c+'</WRBTR><!--Optional:--><KUNNR1>'+d.Booking__r.Opportunity__r.Old_Booking__r.Customer_Number_Str__c+'</KUNNR1><!--Optional:-->'+
+                    '<BUKRS1>'+d.Booking__r.Opportunity__r.Old_Booking__r.Project__r.Company_Code__c+'</BUKRS1><!--Optional:--><ZFBDT>'+dat+'</ZFBDT><!--Optional:--><ZLSCH>T</ZLSCH><!--Optional:--><SGTXT>Transfer from '+d.Booking__r.Opportunity__r.Old_Booking__r.Cancelled_Unit__c+'('+d.Booking__r.Opportunity__r.Old_Booking__r.Customer_Number_Str__c+') to '+d.Booking__r.Unit__r.Name+'('+d.Booking__r.Customer_Number__c+')</SGTXT>'+
+                    '</item></tran:TransferProcess_Req></soapenv:Body></soapenv:Envelope>';
+                
+                String eventEndPoint = '';
+                HttpRequest req = new HttpRequest();
+                req.setEndpoint(endpoint());
+                req.setMethod('POST');
+                req.setTimeout(6000);
+                //Blob headerValue = Blob.valueOf('body');
+                //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+                req.setHeader('Authorization', authorization());
+                req.setHeader('Content-Type', 'application/xml');
+                req.setBody(body);
+                Http http = new Http();
+                HTTPResponse res = new HTTPResponse();
+                if(!Test.IsRunningTest()){ 
+                    res = http.send(req);
+                    system.debug('res::'+res.getBody());
+                    ///////////////Response Parsing/////////////////
+                    XmlStreamReader reader = new XmlStreamReader(res.getBody());
+                    system.debug('Reader:'+reader);
+                    String Message = '';
+                    String RETCode = '';
+                    String AccountingDocumentNumber = '';
+                    
+                    if (res.getStatusCode() == 200){
+                        //Proceed only if it is Success
+                        while (reader.hasNext()){
+                            if (XmlTag.START_ELEMENT == reader.getEventType()){
+                                
+                                
+                                if ('BELNR'.equals(reader.getLocalName())){
+                                    AccountingDocumentNumber = getValueFromTag(reader);
+                                    system.debug('BELNR:'+AccountingDocumentNumber);
+                                }else if('BUKRS'.equals(reader.getLocalName())){
+                                    String ReferenceDocumentNumber = getValueFromTag(reader);
+                                    system.debug('BUKRS:'+ReferenceDocumentNumber);
+                                }else if('BELNR1'.equals(reader.getLocalName())){
+                                    String AmountinDocumentCurrency = getValueFromTag(reader);
+                                    system.debug('BELNR1:'+AmountinDocumentCurrency);
+                                }else if('BUKRS1'.equals(reader.getLocalName())){
+                                    String PostingDateintheDocument = getValueFromTag(reader);
+                                    system.debug('BUKRS1:'+PostingDateintheDocument);
+                                }else if('MESSAGE'.equals(reader.getLocalName())){
+                                    Message = getValueFromTag(reader);
+                                    system.debug('MESSAGE:'+Message);
+                                }else if('RETCODE'.equals(reader.getLocalName())){
+                                    RETCode = getValueFromTag(reader);
+                                    system.debug('RETCODE:'+RETCode);
+                                }
+                            }
+                            reader.next();
+                        }
+                        
+                    }
+                    ////////////////////API Log///////////////////////
+                    API_Log__c ap = new API_Log__c();
+                    ap.API_Name__c = 'Transfer API';
+                    ap.Message__c = Message;
+                    ap.Response_Code__c = RETCode;
+                    ap.Request__c = body;
+                    ap.Response__c = res.getBody();
+                    ap.Demand__c = d.Id;
+                    loglist.add(ap);
+                    ////////////////////////////////////////////////
+                    if(AccountingDocumentNumber !=''){
+                        d.Accounting_Document_Number__c = AccountingDocumentNumber;
+                        d.SAP_Posting_Date__c = Date.today();
+                        dlistupdate.add(d);
+                    }
+                }else{
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   res.setBody('Dummy');
+                   
+                }
+            }
+        }
+        if(!loglist.isEmpty()){
+            insert loglist;
+            update dlistupdate;
+        }
+    }
+    
+    private static String getValueFromTag(XMLStreamReader reader) {
+        String DataValue;
+        while (reader.hasNext()) {
+            if (XmlTag.END_ELEMENT == reader.getEventType()) {
+                break;
+            } else if (XmlTag.CHARACTERS == reader.getEventType() || XmlTag.CDATA == reader.getEventType()) {
+                DataValue = reader.getText();
+            }
+            reader.next();
+        }
+        return DataValue;
+    }
+    public static String authorization() {
+            String authHeader;
+            SAP_Credential__mdt sapSetting;
+            sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                                from SAP_Credential__mdt 
+                                where QualifiedApiName = 'Transfer_Process_API'];
+            authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+            return authHeader;
+    }
+    
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Transfer_Process_API'];
+        system.debug('f:::'+fiSetting.Endpoint__c);
+        return fiSetting.Endpoint__c;
+    }
+    public static String endpointreceipt() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Transfer_Process_API'];
+        system.debug('f:::'+fiSetting.Endpoint__c);
+        return fiSetting.Endpoint__c;
+    }
+    
+}
