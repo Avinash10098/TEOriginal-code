@@ -1,0 +1,482 @@
+//test class : testCustomerPayoutAPI
+public class CustomerPayoutAPI {
+    //sapComDocumentSapRfcFunctions
+    //AsyncTotalEnvironmentPiCustomerPayout
+    //totalEnvironmentPiCustomerPayout
+    //AsyncSapComDocumentSapRfcFunctions
+	@future(callout = true)  
+    public static void CustomerPayoutMethod(set<Id> DId){
+        List<Demand__c> dlist = new List<Demand__c>();
+        List<Bank_Masters__c> bankMasterList = new List<Bank_Masters__c>();
+        
+        List<Applicant_Details__c> aplist = new List<Applicant_Details__c>();
+        dlist = [Select id,Name,Booking__r.Project__r.Company_Code__c,Booking__r.Project__r.Business_Place__c,Due_Date__c,Payment_Milestones__r.Milestone_Name__c,Quotation__c,Booking__r.Customer_Number__c,Invoice_Date__c
+                 ,Total_Amount_Demanded__c,Total_Amount_with_Tax_Demanded__c,Total_Tax_Demanded__c,CurrencyIsoCode,Booking__r.Sales_Order_Number__c,Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,
+                 Debit_Demanded__c,Debit_Type__c,Debit_CGST__c,Debit_SGST__c,Demand_Unique_ID__c,Booking__r.Project_Unit__c,Is_Back_Dated__c,
+                 Back_Date_Posting_Date__c,Remarks__c,Booking__r.Project__r.Project_Code__c,Cheque_Lot_No__c,Debit_Note_Approved_Date__c,Payment_Reference_Number__c,
+                 Bank_Masters__r.Account_ID__c,Bank_Masters__r.House_Bank_ID__c,Posting_Date__c,Payment_Method__c,SAP_Cheque_No__c,
+                 Bank_Masters__r.GL_Code__c,Bank_Masters__r.Company_Code__c,Special_GL_Indicator__c
+                 from Demand__c where id =: Did ];
+        
+        
+        List<Demand__c> dlistupdate = new List<Demand__c>();
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        
+        
+        if(dlist != null && dlist.size() >0){
+            
+        for(Demand__c d : dlist){
+         /*   if(d.Booking__r.Project__r.Company_Code__c == Null && (String.isBlank(d.Bank_Masters__r.House_Bank_ID__c) || String.isBlank(d.Bank_Masters__r.Account_ID__c)
+               || d.Cheque_Lot_No__c == null)){
+                   System.debug('Inside break');
+                   break; 
+               }
+            if(d.Booking__r.Project__r.Company_Code__c != Null && !(String.isBlank(d.Bank_Masters__r.Company_Code__c)) && 
+               (d.Debit_Demanded__c == Null) ){
+                System.debug('Inside break');
+                break; 
+            }
+            if((d.Payment_Method__c == 'RTGS' || d.Payment_Method__c == 'NEFT') && !(String.isBlank(d.Bank_Masters__r.Company_Code__c)) && 
+               ( d.Booking__r.Project__r.Company_Code__c == null) &&  (String.isBlank(d.Bank_Masters__r.GL_Code__c) || d.Booking__r.Customer_Number__c == null) ){
+                   System.debug('Inside break');
+                   break; 
+               }
+            */
+            String Title = '';
+            String Name1 = '';
+            String Name2 = '';
+            String city = '';
+            
+            
+            String chequeLotNo = d.Cheque_Lot_No__c != null ? string.valueof(d.Cheque_Lot_No__c) : '';
+            
+            String fromCompanyCode = d.Bank_Masters__r.Company_Code__c != null ? d.Bank_Masters__r.Company_Code__c : '';
+            String COMP_CODE = d.Booking__r.Project__r.Company_Code__c != null ? string.valueof(d.Booking__r.Project__r.Company_Code__c) : '';
+            if(fromCompanyCode == COMP_CODE){
+                fromCompanyCode = '';
+            }
+            
+            DateTime dtdocDate = DateTime.newInstance(d.Debit_Note_Approved_Date__c.year(), d.Debit_Note_Approved_Date__c.month(), d.Debit_Note_Approved_Date__c.day());
+            string docDate = dtdocDate.format('dd.MM.yyyy');
+            
+            DateTime dtposting = DateTime.newInstance(d.Posting_Date__c.year(), d.Posting_Date__c.month(), d.Posting_Date__c.day());
+            String postingDate = dtposting.format('dd.MM.yyyy'); 
+            
+            String docType = 'DZ';
+            String CurrencyKey = 'INR';
+            String refDocNo = d.Payment_Reference_Number__c != null ? d.Payment_Reference_Number__c : '';
+            String DocHeaderTxt =  d.Remarks__c != null ? d.Remarks__c : '';
+            String custNo = d.Booking__r.Customer_Number__c != null ? String.valueof(d.Booking__r.Customer_Number__c) : '';
+            Decimal CGST = math.abs(d.Debit_CGST__c.setscale(0,RoundingMode.HALF_UP));
+            Decimal SGST = math.abs(d.Debit_SGST__c.setscale(0,RoundingMode.HALF_UP));
+            Decimal Amount = d.Debit_Demanded__c != null ? d.Debit_Demanded__c + CGST + SGST : 0;
+            system.debug('Amount::'+Amount);
+            String businessPlace = d.Booking__r.Project__r.Business_Place__c != null ? d.Booking__r.Project__r.Business_Place__c : '';
+            String GLAcc = d.Bank_Masters__r.GL_Code__c != null ? d.Bank_Masters__r.GL_Code__c : '';
+            String wbsCode = d.Booking__r.Project__r.Project_Code__c != null ? d.Booking__r.Project__r.Project_Code__c : '';
+            String debitTypAndRemarks = d.Debit_Type__c+'-'+d.Remarks__c;
+            String ItemTxt = debitTypAndRemarks.length() >= 50 ?  debitTypAndRemarks.substring(0,49) : debitTypAndRemarks ;
+        //    String payRefNo = d.Payment_Reference_Number__c != null ? d.Payment_Reference_Number__c : '';
+            String payRefNo = '';
+            Title = '';
+            Name1 = '';
+            Name2 = '';
+            city = '';
+            String spclGL = d.Special_GL_Indicator__c != null ? d.Special_GL_Indicator__c.substring(0, 1) : '';
+            String apiId = d.Name;
+            
+            string payMethod = '';
+            String houseBankId = '';
+            String AccountId = '';
+            if(d.Payment_Method__c.contains('Online')){
+                payMethod = '';
+                houseBankId = '';
+                AccountId =  '';
+            }
+            else{
+                payMethod = d.Payment_Method__c != null ? d.Payment_Method__c.substring(0, 1) : '';
+                houseBankId = d.Bank_Masters__r.House_Bank_ID__c != null ? d.Bank_Masters__r.House_Bank_ID__c : '';
+                AccountId = d.Bank_Masters__r.Account_ID__c != null ? d.Bank_Masters__r.Account_ID__c : '';
+            }
+            
+            
+          string body = '';  
+       if(d.Debit_Type__c == 'TDS' || d.Debit_Type__c == 'Compensation'  || d.Debit_Type__c == 'Pre-EMI Reimbursement' || d.Debit_Type__c == 'Refund'){
+            
+           body =  '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:sap-com:document:sap:rfc:functions"> '+
+               '<soapenv:Header/>'+
+               '<soapenv:Body> '+
+               '<urn:ZBAPI_TRF_CUSTOMER_PAYOUT_T>'+
+               '<!--You may enter the following 4 items in any order-->'+
+               '<CUST_PAY_INUT>'+
+               '<!--Optional:-->'+
+               '<DOCUMENT_NUMBER>'+''+'</DOCUMENT_NUMBER> '+
+               '<!--Optional:-->'+
+               '<TYP_CR_UPD>'+'X'+'</TYP_CR_UPD>' + 
+               '<!--Optional:-->'+
+               '<HOUSE_BANK_ID>'+houseBankId+'</HOUSE_BANK_ID> '+
+               '<!--Optional:-->'+
+               '<ACCOUNT_ID>'+AccountId+'</ACCOUNT_ID> '+
+               '<!--Optional:-->'+
+               '<CHEQUE_LOT_NO>'+chequeLotNo+'</CHEQUE_LOT_NO> '+
+               '<!--Optional:-->'+
+               '<PAYMENT_METHOD>'+payMethod+'</PAYMENT_METHOD> '+
+               '<!--Optional:-->'+
+               '<FROM_COMPANY_CODE>'+fromCompanyCode+'</FROM_COMPANY_CODE> '+
+               '<!--Optional:-->'+
+               '<COMPANY_CODE>'+COMP_CODE+'</COMPANY_CODE> '+
+               '<!--Optional:-->'+
+               '<DOCUMENT_DATE>'+docDate+'</DOCUMENT_DATE> '+
+               '<!--Optional:-->'+
+               '<POSTING_DATE>'+postingDate+'</POSTING_DATE> '+
+               '<!--Optional:-->'+
+               '<DOCUMENT_TYPE>'+docType+'</DOCUMENT_TYPE> '+
+               '<!--Optional:-->'+
+               '<CURRENCY_KEY>'+CurrencyKey+'</CURRENCY_KEY> '+
+               '<!--Optional:-->'+
+               '<REFERENCE_DOC_NUMBER>'+refDocNo+'</REFERENCE_DOC_NUMBER> '+
+               '<!--Optional:-->'+
+               '<DOCUMENT_HEADER_TXT>'+DocHeaderTxt+'</DOCUMENT_HEADER_TXT> '+
+               '<!--Optional:-->'+
+               '<CUSTOMER_NUMBER>'+custNo+'</CUSTOMER_NUMBER> '+
+               '<!--Optional:-->'+
+               '<AMOUNT_IN_DOC_CURRENCY>'+Amount+'</AMOUNT_IN_DOC_CURRENCY> '+
+               '<!--Optional:-->'+
+               '<VALUE_DATE>'+postingDate+'</VALUE_DATE> '+
+               '<!--Optional:-->'+
+               '<BASELINE_DATE>'+postingDate+'</BASELINE_DATE> '+
+               '<!--Optional:-->'+
+               '<BUSINESS_PLACE>'+businessPlace+'</BUSINESS_PLACE> '+
+               '<!--Optional:-->'+
+               '<GENERAL_LEDGER_ACCOUNT>'+GLAcc+'</GENERAL_LEDGER_ACCOUNT> '+
+               '<!--Optional:-->'+
+               '<WBS_CODE>'+wbsCode+'</WBS_CODE> '+
+               '<!--Optional:-->'+
+               '<ASSIGNMENT>'+DocHeaderTxt+'</ASSIGNMENT> '+ 
+               '<!--Optional:-->'+
+               '<ITEM_TEXT>'+ItemTxt+'</ITEM_TEXT> '+
+               '<!--Optional:-->'+
+               '<API_ID>'+apiId+'</API_ID> '+
+               '<!--Optional:-->'+
+               '<PAYMENT_REF_UTR>'+payRefNo+'</PAYMENT_REF_UTR> '+
+               '<!--Optional:-->'+
+               '<TITLE>'+Title+'</TITLE> '+
+               '<!--Optional:-->'+
+               '<NAME_1>'+Name1+'</NAME_1> '+ 
+               '<!--Optional:-->'+
+               '<NAME_2>'+Name2+'</NAME_2> '+ 
+               '<!--Optional:-->'+
+               '<CITY>'+city+'</CITY> '+ 
+               '<!--Optional:-->'+
+               '<SPECIAL_GL_INDI>'+spclGL+'</SPECIAL_GL_INDI> '+ 
+               '</CUST_PAY_INUT>'+
+               '<!--Optional:-->'+
+               '<CUST_PAY_OUTPUT>'+
+               '<!--Zero or more repetitions:-->'+
+               '<item>'+
+               '<!--Optional:-->'+
+               '<PAYMENT_DOC_NO></PAYMENT_DOC_NO>'+
+               '<!--Optional:-->'+
+               '<CHEQUE_NO></CHEQUE_NO>'+
+               '<!--Optional:-->'+
+               '<API_ID></API_ID>'+
+               '<!--Optional:-->'+
+               '<RET_CODE></RET_CODE>'+
+               '<!--Optional:-->'+
+               '<RET_MESSAGE></RET_MESSAGE>'+
+               '</item>'+
+               '</CUST_PAY_OUTPUT>'+
+               '<!--Optional:-->'+
+               '<IT_MESSAGES>'+
+               '<!--Zero or more repetitions:-->'+
+               '<item>'+
+               '<!--Optional:-->'+
+               '<MSGTY></MSGTY>'+
+               '<!--Optional:-->'+
+               '<MSGTX></MSGTX>'+
+               '</item>'+
+               '</IT_MESSAGES>'+
+               '<!--Optional:-->'+
+               '<IT_RETURN>'+
+               '<!--Zero or more repetitions:-->'+
+               '<item>'+
+               '<!--Optional:-->'+
+               '<TYPE></TYPE>'+
+               '<!--Optional:-->'+
+               '<ID></ID>'+
+               '<!--Optional:-->'+
+               '<NUMBER></NUMBER>'+
+               '<!--Optional:-->'+
+               '<MESSAGE></MESSAGE>'+
+               '<!--Optional:-->'+
+               '<LOG_NO></LOG_NO>'+
+               '<!--Optional:-->'+
+               '<LOG_MSG_NO></LOG_MSG_NO>'+
+               '<!--Optional:-->'+
+               '<MESSAGE_V1></MESSAGE_V1>'+
+               '<!--Optional:-->'+
+               '<MESSAGE_V2></MESSAGE_V2>'+
+               '<!--Optional:-->'+
+               '<MESSAGE_V3></MESSAGE_V3>'+
+               '<!--Optional:-->'+
+               '<MESSAGE_V4></MESSAGE_V4>'+
+               '<!--Optional:-->'+
+               '<PARAMETER></PARAMETER>'+
+               '<!--Optional:-->'+
+               '<ROW></ROW>'+
+               '<!--Optional:-->'+
+               '<FIELD></FIELD>'+
+               '<!--Optional:-->'+
+               '<SYSTEM></SYSTEM>'+
+               '</item>'+
+               '</IT_RETURN>'+
+               '</urn:ZBAPI_TRF_CUSTOMER_PAYOUT_T>'+
+               '</soapenv:Body>'+
+               '</soapenv:Envelope>';
+                
+            }  
+           
+      /*     if(d.Debit_Type__c == 'TDS' || d.Debit_Type__c == 'Compensation'  || d.Debit_Type__c == 'Pre-EMI Reimbursement' ){
+        body = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:sap-com:document:sap:rfc:functions">'+
+        '<soapenv:Header/>'+
+        '<soapenv:Body>'+
+        '<urn:ZBAPI_TRF_CUSTOMER_PAYOUT_T>'+
+        '<!--You may enter the following 4 items in any order-->'+
+        '<CUST_PAY_INUT>'+
+        '<!--Optional:-->'+
+        '<DOCUMENT_NUMBER></DOCUMENT_NUMBER>'+
+        '<!--Optional:-->'+
+        '<TYP_CR_UPD>X</TYP_CR_UPD>'+
+        '<!--Optional:-->'+
+        '<HOUSE_BANK_ID>HD749</HOUSE_BANK_ID>'+
+        '<!--Optional:-->'+
+        '<ACCOUNT_ID>HD749</ACCOUNT_ID>'+
+        '<!--Optional:-->'+
+        '<CHEQUE_LOT_NO>1</CHEQUE_LOT_NO>'+
+        '<!--Optional:-->'+
+        '<PAYMENT_METHOD>D</PAYMENT_METHOD>'+
+        '<!--Optional:-->'+
+        '<FROM_COMPANY_CODE></FROM_COMPANY_CODE>'+
+        '<!--Optional:-->'+
+        '<COMPANY_CODE>1000</COMPANY_CODE>'+
+        '<!--Optional:-->'+
+        '<DOCUMENT_DATE>01.07.2024</DOCUMENT_DATE>'+
+        '<!--Optional:-->'+
+        '<POSTING_DATE>17.07.2024</POSTING_DATE>'+
+        '<!--Optional:-->'+
+        '<DOCUMENT_TYPE>DZ</DOCUMENT_TYPE>'+
+        '<!--Optional:-->'+
+        '<CURRENCY_KEY>INR</CURRENCY_KEY>'+
+        '<!--Optional:-->'+
+        '<REFERENCE_DOC_NUMBER></REFERENCE_DOC_NUMBER>'+
+        '<!--Optional:-->'+
+        '<DOCUMENT_HEADER_TXT>Header_API Unique ID</DOCUMENT_HEADER_TXT>'+
+        '<!--Optional:-->'+
+        '<CUSTOMER_NUMBER>422</CUSTOMER_NUMBER>'+
+        '<!--Optional:-->'+
+        '<AMOUNT_IN_DOC_CURRENCY>501</AMOUNT_IN_DOC_CURRENCY>'+
+        '<!--Optional:-->'+
+        '<VALUE_DATE>12.07.2024</VALUE_DATE>'+
+        '<!--Optional:-->'+
+        '<BASELINE_DATE>12.07.2024</BASELINE_DATE>'+
+        '<!--Optional:-->'+
+        '<BUSINESS_PLACE>KARN</BUSINESS_PLACE>'+
+        '<!--Optional:-->'+
+        '<GENERAL_LEDGER_ACCOUNT></GENERAL_LEDGER_ACCOUNT>'+
+        '<!--Optional:-->'+
+        '<WBS_CODE>0068</WBS_CODE>'+
+        '<!--Optional:-->'+
+        '<ASSIGNMENT>Assign_001</ASSIGNMENT>'+
+        '<!--Optional:-->'+
+        '<ITEM_TEXT>Item_Text_001</ITEM_TEXT>'+
+        '<!--Optional:-->'+
+        '<API_ID>API_001</API_ID>'+
+        '<!--Optional:-->'+
+        '<PAYMENT_REF_UTR></PAYMENT_REF_UTR>'+
+        '<!--Optional:-->'+
+        '<TITLE></TITLE>'+
+        '<!--Optional:-->'+
+        '<NAME_1></NAME_1>'+
+        '<!--Optional:-->'+
+        '<NAME_2></NAME_2>'+
+        '<!--Optional:-->'+
+        '<CITY></CITY>'+
+        '<!--Optional:-->'+
+        '<SPECIAL_GL_INDI></SPECIAL_GL_INDI>'+
+        '</CUST_PAY_INUT>'+
+        '<!--Optional:-->'+
+        '<CUST_PAY_OUTPUT>'+
+        '<!--Zero or more repetitions:-->'+
+        '<item>'+
+        '<!--Optional:-->'+
+        '<PAYMENT_DOC_NO></PAYMENT_DOC_NO>'+
+        '<!--Optional:-->'+
+        '<CHEQUE_NO></CHEQUE_NO>'+
+        '<!--Optional:-->'+
+        '<API_ID></API_ID>'+
+        '<!--Optional:-->'+
+        '<RET_CODE></RET_CODE>'+
+        '<!--Optional:-->'+
+        '<RET_MESSAGE></RET_MESSAGE>'+
+        '</item>'+
+        '</CUST_PAY_OUTPUT>'+
+        '<!--Optional:-->'+
+        '<IT_MESSAGES>'+
+        '<!--Zero or more repetitions:-->'+
+        '<item>'+
+        '<!--Optional:-->'+
+        '<MSGTY></MSGTY>'+
+        '<!--Optional:-->'+
+        '<MSGTX></MSGTX>'+
+        '</item>'+
+        '</IT_MESSAGES>'+
+        '<!--Optional:-->'+
+        '<IT_RETURN>'+
+        '<!--Zero or more repetitions:-->'+
+        '<item>'+
+        '<!--Optional:-->'+
+        '<TYPE></TYPE>'+
+        '<!--Optional:-->'+
+        '<ID></ID>'+
+        '<!--Optional:-->'+
+        '<NUMBER></NUMBER>'+
+        '<!--Optional:-->'+
+        '<MESSAGE></MESSAGE>'+
+        '<!--Optional:-->'+
+        '<LOG_NO></LOG_NO>'+
+        '<!--Optional:-->'+
+        '<LOG_MSG_NO></LOG_MSG_NO>'+
+        '<!--Optional:-->'+
+        '<MESSAGE_V1></MESSAGE_V1>'+
+        '<!--Optional:-->'+
+        '<MESSAGE_V2></MESSAGE_V2>'+
+        '<!--Optional:-->'+
+        '<MESSAGE_V3></MESSAGE_V3>'+
+        '<!--Optional:-->'+
+        '<MESSAGE_V4></MESSAGE_V4>'+
+        '<!--Optional:-->'+
+        '<PARAMETER></PARAMETER>'+
+        '<!--Optional:-->'+
+        '<ROW></ROW>'+
+        '<!--Optional:-->'+
+        '<FIELD></FIELD>'+
+        '<!--Optional:-->'+
+        '<SYSTEM></SYSTEM>'+
+        '</item>'+
+        '</IT_RETURN>'+
+        '</urn:ZBAPI_TRF_CUSTOMER_PAYOUT_T>'+
+        '</soapenv:Body>'+
+        '</soapenv:Envelope>';
+       }
+           */ 
+            
+        //string body;
+        String eventEndPoint = '';
+        HttpRequest req = new HttpRequest();
+        //13.228.235.198 Sandbox 13.228.217.109 Production
+        req.setEndpoint(endpoint());
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        //Blob headerValue = Blob.valueOf('body');
+        //String authorizationHeader = 'Basic '+ EncodingUtil.base64Encode(headerValue);
+        req.setHeader('Authorization', authorization());
+        req.setHeader('Content-Type', 'application/xml');
+        req.setBody(body);
+        Http http = new Http();
+        HTTPResponse res = new HTTPResponse();    
+        res = http.send(req);
+        system.debug('res::'+res.getBody());
+        
+        
+        
+        ///////////////Response Parsing/////////////////
+        XmlStreamReader reader = new XmlStreamReader(res.getBody());
+        system.debug('Reader:'+reader);
+        String Message = '';
+        String RetCode = '';
+        String PaymentDocumentNumber = '';
+        String ChequeNumber = '';
+        String APIUniqueId = '';
+        if (res.getStatusCode() == 200){
+            //Proceed only if it is Success
+            while (reader.hasNext()){
+                if (XmlTag.START_ELEMENT == reader.getEventType()){
+                    
+                    if ('PAYMENT_DOC_NO'.equals(reader.getLocalName())){
+                         PaymentDocumentNumber = getValueFromTag(reader);
+                        system.debug('PAYMENT_DOC_NO:'+PaymentDocumentNumber);
+                    }if('CHEQUE_NO'.equals(reader.getLocalName())){
+                         ChequeNumber = getValueFromTag(reader);
+                        system.debug('CHEQUE_NO:'+ChequeNumber);
+                    }if('RET_MESSAGE'.equals(reader.getLocalName())){
+                         Message = getValueFromTag(reader);
+                        system.debug('RET_MESSAGE:'+Message);
+                    }if('RET_CODE'.equals(reader.getLocalName())){
+                         RetCode = getValueFromTag(reader);
+                        system.debug('RET_CODE:'+RetCode);
+                    }
+                }
+                 reader.next();
+            }
+        }
+        
+        ////////////////////API Log///////////////////////
+        API_Log__c ap = new API_Log__c();
+        ap.API_Name__c = 'Customer Payout API';
+        ap.Request__c = body;
+        ap.Response__c = res.getBody();
+        ap.Message__c = Message;
+        ap.Response_Code__c = RetCode;
+        ap.Demand__c = d.id;
+        loglist.add(ap);
+        
+        if(PaymentDocumentNumber != '' && ChequeNumber != ''){
+            d.SAP_Cheque_No__c = ChequeNumber;
+			d.SAP_Posting_Date__c = d.Posting_Date__c;
+            d.Accounting_Document_Number__c =PaymentDocumentNumber;
+            dlistupdate.add(d);
+        }
+           
+        }
+        }
+        if(!loglist.isEmpty()){
+            insert loglist;
+            update dlistupdate;
+        }
+ 
+    }
+    
+    
+    
+    private static String getValueFromTag(XMLStreamReader reader) {
+        String DataValue;
+        while (reader.hasNext()) {
+            if (XmlTag.END_ELEMENT == reader.getEventType()) {
+                break;
+            } else if (XmlTag.CHARACTERS == reader.getEventType() || XmlTag.CDATA == reader.getEventType()) {
+                DataValue = reader.getText();
+            }
+            reader.next();
+        }
+        return DataValue;
+    }
+    public static String authorization() {
+            String authHeader;
+            SAP_Credential__mdt sapSetting;
+            sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                                from SAP_Credential__mdt 
+                                where QualifiedApiName = 'Customer_Payout_API'];
+            authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+            return authHeader;
+    }
+    
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                            from SAP_Credential__mdt 
+                            where QualifiedApiName = 'Customer_Payout_API'];
+        system.debug('f:::'+fiSetting.Endpoint__c);
+        return fiSetting.Endpoint__c;
+    //	  return 'http://13.228.235.198:50000/XISOAPAdapter/MessageServlet?senderParty=&senderService=BS_FUGUE_QAS&receiverParty=&receiverService=&interface=SI_Customer_Payout_Out&interfaceNamespace=http://total-environment/PI/Customer_Payout';
+    }
+}
