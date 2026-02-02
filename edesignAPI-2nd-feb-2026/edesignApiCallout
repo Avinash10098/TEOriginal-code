@@ -1,0 +1,189 @@
+//testedesignApiCallout
+public with sharing class edesignApiCallout {
+    
+    @AuraEnabled
+    public static string edesignCallout(Id recordId){
+        system.debug('BookId : '+recordId);
+        List<Booking__c> blist = [Select id,Relationship_Manager__c,Relationship_Manager__r.Email_Formula__c,Flat_No__c,Unit__r.Default_Specification_new__c,Unit__r.Floor__c,
+                                  Relationship_Manager__r.Name_Formula__c,Account__c,Customer_Number__c,Project__r.name,Unit__r.Unit_Orientation__c,
+                                  Unit__r.Product_Type__r.Name,Quotation__r.Customization_Credit__c,Quotation__r.Selected_Specification__c,Unit__r.TE_Product__r.Name,
+                                  Unit__r.Garden_1_Orientation__c , eDesign_Platform__c , Unit_launch_status__c , Status__c ,Finalised_Design_Platform__c
+                                  from Booking__c where Id = :recordId];
+        
+        List<Applicant_Details__c> appDetails = [SELECT Id , Name , Booking__r.Project__r.Company_Code__c , Booking__r.Name,Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Plant_Code__c,
+                                                 Salutation__c, Booking__r.Customer_Number__c,Booking__r.Project_Unit__c , Mobile_Number__c,Locales__c,
+                                                 Mailing_Address__c , Mailing_City__c, Mailing_Pincode__c, Mailing_Country__c , PancardNo__c , GSTIN__c,
+                                                 Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c, Booking__r.Unit__r.Name,Applicant_Number__c,
+                                                 Email_Address__c
+                                                 FROM Applicant_Details__c 
+                                                 WHERE booking__c = :recordId];
+        
+        BookingRequest req = new BookingRequest();
+        req.customer = new List<Customer>();
+        
+        if(blist[0].Status__c != 'Processed'){
+            return 'Launch Error: This unit cannot be launched because Booking status is not Processed';
+        }
+        
+        if(blist[0].Unit_launch_status__c == 'Launched'){
+            return 'Launch Error: This unit cannot be launched because it is already launched';
+        }
+       
+        if(blist[0].Finalised_Design_Platform__c != 'eDesign 3.0'){
+            return 'Launch Error: This unit cannot be launched because it is not associated with eDesign 3.0 platform. Check the Field "Finalised Design Platform"';
+        }
+       
+        for (Applicant_Details__c app : appDetails) {
+            Customer cust = new Customer();
+            cust.fullName = app.Name;
+            cust.applicantId = app.Id;
+            
+            if(app.Applicant_Number__c != null){
+                List<String>appNameString = app.Applicant_Number__c.trim().split('\\s+');
+                cust.role = appNameString[0];
+            }else{
+                cust.role = '';
+            }
+            
+            
+            cust.locale = app.Locales__c != null ? app.Locales__c : '';
+            cust.phoneNumber = app.Mobile_Number__c != null ? app.Mobile_Number__c : '';
+            cust.email = app.Email_Address__c != null ? app.Email_Address__c : '';
+            req.customer.add(cust);
+        }
+        
+        DesignManager dm = new DesignManager();
+        dm.email = blist[0].Relationship_Manager__r.Email_Formula__c;
+        dm.fullName = blist[0].Relationship_Manager__r.Name_Formula__c;
+        req.designManager = dm;
+        
+        Booking__c booking = blist[0];
+        req.unitNo = Integer.valueOf(booking.Flat_No__c);
+        req.north = Integer.ValueOf(booking.Unit__r.Unit_Orientation__c); // Unit Orientation field on unit
+        req.variant = booking.Unit__r.Product_Type__r.Name; // Product Variant field on unit
+        req.salesCommitment = Integer.ValueOf(booking.Quotation__r.Customization_Credit__c); //"Customisation credit" field on quotation
+        req.spec = booking.Quotation__r.Selected_Specification__c; // Selected spec on quotation
+        req.floor = Integer.valueOf(booking.Unit__r.Floor__c); //Floor no
+        req.booking = booking.id;
+        req.additionalInformation = 'test';// TE team will confirm
+        req.productName = 'ITQE_L25_TYPE1';//booking.Unit__r.TE_Product__r.Name; //Product field on unit
+        req.garden = string.valueof(booking.Unit__r.Garden_1_Orientation__c); // Garden orientation on unit// TE team will confirm
+        req.accountId = booking.Account__c;
+        req.customerNo = booking.Customer_Number__c != null ? string.valueof(booking.Customer_Number__c) : '';
+        req.projectName = booking.Project__r.name;
+        
+        String jsonBody = JSON.serialize(req);
+        System.debug('Final JSON: ' + jsonBody);
+        
+        // Make REST callout
+            HttpRequest request = new HttpRequest();
+            request.setEndpoint(endpoint());
+            request.setMethod('POST');
+            request.setHeader('Content-Type', 'application/json');
+            request.setHeader('Authorization', authorization()); 
+            request.setTimeout(120000);
+            // Convert payload to JSON
+            request.setBody(jsonBody);
+        
+            Http http = new Http();
+            HttpResponse res;
+			
+        try {
+            res = http.send(request);
+            System.debug('res: ' + res);
+            System.debug('Response Status: ' + res.getStatus());
+            System.debug('Response Body: ' + res.getBody());
+            
+            if(res.getStatusCode() == 200 || res.getStatusCode() == 201){
+                system.debug('Inside the If Block');
+                booking.Unit_launch_status__c = 'Launched';
+                update blist;
+                
+                API_Log__c api = new API_Log__c();
+                api.API_Name__c = 'Edesign API Success';
+                api.Message__c = res.getBody();
+                api.Response_Code__c = '';
+                api.Booking__c = booking.id;
+                api.Response__c = res.getBody();
+                api.Request__c = jsonBody;
+                insert api;
+                
+                return 'Success: Customer Launch Edesign';
+                
+            } else {
+                system.debug('Inside the else Block');
+                booking.Unit_launch_status__c = 'Failed ';
+                update blist;
+                return 'Error: Contact your Administrator';
+            }
+        } catch(Exception e){
+            system.debug('Inside the Exception');
+            booking.Unit_launch_status__c = 'Failed ';
+            update blist;
+            
+            System.debug('Callout Exception: ' + e.getMessage());
+            API_Log__c api = new API_Log__c();
+            api.API_Name__c = 'Edesign API Error';
+            api.Message__c = res.getBody();
+            api.Response_Code__c = '';
+            api.Booking__c = booking.id;
+            api.Response__c = res.getBody();
+            api.Request__c = jsonBody;
+            insert api;
+            return 'Error: Error: Contact your Administrator';
+        }
+        
+    }
+    
+    // Wrapper classes
+    public class BookingRequest {
+        public List<Customer> customer;
+        public DesignManager designManager;
+        public Integer unitNo;
+        public Integer north;
+        public String variant;
+        public Integer salesCommitment;
+        public String spec;
+        public Integer floor;
+        public String booking;
+        public String additionalInformation;
+        public String productName;
+        public String garden;
+        public String accountId;
+        public String customerNo;
+        public String projectName;
+    }
+    
+    public class Customer {
+        public String email;
+        public String fullName;
+        public String role;
+        public String applicantId;
+        public String phoneNumber;
+        public String locale;
+    }
+    
+    public class DesignManager {
+        public String email;
+        public String fullName;
+    }
+    
+    public static String authorization() {
+        String authHeader;
+        EDesign_Api_Callout_Creds__mdt edesignToken;
+        edesignToken = [Select Token__c 
+                      from EDesign_Api_Callout_Creds__mdt 
+                      where QualifiedApiName = 'Edesign_Credentials'];
+        authHeader = edesignToken.Token__c;
+        return authHeader;
+    }
+    
+    public static String endpoint() {
+        EDesign_Api_Callout_Creds__mdt edesignEndpoint;
+        edesignEndpoint = [Select Endpoint__c 
+                     from EDesign_Api_Callout_Creds__mdt 
+                     where QualifiedApiName = 'Edesign_Credentials'];
+        system.debug('f:::'+edesignEndpoint.Endpoint__c);
+        return edesignEndpoint.Endpoint__c;
+    }
+}
