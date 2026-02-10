@@ -1,0 +1,163 @@
+<apex:component controller="AFSPuneProjectController" access="global" allowDML="true">
+    <apex:attribute name="bookingId" type="Id" description="Booking Id" access="global" assignTo="{!bId}"/> 
+    
+    <html>
+        <body>{!attachment}
+            <table style='width:100%;border-collapse: collapse;margin:2px' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #969595;background-color:#EEEEEE;text-align: center;font-family:SansSerif;'>TITLE CERTIFICATE</th>
+                </tr>
+            </table>
+            <apex:repeat value="{!TitleCertificate}" var="f">
+                <apex:panelgrid columns="1">
+                    <div class="col col-6 col-md-4 col-lg-3 col-xl-2 my_vertmargin5">
+                        <div class="my_padded5 my_panel">
+                            <apex:image url="/sfc/servlet.shepherd/version/download/{!f.ContentDocument.LatestPublishedVersionId}"
+                                        alt="{!f.ContentDocument.LatestPublishedVersion.Title}" width="700px" height="800px"/>
+                        </div>
+                    </div>
+                </apex:panelgrid>
+            </apex:repeat>
+            
+            <apex:outputPanel rendered="{villageFormRender}">
+            <div style='page-break-after: always;'></div>
+            <table style='width:100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #969595;background-color:#EEEEEE;text-align: center;font-family:SansSerif;'>VILLAGE FORM</th>
+                </tr>
+            </table>
+            <apex:repeat value="{!villageform}" var="v">
+                <apex:panelgrid columns="1">
+                    <div class="col col-6 col-md-4 col-lg-3 col-xl-2 my_vertmargin5">
+                        <div class="my_padded5 my_panel">
+                            <apex:image url="/sfc/servlet.shepherd/version/download/{!v.ContentDocument.LatestPublishedVersionId}"
+                                        alt="{!v.ContentDocument.LatestPublishedVersion.Title}" width="700px" height="800px"/>
+                        </div>
+                    </div>
+                </apex:panelgrid>
+            </apex:repeat>
+            </apex:outputPanel>
+            
+            <div style='page-break-after: always;'></div>
+      <!--      <table style='width:100%;border-collapse: collapse;' cellpadding='7'>
+                <tr>
+                    <th style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;background-color:#000000;color:#ffffff;margin-bottom:2px'>Annexure 02 - Approvals</th>
+                </tr>
+            </table> -->
+      <!--------------------------------------------------------------------------------------------------------------------------------------------->      
+            <div>    
+        <table style='width:100%;border-collapse: collapse;' cellpadding='7'>
+            <tr>
+                <th style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;background-color:#000000;color:#ffffff;margin-bottom:2px'>Annexure 02 - Approvals</th>
+            </tr>
+        </table>
+        <div>
+            <p style='font-size:10pt;text-align:justify;margin-bottom:0px;margin-top:2px'>The list of approvals for the Project are as follows:</p>
+            <table style='width:100%;border-collapse: collapse;font-size:10pt;margin-top:0px' cellpadding='2'>
+                <tbody>
+                    <tr style="color:Black;">
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>S.no.</th>
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>Approval</th>
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>Authority</th>
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>Approval no.</th>
+                        <th style='border:1px solid #d3d3d3;font-family:SansSerif;'>Date</th>
+                    </tr>
+                    <apex:repeat value="{!approval}" var="appro" rendered="{!ISNULL(approval) == false && approval.size > 0}">
+                    <tr style="color:#4b4b4b;">
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;'>{!appro.Sr_No__c}</td>
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;'>{!appro.Name}</td>
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;'>{!appro.Authority__c}</td>
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;'>{!appro.Approval_No__c}</td>
+                        <td style='border:1px solid #d3d3d3;font-family:SansSerif;text-align: center;' ><apex:outputText value="{0, date, dd-MM-yyyy}"> <apex:param value="{!appro.Date__c}" /> </apex:outputText></td>
+                    </tr>
+                    </apex:repeat>
+					</tbody>
+              </table>
+             </div>
+            </div>
+            <div style='page-break-after: always;'></div>
+      <!------------------------------------------------------------------------------------------------------------------------------------------------------>      
+            
+            <table style='width:100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #969595;background-color:#EEEEEE;text-align: center;font-family:SansSerif;'>APPROVED LAYOUT PLAN</th>
+                </tr>
+            </table>
+            <apex:repeat value="{!ApprovedLayoutPlan}" var="app">
+                <apex:panelgrid columns="1">
+                    <div class="col col-6 col-md-4 col-lg-3 col-xl-2 my_vertmargin5">
+                        <div class="my_padded5 my_panel">
+                            <apex:image url="/sfc/servlet.shepherd/version/download/{!app.ContentDocument.LatestPublishedVersionId}"
+                                        alt="{!app.ContentDocument.LatestPublishedVersion.Title}" width="700px" height="800px"/>
+                        </div>
+                    </div>
+                </apex:panelgrid>
+            </apex:repeat>
+            <div style='page-break-after: always;'></div>
+            <table style='width:100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #969595;background-color:#EEEEEE;text-align: center;font-family:SansSerif;'>APPROVED BUILDING PLAN</th>
+                </tr>
+            </table>
+            <apex:repeat value="{!ApprovedBuildingPlan}" var="build">
+                <apex:panelgrid columns="1">
+                    <div class="col col-6 col-md-4 col-lg-3 col-xl-2 my_vertmargin5">
+                        <div class="my_padded5 my_panel">
+                            <apex:image url="/sfc/servlet.shepherd/version/download/{!build.ContentDocument.LatestPublishedVersionId}"
+                                        alt="{!build.ContentDocument.LatestPublishedVersion.Title}" width="700px" height="800px"/>
+                        </div>
+                    </div>
+                </apex:panelgrid>
+            </apex:repeat>
+            <div style='page-break-after: always;'></div>
+            <table style='width:100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #969595;background-color:#EEEEEE;text-align: center;font-family:SansSerif;'>COMMENCEMENT CERTIFICATE</th>
+                </tr>
+            </table>
+            <apex:repeat value="{!CommencementCertificate}" var="commencement">
+                <apex:panelgrid columns="1">
+                    <div class="col col-6 col-md-4 col-lg-3 col-xl-2 my_vertmargin5">
+                        <div class="my_padded5 my_panel">
+                            <apex:image url="/sfc/servlet.shepherd/version/download/{!commencement.ContentDocument.LatestPublishedVersionId}"
+                                        alt="{!commencement.ContentDocument.LatestPublishedVersion.Title}" width="700px" height="800px"/>
+                        </div>
+                    </div>
+                </apex:panelgrid>
+            </apex:repeat>
+            <div style='page-break-after: always;'></div>
+            <table style='width:100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #969595;background-color:#EEEEEE;text-align: center;font-family:SansSerif;'>NON-AGRICULTURAL USE PERMISSION</th>
+                </tr>
+            </table>
+            <apex:repeat value="{!NonAgricutural}" var="app">
+                <apex:panelgrid columns="1">
+                    <div class="col col-6 col-md-4 col-lg-3 col-xl-2 my_vertmargin5">
+                        <div class="my_padded5 my_panel">
+                            <apex:image url="/sfc/servlet.shepherd/version/download/{!app.ContentDocument.LatestPublishedVersionId}"
+                                        alt="{!app.ContentDocument.LatestPublishedVersion.Title}" width="700px" height="800px"/>
+                        </div>
+                    </div>
+                </apex:panelgrid>
+            </apex:repeat>
+            <div style='page-break-after: always;'></div>
+            <table style='width:100%;border-collapse: collapse;' cellpadding='5'>
+                <tr>
+                    <th style='border:1px solid #969595;background-color:#EEEEEE;text-align: center;font-family:SansSerif;'>RERA REGISTRATION CERTIFICATE</th>
+                </tr>
+            </table>
+            <apex:repeat value="{!Reracertificate}" var="rera">
+                <apex:panelgrid columns="1">
+                    <div class="col col-6 col-md-4 col-lg-3 col-xl-2 my_vertmargin5">
+                        <div class="my_padded5 my_panel">
+                            <apex:image url="/sfc/servlet.shepherd/version/download/{!rera.ContentDocument.LatestPublishedVersionId}"
+                                        alt="{!rera.ContentDocument.LatestPublishedVersion.Title}" width="700px" height="800px"/>
+                        </div>
+                    </div>
+                </apex:panelgrid>
+            </apex:repeat>
+            <div style='page-break-after: always;'></div>
+        </body>
+    </html>
+</apex:component>
