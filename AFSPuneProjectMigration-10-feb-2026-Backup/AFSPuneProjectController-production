@@ -1,0 +1,78 @@
+public class AFSPuneProjectController {
+    public Id qId{get;set;} 
+    public Id bId{get;set;}
+    public List<Booking__c> bklist{get;set;}
+    public List<ContentDocumentLink> TitleCertificate{get;set;}
+    public List<ContentDocumentLink> villageform{get;set;}
+    public List<ContentDocumentLink> ApprovedLayoutPlan{get;set;}
+    public List<ContentDocumentLink> ApprovedBuildingPlan{get;set;}
+    public List<ContentDocumentLink> CommencementCertificate{get;set;}
+    public List<ContentDocumentLink> NonAgricutural{get;set;}
+    public List<ContentDocumentLink> Reracertificate{get;set;}
+    public List<ContentVersion> contentversionlist{get;set;}
+    public List<Applicant_Details__c> applist{get;set;}
+    Public String url{get;set;}
+    Public Boolean villageFormRender{get;set;}
+    public List<Annexure_Approval__c> approval {get;set;}
+    public Booking__c bk {get;set;}
+    public Unit__c Unt{get;set;}
+    public Tower__c tw{get;set;}
+    public Cluster__c phase{get;set;}
+    
+    Public AFSPuneProjectController(){
+        if( ApexPages.currentPage().getParameters().get('bId') != null )
+            bId = ApexPages.currentPage().getParameters().get('bId');
+        approval = new List<Annexure_Approval__c>();
+    }
+    public void getattachment(){
+         bklist = new List<Booking__c>();
+        TitleCertificate = new List<ContentDocumentLink>();
+        villageform = new List<ContentDocumentLink>();
+        ApprovedLayoutPlan = new List<ContentDocumentLink>();
+        ApprovedBuildingPlan = new List<ContentDocumentLink>();
+        CommencementCertificate = new List<ContentDocumentLink>();
+        NonAgricutural = new List<ContentDocumentLink>();
+        Reracertificate = new List<ContentDocumentLink>();
+        contentversionlist = new List<ContentVersion>();
+        
+        bklist = [Select id, name,Unit__r.Tower__r.Cluster__c from booking__c where id=:bId];
+        TitleCertificate = [SELECT Id, ContentDocumentId, ContentDocument.LatestPublishedVersionId,
+        				  ContentDocument.LatestPublishedVersion.Title
+    					  FROM ContentDocumentLink WHERE LinkedEntityId =: bklist[0].Unit__r.Tower__r.Cluster__c and ContentDocument.Title LIKE 'Title Certificate%' order by ContentDocument.Title ASC ];
+        villageform = [SELECT Id, ContentDocumentId, ContentDocument.LatestPublishedVersionId,
+        				  ContentDocument.LatestPublishedVersion.Title
+    					  FROM ContentDocumentLink WHERE LinkedEntityId =: bklist[0].Unit__r.Tower__r.Cluster__c and ContentDocument.Title LIKE '%Villagefrom%' order by ContentDocument.Title ASC ];
+        ApprovedLayoutPlan = [SELECT Id, ContentDocumentId, ContentDocument.LatestPublishedVersionId,
+        				  ContentDocument.LatestPublishedVersion.Title
+    					  FROM ContentDocumentLink WHERE LinkedEntityId =: bklist[0].Unit__r.Tower__r.Cluster__c and ContentDocument.Title LIKE '%Approvedlayoutplan%' order by ContentDocument.Title ASC ];
+        ApprovedBuildingPlan = [SELECT Id, ContentDocumentId, ContentDocument.LatestPublishedVersionId,
+        				  ContentDocument.LatestPublishedVersion.Title
+    					  FROM ContentDocumentLink WHERE LinkedEntityId =: bklist[0].Unit__r.Tower__r.Cluster__c and ContentDocument.Title LIKE '%Approvedbuildingplan%' order by ContentDocument.Title ASC ];
+        CommencementCertificate = [SELECT Id, ContentDocumentId, ContentDocument.LatestPublishedVersionId,
+        				  ContentDocument.LatestPublishedVersion.Title
+    					  FROM ContentDocumentLink WHERE LinkedEntityId =: bklist[0].Unit__r.Tower__r.Cluster__c and ContentDocument.Title LIKE '%Commencementcertificate%' order by ContentDocument.Title ASC ];
+        NonAgricutural = [SELECT Id, ContentDocumentId, ContentDocument.LatestPublishedVersionId,
+        				  ContentDocument.LatestPublishedVersion.Title
+    					  FROM ContentDocumentLink WHERE LinkedEntityId =: bklist[0].Unit__r.Tower__r.Cluster__c and ContentDocument.Title LIKE '%Nonagricutural%' order by ContentDocument.Title ASC ];
+        Reracertificate = [SELECT Id, ContentDocumentId, ContentDocument.LatestPublishedVersionId,
+        				  ContentDocument.LatestPublishedVersion.Title
+    					  FROM ContentDocumentLink WHERE LinkedEntityId =: bklist[0].Unit__r.Tower__r.Cluster__c and ContentDocument.Title LIKE '%Reracertificate%' order by ContentDocument.Title ASC ];
+        
+        bk = [SELECT  Id,No_of_Earmarked_Parking__c,Unit__c,Unit__r.Tower__r.Cluster__c,Opportunity__c, No_of_Additional_Parking__c, Quotation__c, Project__c FROM Booking__c WHERE id =:bId];
+        Unt = [Select Id,Name,Tower__c,Default_Specification_new__c,Floor__c,Builtup_Area_Sub_Product__c,Carpet_Area_Sub_Product__c,Outdoor_Area_Sub_Product__c from Unit__c where id=:bk.Unit__c];
+        tw = [select Id, Name,Cluster__c from Tower__c where id=: Unt.Tower__c];
+        phase = [Select Id,Name,Annexure_01__c from Cluster__c where id=: tw.Cluster__c];
+        approval = [Select Id, Name,Approval_No__c, Authority__c, Sr_No__c,Date__c from Annexure_Approval__c where Phase__c=: phase.id order by Sr_No__c ASC ];
+        
+        if(!villageform.isEmpty())
+        {
+            villageFormRender = false;        
+        }
+        else
+        {
+            villageFormRender = true;
+        }
+        
+    } 
+        
+}
