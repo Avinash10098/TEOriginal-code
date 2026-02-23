@@ -1,0 +1,431 @@
+<template> 
+    <lightning-layout>
+        <lightning-layout-item >
+            
+            <lightning-card title="My Bookings" icon-name="custom:custom63">
+               
+                
+        <h1>Select Booking ...</h1>  
+        <select  class="slds-select"  name = "Select booking" onchange={changeHandler} >
+            <template if:false={showOption} ><option >None</option></template>
+            <template for:each={bookingList} for:item="bk">
+        <option key={bk.id} value={bk.Id}>{bk.Unit_Tower_Project__c}</option>
+    </template> 
+        </select>
+        <br/>
+     
+     <br/>
+     
+                <lightning-tabset variant="vertical" >
+                 <!--   <template if:true={showUnit}>
+                        <lightning-tab label="Unit Details">
+                            <lightning-card title="Unit Details" icon-name="custom:custom55">
+                                <div style="height: 300px;width: 1000px;">
+                                    
+                                    <lightning-datatable key-field="Id" 
+                                        data={unitList}
+                                        columns={columnsU}
+                                        hide-checkbox-column="true"  
+                                        show-row-number-column="true"  
+                                        onrowaction={callRowAction5}>
+                                        
+                                           
+                                            
+                                            
+                                    </lightning-datatable>
+                                </div>
+                            </lightning-card>
+                        </lightning-tab>
+                    </template> -->
+                  <!--  <template if:true={showBookings}>
+                        <lightning-tab label="Contract Terms">
+                            <lightning-card title="Booking Details" icon-name="standard:timesheet">
+                                <div style="height: 300px;width: 1000px;">
+                                    <lightning-datatable key-field="Id" data={bookingRecord}
+                                        show-row-number-column hide-checkbox-column columns={columnsB} onrowaction={callRowAction4}>
+
+                                    </lightning-datatable>
+                                </div> --> <!--
+                                       <template if:false={showdetail}>
+                                        <h1> Please select booking to see details </h1>
+                                       </template>
+                                       <lightning-record-view-form density="compact"
+                                        record-id={selectedOption} object-api-name="Booking__c"><div style="width: 1350px"  class="slds-col slds-size_1-of-2"><lightning-output-field field-name="Name"></lightning-output-field>
+                                        <lightning-output-field field-name="Project__c"></lightning-output-field>
+                                        <lightning-output-field field-name="Opportunity__c"></lightning-output-field>
+                                        <lightning-output-field field-name="Booking_Date__c"></lightning-output-field>
+                                        <lightning-output-field field-name="Status__c"></lightning-output-field>
+                                        
+                                        <lightning-output-field field-name="Agreement_Value__c"></lightning-output-field>
+                                     
+                                    </div>
+                                    
+                                        
+                                    
+                                    </lightning-record-view-form> -->
+                             <!--  
+                            </lightning-card>
+                        </lightning-tab>
+                    </template> -->
+             <p></p>
+             
+          <!--  <template if:true={showinteriorDesign}>
+                <lightning-tab label="Interior Design">
+                    <lightning-card title="Interior Design" icon-name="custom:custom55">
+                        <div style="height: 400px;width: 1000px;">
+                            
+                            <lightning-datatable key-field="Id" 
+                                data={interiorDesign}
+                                columns={columnsID}
+                                hide-checkbox-column="true"  
+                                show-row-number-column="true"  
+                                onrowaction={callRowAction6}>
+                                
+                                   
+                                    
+                                    
+                            </lightning-datatable>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template> -->
+            <template if:true={showPayments}>
+                <lightning-tab label="Payment Schedule">
+                    <lightning-card title="Payment Schedule" icon-name="custom:custom62">
+                        <div style="height: 400px;width: 1000px;">
+                            
+                            <lightning-datatable key-field="Id" data={PaymentMilestone}
+                                columns={columnsPM}
+                                hide-checkbox-column="true"  
+                                show-row-number-column="true"  
+                                onrowaction={callRowAction7}>
+                            </lightning-datatable>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template>
+             <!--   <template if:true={showDemands}>
+                <lightning-tab label="Invoices">
+                    <lightning-card title="Invoices" icon-name="custom:custom55">
+                        <div style="height: 400px;width: 1000px;">
+                            
+                            <lightning-datatable key-field="Id" 
+                                data={DemandList}
+                                columns={columnsD}
+                                hide-checkbox-column="true"  
+                                show-row-number-column="true"  
+                                onrowaction={callRowAction}>
+                                
+                                   
+                                    
+                                    
+                            </lightning-datatable>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template>
+            <template if:true={showPayments}>
+                <lightning-tab label="Receipts">
+                    <lightning-card title="Receipts" icon-name="custom:custom62">
+                        <div style="height: 400px;width: 1000px;">
+                            
+                            <lightning-datatable key-field="Id" data={PaymentList}
+                                columns={columnsP}
+                                hide-checkbox-column="true"  
+                                show-row-number-column="true"  
+                                onrowaction={callRowAction1}>
+                            </lightning-datatable>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template> -->
+            <!--template if:true={showConstructionUpdates}>
+                <lightning-tab label="Construction Updates">
+                    <lightning-card title="Construction Updates" icon-name="custom:custom62">
+                        <div style="height: 300px;">
+                            
+                            <lightning-datatable key-field="Id" data={ConstructinUpdatesList}
+                                 columns={columnsCP}
+                                 hide-checkbox-column="true"  
+                                show-row-number-column="true"  
+                                onrowaction={callRowAction2}
+                                >
+                            </lightning-datatable>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template-->
+          <!--  <template if:true={showApplicants}>
+                <lightning-tab label="Applicant Details">
+                    <lightning-card title="Applicant Details" icon-name="custom:custom62">
+                        <div style="height: 400px;width: 1000px;">
+                            
+                            <lightning-datatable key-field="Id" data={ApplicantList}
+                                columns={columnsA}
+                                hide-checkbox-column="true"  
+                                show-row-number-column="true"  
+                                onrowaction={callRowAction3}>
+                            </lightning-datatable>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template> -->
+          <!--  <template if:true={showSpoc}>
+                <lightning-tab label="SPOC">
+                    <lightning-card title="SPOC" icon-name="standard:customer_360">
+                        <div style="height: 420px;width: 1000px;" class="slds-scrollable_y"> -->
+                            
+                            <!--lightning-datatable key-field="Id" data={projectUpdates}
+                                columns={columnsPU}
+                                hide-checkbox-column="true"  
+                                show-row-number-column="true"  
+                                onrowaction={callRowAction8}>
+                            </lightning-datatable-->
+                    <!--    <lightning-record-view-form density="compact" record-id={SpocId} object-api-name="User">
+                            <div style="width: 1350px"  class="slds-col slds-size_1-of-2">
+                                <lightning-output-field field-name="Photograph__c"></lightning-output-field>
+                                <lightning-output-field field-name="Name_Formula__c"></lightning-output-field>
+                                <lightning-output-field field-name="Mobile_No_Formula__c"></lightning-output-field>
+                                <lightning-output-field field-name="Email_Formula__c"></lightning-output-field>
+                            </div>
+                            <div style="width: 1350px"  class="slds-col slds-size_1-of-2">
+                                <lightning-output-field field-name="Working_Days__c"></lightning-output-field>
+                                <lightning-output-field field-name="Working_Hours__c"></lightning-output-field>
+                                <lightning-output-field field-name="List_Of_Public_Holiday__c"></lightning-output-field> -->
+                                <!--template if:true={WorkingDay} >Working Status : &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Working Day</template>
+                                <template if:false={WorkingDay}>Working Status : &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Holiday</template-->
+                                <!--lightning-output-field field-name="customer__c"></lightning-output-field>
+                                <lightning-output-field field-name="Working_Hours__c"></lightning-output-field-->
+                         <!--   </div>    
+                        </lightning-record-view-form>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template> -->
+
+            
+
+            <template if:true={showProject}>
+                <lightning-tab label="Project Update">
+                    <lightning-card title="Project Update" icon-name="custom:custom62">
+                        <div style="height: 400px;width: 1000px;" class="slds-scrollable_y">
+                            
+                            <!--lightning-datatable key-field="Id" data={projectUpdates}
+                                columns={columnsPU}
+                                hide-checkbox-column="true"  
+                                show-row-number-column="true"  
+                                onrowaction={callRowAction8}>
+                            </lightning-datatable-->
+                            <template if:true={cupdate}>
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                    <thead>
+                                        <tr class="slds-text-title_caps">
+                                            <!--th scope="col">
+                                                <div title="Value">File Download</div>
+                                            </th-->
+                                            <th scope="col">
+                                                <div title="Value">File Preview</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div title="Key">File Name</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div title="Key">File Extension</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div title="Key">Upload Date</div>
+                                            </th>
+                                            <!--th scope="col">
+                                                <div title="Value">File Size</div>
+                                            </th-->
+                                            
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={cupdate} for:item="keyValue">
+                                            <tr key={keyValue.Id}>
+                                                <!--th scope="col">    
+                                                    <lightning-button data-id={keyValue.ContentDocumentId} 
+                                                                      label="Download" 
+                                                                      variant="brand" 
+                                                                      value="Download File" 
+                                                                      onclick={downloadfile}></lightning-button>
+                                                </th-->
+                                                <th scope="col">    
+                                                    <lightning-button data-id={keyValue.Public_URL__c} 
+                                                                      label="Preview" 
+                                                                      variant="brand" 
+                                                                      value="file preview" 
+                                                                      onclick={filePreview}></lightning-button>
+                                                </th>
+                                                <th scope="col">
+                                                    <div>{keyValue.Title}</div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div>{keyValue.FileExtension}</div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div><lightning-formatted-date-time value={keyValue.CreatedDate} ></lightning-formatted-date-time></div>
+                                                </th>
+                                                <!--th scope="col">
+                                                    <div>{keyValue.ContentSize} Bytes</div>
+                                                </th-->
+                                                
+                                                
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template>
+           <!-- <template if:true={showSpoc}>
+                <lightning-tab label="Home Update">
+                    <lightning-card title="Home Update" icon-name="custom:custom62" >
+                        <div style="height: 400px;width: 1000px;" class="slds-scrollable_y">
+                            <template if:true={files}>
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                    <thead>
+                                        <tr class="slds-text-title_caps">-->
+                                            <!--th scope="col">
+                                                <div title="Value">File Download</div>
+                                            </th-->
+                                            <!--<th scope="col">
+                                                <div title="Value">File Preview</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div title="Key">File Name</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div title="Key">File Extension</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div title="Key">Upload Date</div>
+                                            </th>-->
+                                            <!--th scope="col">
+                                                <div title="Value">File Size</div>
+                                            </th-->
+                                            
+                                            
+                                        <!--</tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={home} for:item="keyValue">
+                                            <tr key={keyValue.Id}>-->
+                                                <!--th scope="col">    
+                                                    <lightning-button data-id={keyValue.ContentDocumentId} 
+                                                                      label="Download" 
+                                                                      variant="brand" 
+                                                                      value="Download File" 
+                                                                      onclick={downloadfile}></lightning-button>
+                                                </th-->
+                                                <!--<th scope="col">    
+                                                    <lightning-button data-id={keyValue.Public_URL__c} 
+                                                                      label="Preview" 
+                                                                      variant="brand" 
+                                                                      value="file preview" 
+                                                                      onclick={filePreview}></lightning-button>
+                                                </th>
+                                                <th scope="col">
+                                                    <div>{keyValue.Title}</div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div>{keyValue.FileExtension}</div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div><lightning-formatted-date-time value={keyValue.CreatedDate} ></lightning-formatted-date-time></div>
+                                                </th>-->
+                                                <!--th scope="col">
+                                                    <div>{keyValue.ContentSize} Bytes</div>
+                                                </th-->
+                                                
+                                                
+                                            
+                                            <!--</tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template> -->
+         <!--   <template if:true={showSpoc}>
+                <lightning-tab label="Document Library">
+                    <lightning-card title="All Documents" icon-name="custom:custom62" >
+                        <div style="height: 400px;width: 1000px;" class="slds-scrollable_y" >
+                            <template if:true={files}>
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                    <thead>
+                                        <tr class="slds-text-title_caps">
+                                            <th scope="col">
+                                                <div title="Value">File Download</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div title="Key">File Name</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div title="Key">File Extension</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div title="Key">Upload Date</div>
+                                            </th> -->
+                                            <!--th scope="col">
+                                                <div title="Value">File Size</div>
+                                            </th-->
+                                            <!--th scope="col">
+                                                <div title="Value">File Preview</div>
+                                            </th-->
+                                            
+                                    <!--    </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={files} for:item="keyValue" >
+                                            <tr key={keyValue.Id}>
+                                                
+                                                <th scope="col">    
+                                                    <lightning-button data-id={keyValue.ContentDocumentId} 
+                                                                      label="Download" 
+                                                                      variant="brand" 
+                                                                      value="Download File" 
+                                                                      onclick={downloadfile}></lightning-button>
+                                                </th>
+                                                <th scope="col">
+                                                    <div>{keyValue.Title}</div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div>{keyValue.FileExtension}</div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div><lightning-formatted-date-time value={keyValue.CreatedDate} ></lightning-formatted-date-time></div>
+                                                </th> -->
+                                                <!--th scope="col">
+                                                    <div>{keyValue.ContentSize} Bytes</div>
+                                                </th-->
+                                                <!--th scope="col">    
+                                                    <lightning-button data-id={keyValue.Id} 
+                                                                      label="Preview" 
+                                                                      variant="brand" 
+                                                                      value="file preview" 
+                                                                      onclick={filePreview}></lightning-button>
+                                                </th-->
+                                                
+                                         <!--   </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </lightning-tab>
+            </template> -->
+            
+</lightning-tabset>
+</lightning-card>
+            
+</lightning-layout-item>
+</lightning-layout>
+</template>
