@@ -1,0 +1,288 @@
+public class CustomerPayoutAPI {
+    @future(callout = true)  
+    public static void CustomerPayoutMethod(set<Id> DId){
+        List<Demand__c> dlist = new List<Demand__c>();
+        
+        dlist = [Select id,Name,Booking__r.Project__r.Company_Code__c,Booking__r.Project__r.Business_Place__c,Due_Date__c,
+                 Payment_Milestones__r.Milestone_Name__c,Quotation__c,Booking__r.Customer_Number__c,Invoice_Date__c,
+                 Total_Amount_Demanded__c,Total_Amount_with_Tax_Demanded__c,Total_Tax_Demanded__c,CurrencyIsoCode,
+                 Booking__r.Sales_Order_Number__c,Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c,
+                 Booking__r.Unit__r.Name,Debit_Demanded__c,Debit_Type__c,Debit_CGST__c,Debit_SGST__c,Demand_Unique_ID__c,
+                 Booking__r.Project_Unit__c,Is_Back_Dated__c,Back_Date_Posting_Date__c,Remarks__c,
+                 Booking__r.Project__r.Project_Code__c,Cheque_Lot_No__c,Debit_Note_Approved_Date__c,Payment_Reference_Number__c,
+                 Bank_Masters__r.Account_ID__c,Bank_Masters__r.House_Bank_ID__c,Posting_Date__c,Payment_Method__c,
+                 SAP_Cheque_No__c,Bank_Masters__r.GL_Code__c,Bank_Masters__r.Company_Code__c,Special_GL_Indicator__c
+                 from Demand__c where id =: DId ];
+        
+        List<Demand__c> dlistupdate = new List<Demand__c>();
+        List<API_Log__c> loglist = new List<API_Log__c>();
+        
+        if(dlist != null && !dlist.isEmpty()){
+            for(Demand__c d : dlist){
+                String Title = '';
+                String Name1 = '';
+                String Name2 = '';
+                String city = '';
+                
+                String chequeLotNo = d.Cheque_Lot_No__c != null ? string.valueof(d.Cheque_Lot_No__c) : '';
+                
+                String fromCompanyCode = d.Bank_Masters__r.Company_Code__c != null ? d.Bank_Masters__r.Company_Code__c : '';
+                String COMP_CODE = d.Booking__r.Project__r.Company_Code__c != null ? string.valueof(d.Booking__r.Project__r.Company_Code__c) : '';
+                if(fromCompanyCode == COMP_CODE){
+                    fromCompanyCode = '';
+                }
+                
+                DateTime dtdocDate = DateTime.newInstance(d.Debit_Note_Approved_Date__c.year(), d.Debit_Note_Approved_Date__c.month(), d.Debit_Note_Approved_Date__c.day());
+                string docDate = dtdocDate.format('dd.MM.yyyy');
+                
+                DateTime dtposting = DateTime.newInstance(d.Posting_Date__c.year(), d.Posting_Date__c.month(), d.Posting_Date__c.day());
+                String postingDate = dtposting.format('dd.MM.yyyy'); 
+                
+                String docType = 'DZ';
+                String CurrencyKey = 'INR';
+                String refDocNo = d.Payment_Reference_Number__c != null ? d.Payment_Reference_Number__c : '';
+                String DocHeaderTxt =  d.Remarks__c != null ? d.Remarks__c : '';
+                String ASSIGNMENT = d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c+'_'+d.Booking__r.Unit__r.Name;
+                String custNo = d.Booking__r.Customer_Number__c != null ? String.valueof(d.Booking__r.Customer_Number__c) : '';
+                Decimal CGST = math.abs(d.Debit_CGST__c.setscale(0,RoundingMode.HALF_UP));
+                Decimal SGST = math.abs(d.Debit_SGST__c.setscale(0,RoundingMode.HALF_UP));
+                Decimal Amount = d.Debit_Demanded__c != null ? d.Debit_Demanded__c + CGST + SGST : 0;
+                system.debug('Amount::'+Amount);
+                String businessPlace = d.Booking__r.Project__r.Business_Place__c != null ? d.Booking__r.Project__r.Business_Place__c : '';
+                String GLAcc = d.Bank_Masters__r.GL_Code__c != null ? d.Bank_Masters__r.GL_Code__c : '';
+                String wbsCode = d.Booking__r.Unit__r.Tower__r.Cluster__r.SAP_Project_Code__c;
+                String debitTypAndRemarks = d.Debit_Type__c+'-'+d.Remarks__c;
+                String ItemTxt = debitTypAndRemarks.length() >= 50 ?  debitTypAndRemarks.substring(0,49) : debitTypAndRemarks ;
+                String payRefNo = '';
+                Title = '';
+                Name1 = '';
+                Name2 = '';
+                city = '';
+                String spclGL = d.Special_GL_Indicator__c != null ? d.Special_GL_Indicator__c.substring(0, 1) : '';
+                String apiId = d.Name;
+                
+                string payMethod = '';
+                String houseBankId = '';
+                String AccountId = '';
+                if(d.Payment_Method__c != null && d.Payment_Method__c.contains('Online')){
+                    payMethod = '';
+                    houseBankId = '';
+                    AccountId =  '';
+                }
+                else{
+                    payMethod = d.Payment_Method__c != null ? d.Payment_Method__c.substring(0, 1) : '';
+                    houseBankId = d.Bank_Masters__r.House_Bank_ID__c != null ? d.Bank_Masters__r.House_Bank_ID__c : '';
+                    AccountId = d.Bank_Masters__r.Account_ID__c != null ? d.Bank_Masters__r.Account_ID__c : '';
+                }
+                
+                List<SapPayloadWrapper> payloadList = new List<SapPayloadWrapper>();
+                if(d.Debit_Type__c == 'TDS' || d.Debit_Type__c == 'Compensation'  || d.Debit_Type__c == 'Pre-EMI Reimbursement' || 
+                   d.Debit_Type__c == 'Refund' || d.Debit_Type__c == 'Franking Charges'){
+                       
+                       SapPayloadWrapper payload = new SapPayloadWrapper();
+                       payload.DOCUMENT_NUMBER = '';
+                       payload.TYP_CR_UPD = 'X';
+                       payload.HOUSE_BANK_ID = houseBankId;
+                       payload.ACCOUNT_ID = AccountId;
+                       payload.CHEQUE_LOT_NO = chequeLotNo;
+                       payload.PAYMENT_METHOD = payMethod;
+                       payload.FROM_COMPANY_CODE = fromCompanyCode;
+                       payload.COMPANY_CODE = COMP_CODE;
+                       payload.DOCUMENT_DATE = docDate;
+                       payload.POSTING_DATE = postingDate;
+                       payload.DOCUMENT_TYPE = docType ;
+                       payload.CURRENCY_KEY = CurrencyKey;
+                       payload.REFERENCE_DOC_NUMBER = refDocNo;
+                       payload.DOCUMENT_HEADER_TXT = DocHeaderTxt;
+                       payload.CUSTOMER_NUMBER = custNo;
+                       payload.AMOUNT_IN_DOC_CURRENCY = string.valueof(Amount);
+                       payload.VALUE_DATE = postingDate;
+                       payload.BASELINE_DATE = postingDate;
+                       payload.BUSINESS_PLACE = businessPlace;
+                       payload.GENERAL_LEDGER_ACCOUNT = GLAcc;
+                       payload.WBS_CODE = wbsCode;
+                       payload.ASSIGNMENT = ASSIGNMENT;
+                       payload.ITEM_TEXT = ItemTxt;
+                       payload.API_ID = apiId;
+                       payload.PAYMENT_REF_UTR = payRefNo;
+                       payload.TITLE = Title;
+                       payload.NAME_1 = Name1;
+                       payload.NAME_2 = Name2;
+                       payload.CITY = city;
+                       payload.SPECIAL_GL_INDI = spclGL;
+                       
+                       payloadList.add(payload);
+                       
+                       HttpRequest req = new HttpRequest();
+                       req.setEndpoint(endpoint());
+                       req.setMethod('POST');
+                       req.setTimeout(120000);
+                       req.setHeader('Authorization', authorization());
+                       req.setHeader('Content-Type', 'application/json');
+                       String jsonBody = JSON.serialize(payloadList);
+                       req.setBody(jsonBody);
+                       
+                       try{
+                           Http http = new Http();
+                           HTTPResponse response  = new HTTPResponse();
+                           
+                           response  = http.send(req);
+                           
+                           if (response.getStatusCode() == 200) {
+                               System.debug('Raw Response: ' + response.getBody());
+                               
+                               // Parse the response using untyped JSON
+                               List<Object> responseList = (List<Object>) JSON.deserializeUntyped(response.getBody());
+                               
+                               if(responseList != null && !responseList.isEmpty()){
+                                   Map<String, Object> responseMap = (Map<String, Object>) responseList[0];
+                                   
+                                   // Get CUST_PAY_OUTPUT array
+                                   List<Object> custPayOutputList = (List<Object>) responseMap.get('CUST_PAY_OUTPUT');
+                                   
+                                   if(custPayOutputList != null && !custPayOutputList.isEmpty()){
+                                       Map<String, Object> outputMap = (Map<String, Object>) custPayOutputList[0];
+                                       
+                                       API_Log__c ap = new API_Log__c();
+                                       ap.API_Name__c = 'Payout API';
+                                       
+                                       // Get RET_MESSAGE
+                                       if(outputMap.get('RET_MESSAGE') != null){
+                                           ap.Message__c = (String) outputMap.get('RET_MESSAGE');
+                                       }
+                                       
+                                       // Get RET_CODE
+                                       if(outputMap.get('RET_CODE') != null){
+                                           ap.Response_Code__c = (String) outputMap.get('RET_CODE');
+                                       }
+                                       
+                                       ap.Request__c = jsonBody;
+                                       ap.Response__c = response.getBody();
+                                       ap.Demand__c = d.id;
+                                       loglist.add(ap);
+                                       
+                                       // Get PAYMENT_DOC_NO and CHEQUE_NO
+                                       String PaymentDocumentNumber = '';
+                                       String ChequeNumber = '';
+                                       
+                                       if(outputMap.get('PAYMENT_DOC_NO') != null){
+                                           PaymentDocumentNumber = (String) outputMap.get('PAYMENT_DOC_NO');
+                                       }
+                                       
+                                       if(outputMap.get('CHEQUE_NO') != null){
+                                           ChequeNumber = (String) outputMap.get('CHEQUE_NO');
+                                       }
+                                       
+                                       if(PaymentDocumentNumber != null && PaymentDocumentNumber != ''){
+                                           d.SAP_Cheque_No__c = ChequeNumber;
+                                           d.SAP_Posting_Date__c = d.Posting_Date__c;
+                                           d.Accounting_Document_Number__c = PaymentDocumentNumber;
+                                           dlistupdate.add(d);
+                                           
+                                           System.debug('Updated Demand: ' + d.Name + 
+                                                       ' with Payment Doc: ' + PaymentDocumentNumber + 
+                                                       ' and Cheque No: ' + ChequeNumber);
+                                       }
+                                   } else {
+                                       // If CUST_PAY_OUTPUT is empty, check RETURN array
+                                       List<Object> returnList = (List<Object>) responseMap.get('RETURN');
+                                       if(returnList != null && !returnList.isEmpty()){
+                                           Map<String, Object> returnMap = (Map<String, Object>) returnList[0];
+                                           API_Log__c ap = new API_Log__c();
+                                           ap.API_Name__c = 'Payout API - No Output';
+                                           ap.Message__c = (String) returnMap.get('MESSAGE');
+                                           ap.Response_Code__c = (String) returnMap.get('TYPE');
+                                           ap.Request__c = jsonBody;
+                                           ap.Response__c = response.getBody();
+                                           ap.Demand__c = d.id;
+                                           loglist.add(ap);
+                                       }
+                                   }
+                               }
+                           } else {
+                               System.debug('Error: ' + response.getStatusCode() + ' - ' + response.getBody());
+                               API_Log__c ap = new API_Log__c();
+                               ap.API_Name__c = 'Payout API Error';
+                               ap.Message__c = 'HTTP Error: ' + response.getStatusCode();
+                               ap.Response_Code__c = String.valueOf(response.getStatusCode());
+                               ap.Request__c = jsonBody;
+                               ap.Response__c = response.getBody();
+                               ap.Demand__c = d.Id;
+                               loglist.add(ap);
+                           }
+                       } catch(Exception e) {
+                           System.debug('Exception: ' + e.getMessage());
+                           API_Log__c ap = new API_Log__c();
+                           ap.API_Name__c = 'Payout API Exception';
+                           ap.Message__c = 'Exception: ' + e.getMessage();
+                           ap.Response_Code__c = '';
+                           ap.Request__c = jsonBody;
+                           ap.Response__c = 'Exception: ' + e.getStackTraceString();
+                           ap.Demand__c = d.Id;
+                           loglist.add(ap);
+                       }
+                   }    
+            }
+        }
+        
+        if(!loglist.isEmpty()){
+            insert loglist;
+        }
+        if (!dlistupdate.isEmpty()) {
+            update dlistupdate;
+        }
+    }
+    
+    // Wrapper class for payload
+    public class SapPayloadWrapper {
+        public String DOCUMENT_NUMBER;
+        public String TYP_CR_UPD;
+        public String HOUSE_BANK_ID;
+        public String ACCOUNT_ID;
+        public String CHEQUE_LOT_NO;
+        public String PAYMENT_METHOD;
+        public String FROM_COMPANY_CODE;
+        public String COMPANY_CODE;
+        public String DOCUMENT_DATE;
+        public String POSTING_DATE;
+        public String DOCUMENT_TYPE;
+        public String CURRENCY_KEY;
+        public String REFERENCE_DOC_NUMBER;
+        public String DOCUMENT_HEADER_TXT;
+        public String CUSTOMER_NUMBER;
+        public String AMOUNT_IN_DOC_CURRENCY;
+        public String VALUE_DATE;
+        public String BASELINE_DATE;
+        public String BUSINESS_PLACE;
+        public String GENERAL_LEDGER_ACCOUNT;
+        public String WBS_CODE;
+        public String ASSIGNMENT;
+        public String ITEM_TEXT;
+        public String API_ID;
+        public String PAYMENT_REF_UTR;
+        public String TITLE;
+        public String NAME_1;
+        public String NAME_2;
+        public String CITY;
+        public String SPECIAL_GL_INDI;
+    }
+    
+    public static String authorization() {
+        String authHeader;
+        SAP_Credential__mdt sapSetting;
+        sapSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                      from SAP_Credential__mdt 
+                      where QualifiedApiName = 'Customer_Payout_API'];
+        authHeader = 'Basic ' + Encodingutil.base64Encode(Blob.valueOf(sapSetting.Username__c + ':' + sapSetting.Password__c));
+        return authHeader;
+    }
+    
+    public static String endpoint() {
+        SAP_Credential__mdt fiSetting;
+        fiSetting = [Select MasterLabel, Endpoint__c, Password__c, Username__c 
+                     from SAP_Credential__mdt 
+                     where QualifiedApiName = 'Customer_Payout_API'];
+        system.debug('Endpoint:::'+fiSetting.Endpoint__c);
+        return fiSetting.Endpoint__c;
+    }
+}
