@@ -1,0 +1,129 @@
+//TestClassTrrgReceiptAndDemand
+trigger trgReceipt on Receipt__c (after update , after Insert , after delete , after undelete) {
+   if (trigger.isAfter && trigger.isUpdate) {
+        for (Receipt__c objReceipt: trigger.new) {
+            system.debug('Inside Receipt Update Trigger');
+          /*  if(objReceipt.Banking__c == 'Payment Successful' && trigger.oldmap.get(objReceipt.id).Banking__c != 'Payment Successful')
+            {
+                sendReceipt.sendMails(objReceipt);
+            }*/
+            if (objReceipt.Receipt_Status__c == 'Dishonored' && trigger.oldmap.get(objReceipt.id).Receipt_Status__c != 'Dishonored') {
+                chequeDishonourProcess(objReceipt.id);
+            } else if (objReceipt.Receipt_Status__c == 'Physical Verification Rejected' && trigger.oldmap.get(objReceipt.id).Receipt_Status__c != 'Physical Verification Rejected') {
+                chequeDishonourProcess(objReceipt.id);
+            }
+        }
+    }
+    
+    if(trigger.isAfter){
+        Set<Id>bList = new Set<Id>();
+        if(trigger.isInsert){
+            for(Receipt__c rep : trigger.new){
+                system.debug('Inside the calclulation of the total amount trigger');
+                system.debug('list of receipt '+trigger.new);
+                system.debug('Booking got update '+rep.Booking__c);
+                
+                bList.add(rep.Booking__c);
+                
+                // CSOAReceivedAmountHelper.calculateAmount();
+            }
+        }
+        
+        if(trigger.isUpdate){
+            for(Receipt__c rep : trigger.new){
+                system.debug('Inside the calclulation of the total amount trigger');
+                system.debug('list of receipt '+trigger.new);
+                system.debug('Booking got update '+rep.Booking__c);
+				
+                bList.add(rep.Booking__c);
+				                
+                //CSOAReceivedAmountHelper.calculateAmount(rep.Booking__c);
+            }
+        }
+        
+        if(bList!= null){
+            CSOAReceivedAmountHelper.calculateAmount(bList);
+        }
+        
+    }
+    
+    public static void chequeDishonourProcess(Id receiptId) {
+        Receipt__c r = [Select Id, Name, Project_Unit__c, Booking__c, Job_Run__c, Cancellation_Initiated__c,Token_Amount_Receipt__c,
+                        Opportunity__c, Project__c, Receipt_Status__c,Project__r.Cheque_Bounce_Charges__c,Booking__r.Project__c,
+                        Booking__r.Unit__c,Booking__r.Quotation__c from receipt__c where Id= :receiptId];
+        List<Receipt_Details__c> rdList = new List<Receipt_Details__c>();
+        rdlist = [Select Id, Name from Receipt_Details__c where Receipts__c = :receiptId];
+        if(!rdList.isEmpty() && rdList.size() > 0) {
+            for(Receipt_Details__c rd : rdList) {
+                rd.Status__c = 'Cancelled';
+            }
+            update rdList;
+        }
+        if(r.Receipt_Status__c.equalsIgnoreCase('Dishonored')) {
+            // cheque bounce incurrs penalty, create debit note through demands
+            Demand__c d = new Demand__c();
+            d.Invoice_Date__c = system.today();
+            d.Due_Date__c = system.today().addDays(15);
+            d.Debit_Type__c = 'Cheque Bounce';
+            d.Milestone_Name__c = 'Debit Note';
+            d.Debit_Demanded__c = r.Project__r.Cheque_Bounce_Charges__c;
+            d.debit_sgst__c = (r.Project__r.Cheque_Bounce_Charges__c * 9/100);
+            d.debit_cgst__c = (r.Project__r.Cheque_Bounce_Charges__c * 9/100);
+            d.Booking__c = r.Booking__c;
+            d.Project__c = r.Booking__r.Project__c;
+            d.Unit__c = r.Booking__r.Unit__c;
+            d.Quotation__c = r.Booking__r.Quotation__c;
+			Map<String, Id> quoteApproversMap = getApproversdebit(r.Project__c);
+          	if(quoteApproversMap != null && quoteApproversMap.containsKey('First Level')){
+            d.Debit_Note_Approver__c = quoteApproversMap.get('First Level');
+            }
+            insert d;
+            system.debug('debit note::-'+d.Id);
+        }
+        // if the dishonoured cheque is a token amount cheque then trigger the cancellation process for this unit
+      /*  if(r.Token_Amount_Receipt__c) {
+            Opportunity customer = [Select Id, Name, Unit__c, relationship_manager__c from Opportunity where Id = :r.Opportunity__c];
+            if(customer != null) {
+                Cancellation_Intimation__c c = new Cancellation_Intimation__c();
+                    c.Customer__c = customer.Id;
+                    c.Unit__c = customer.Unit__c;
+                    c.Letter_generated_date__c = system.today();
+                    c.Letter_Category__c = 'Cheque Dishonour Letter (CDL)';
+                    c.letterType__c = 'Cheque Dishonour Letter for Booking Amount';
+                    c.subject__c = 'Cheque Dishonour Letter for Booking Amount';    
+                    c.ownerId = customer.relationship_manager__c;
+                    c.Letter_sent_date__c = system.today();
+                    c.Sent_By_User__c = UserInfo.getUserId();
+                    c.Is_Letter_Sent__c = true;
+               //     c.ownerId = r.ownerId;
+                insert c;
+                
+                   customer.Cancellation_In_Progress__c = true;
+                    customer.Cancellation_Type__c = 'Booking Amount Default';
+                    customer.cancellation_Initiation_Record__c = receiptId;
+                    customer.Cancellation_Remarks__c = System.today().format() + ': Customer marked for cancellation on basis of Booking Amount Default';
+                    customer.L1_to_be_sent_on__c = System.today();
+                    customer.First_Letter_Sent_On__c = System.today();
+                    customer.Cancellation_Remarks__c += '\n' + System.today().format() + ': First letter will be generated on ' + customer.L1_to_be_sent_on__c.format();
+                    customer.Cancellation_Remarks__c += '\n' + System.today().format() + ': Cancellation letter category ' + c.Letter_Category__c + ' generated and sent by system';
+                    customer.Latest_Letter__c = c.Id;
+                    customer.L2_to_be_sent_on__c = System.today().addDays(5);
+                    System.debug('Opportunity:' + customer.Id + ':'+ customer.Name);
+                    update customer;
+               }
+                
+            
+        }*/
+        
+    }
+    
+    public static Map<String,Id> getApproversdebit(Id projId) {
+        List<Team_Members__c> tmList = [Select User__c,Approver_Type__c, IsActive__c from Team_Members__c where Team__r.Team_Type__c like 'Debit Note Approver Team%' and Team__r.Project__c = : projId];
+        Map<String,Id> quoteApproversMap = new Map<String,Id>();
+        for(Team_Members__c tm : tmList) {
+            quoteApproversMap.put(tm.Approver_Type__c, tm.User__c);
+        }
+        return quoteApproversMap;
+    } 
+       
+}
