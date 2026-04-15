@@ -1,0 +1,33 @@
+trigger CheckDuplicateUnit on Unit__c (before insert,before Update,after update) {
+    Set<Id> towerId = new Set<Id>();
+    List<String> strUnitName = new List<string>();
+    
+    for(Unit__c u:Trigger.new){      
+         if(u.Tower__c != null ){
+            towerId.add(u.Tower__c);
+          }
+    }
+    
+    for(Unit__c u1 :[Select Id,name,Tower__c from Unit__c where Tower__c IN :towerId and Id Not In :Trigger.new ]) {
+        strUnitName.add(u1.Name);
+    }
+    
+    for(Unit__c u2: Trigger.new){
+        system.debug('strUnitName'+strUnitName);
+        system.debug('u2.Name'+u2.Name);
+        if(strUnitName.contains(u2.Name) ){
+            u2.addError('Can not Insert more than one Unit with same name');
+        }
+    }  
+    
+    //To update Construction linked payment milestones which are unit linked.
+    //When any of the completion dates is updated on the Unit obj, the resp Payment milestone with similar name is updated with the date to show on 
+    //raise demand dashboard directly without approval.
+   
+    
+    if(trigger.isAfter && trigger.isUpdate){
+       unitHelperClass.updateConsMilestone(Trigger.new,Trigger.oldMap);
+        
+        
+    }
+}
