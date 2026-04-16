@@ -1,0 +1,142 @@
+public class DisplayRelatedController {
+    @AuraEnabled
+    public static List<Project__c> getBrand(){
+        List<Project__c> proplist = [Select Id, Name FROM Project__c where Show_On_Community_Portal__c = true];
+        return proplist;   
+    }
+    @AuraEnabled
+    public static List<Project__c> getModel(String propId)
+    {
+     List<Project__c> unitList =[Select Id, Name FROM Project__c where id =: propId];
+        return unitList;
+    }
+     @AuraEnabled
+    public static List<Project__c> getAnnouncementList(){
+        List<Project__c> plist = [Select Id, Name FROM Project__c];
+        return plist;   
+    }
+    @AuraEnabled
+    public static String getAnnouncement(){
+        String UserEmail = UserInfo.getUserEmail();
+        String DueAmount = '';
+        Decimal AmtDemanded = 0;
+        //User u = [Select id,Name From User where Email=: UserEmail];
+		Account acc = [Select id, name from Account where PersonEmail =:UserEmail and Customer_Portal_User__c = true ];
+        system.debug('acc::'+acc);
+        List<Booking__c> bklist = [Select id,name,TotalAmountDemanded__c,TotalAmountPaid__c,TotalAmountBalance__c from Booking__c where Account__c=:acc.id];
+        system.debug('bklist::'+bklist);
+        for(Booking__c b :bklist){
+            AmtDemanded += b.TotalAmountBalance__c;
+        }
+        
+        if(AmtDemanded > 0){
+            //DueAmount = 'Total Amount Demanded : '+InventoryCostServices.INFormatR(AmtDemanded)+'***** Balance Amount : '+bklist[0].TotalAmountBalance__c+'';
+            DueAmount = 'Due Amount : '+InventoryCostServices.INFormatR(AmtDemanded)+'';
+        }else{
+            DueAmount = '';
+        }
+        system.debug('DueAmount::'+DueAmount);
+        return DueAmount;
+    }
+    public static String getAnnouncement2(){
+        List<Project__c> ann = [Select Id, Name FROM Project__c where name = 'Pursuit of a Radical Rhapsody'];
+        system.debug('Ann::'+ann);
+        String pname = 'Pursuit of a Radical Rhapsody';
+        return pname;     
+    }
+
+    public static String getAnnouncement3(){
+        List<Project__c> ann = [Select Id, Name FROM Project__c where name = 'In That Quiet Earth'];
+        system.debug('Ann::'+ann);
+        return ann[0].name;   
+    }
+
+	@AuraEnabled
+    public static List<ContentVersion> getContents(string brandId, string ObjectName) {
+        Set<Id> contentIds = new Set<Id>();
+        if(ObjectName == 'Project__c')
+        {
+            for (ContentDocumentLink cont :[SELECT ContentDocumentId, LinkedEntityId FROM ContentDocumentLink where LinkedEntityId in ( SELECT Id FROM Project__c where Id =: brandId) and LinkedEntity.Type=:ObjectName and ContentDocument.Title LIKE 'Community%']) {
+                contentIds.add(cont.ContentDocumentId);
+            }
+        }
+         else
+        {
+			 for (ContentDocumentLink cont :[SELECT ContentDocumentId, LinkedEntityId FROM ContentDocumentLink where LinkedEntityId in ( SELECT Id FROM Project__c where Id =: brandId) and LinkedEntity.Type=:ObjectName]) 
+            {
+                contentIds.add(cont.ContentDocumentId);   
+            }
+        }
+        /*
+		system.debug('contentIds::'+contentIds);
+        for(ContentVersion cv :[SELECT Id,Title FROM ContentVersion WHERE ContentDocumentId IN :contentIds] ){
+            system.debug('title::'+cv.Title);
+            if(cv.Title.contains('Community')){
+                cId.put('projectimage', cv.Id);
+            }else{
+                cId.put('projectlogo', cv.Id);
+            }
+        }
+        system.debug('Map::'+cId);
+		return cId;
+
+		*/
+		return [SELECT Id,Title,Description FROM ContentVersion WHERE ContentDocumentId IN :contentIds LIMIT 1];
+    }
+    
+    @AuraEnabled
+    public static List<ContentVersion> getContentsprojectLogo(string brandId, string ObjectName) {
+        Set<Id> contentIds = new Set<Id>();
+        if(ObjectName == 'Project__c')
+        {
+            for (ContentDocumentLink cont :[SELECT ContentDocumentId, LinkedEntityId FROM ContentDocumentLink where LinkedEntityId in ( SELECT Id FROM Project__c where Id =: brandId) and LinkedEntity.Type=:ObjectName and ContentDocument.Title LIKE 'POARR%']) {
+                contentIds.add(cont.ContentDocumentId);
+            }
+        }
+         else
+        {
+			 for (ContentDocumentLink cont :[SELECT ContentDocumentId, LinkedEntityId FROM ContentDocumentLink where LinkedEntityId in ( SELECT Id FROM Project__c where Id =: brandId) and LinkedEntity.Type=:ObjectName]) 
+            {
+                contentIds.add(cont.ContentDocumentId);   
+            }
+        }
+		return [SELECT Id,Title FROM ContentVersion WHERE ContentDocumentId IN :contentIds LIMIT 1];
+    }
+    @AuraEnabled
+    public static List<ContentVersion> getProjectConstructionImages(String projId) {
+        Set<Id> contentIds = new Set<Id>();
+       
+            for (ContentDocumentLink cont :[SELECT ContentDocumentId, LinkedEntityId FROM ContentDocumentLink where LinkedEntityId in ( SELECT Id FROM Project__c where id=: projId) and LinkedEntity.Type=:'Project__c' and ContentDocument.Title LIKE 'Community']) {
+                contentIds.add(cont.ContentDocumentId);
+            }
+        
+         
+		return [SELECT Id,Title FROM ContentVersion WHERE ContentDocumentId IN :contentIds LIMIT 10];
+    }
+    
+    @AuraEnabled(cacheable = true)
+    public static List<hmq__Headlines__c> getRecord(){
+        List<hmq__Headlines__c> headlinelist = [Select Id, hmq__Active__c,hmq__Content__c,hmq__Priority__c,hmq__Reference_Link__c,CreatedDate FROM hmq__Headlines__c where hmq__Active__c = true ORDER BY CreatedDate DESC];
+        return headlinelist;   
+    }
+    @AuraEnabled
+    public static List<ContentVersion> getContentsTile(string brandId, string ObjectName) {
+        Set<Id> contentIds = new Set<Id>();
+        if(ObjectName == 'hmq__Headlines__c')
+        {
+            for (ContentDocumentLink cont :[SELECT ContentDocumentId, LinkedEntityId FROM ContentDocumentLink where LinkedEntityId in ( SELECT Id FROM hmq__Headlines__c where Id =: brandId) and LinkedEntity.Type=:ObjectName ]) {
+                contentIds.add(cont.ContentDocumentId);
+            }
+        }
+         else
+        {
+			 for (ContentDocumentLink cont :[SELECT ContentDocumentId, LinkedEntityId FROM ContentDocumentLink where LinkedEntityId in ( SELECT Id FROM Project__c where Id =: brandId) and LinkedEntity.Type=:ObjectName]) 
+            {
+                contentIds.add(cont.ContentDocumentId);   
+            }
+        }
+        System.debug('ContentId::'+contentIds);
+		return [SELECT Id,Title FROM ContentVersion WHERE ContentDocumentId IN :contentIds LIMIT 1];
+    }
+    
+}
