@@ -1,0 +1,649 @@
+<apex:page controller="TermsheetPageQuotationController" docType="html-5.0" renderAs="Pdf" showHeader="true" standardStylesheets="false" sidebar="false" applyHtmlTag="true" applyBodyTag="false">
+    <head>          
+        <style type="text/css" media="print"> 
+            @page {
+            
+            @top-center {
+                    content: element(header);
+            }
+           @bottom-left {
+                    content: element(footer);
+           }
+            size:4in 4in;
+            margin:20mm 20mm 60mm 20mm;
+            
+            }
+            body{
+            margin:0;
+            padding:0;
+            font-family: sans-serif;
+            font-size:18px;
+            line-height:1.5;
+            }
+            @page {
+            size: 8.26in 11.69in;
+            margin:8mm;
+            margin-bottom:190px;
+            }
+            
+            
+            .maintable {
+                    
+            border-collapse: collapse;
+            margin:0;
+            
+            }
+            
+            .maintable tr td {
+            
+            border:1px solid #DCDCDC;
+            border-collapse: collapse;
+            }
+            .subtable{
+            width:100%;
+            border-collapse: collapse;
+            }
+            .subtable tr td {
+            
+            padding:5px;
+            }
+            
+            .specification{
+            background-color:#303030;   
+            text-align: center !important;
+            border-collapse: collapse;
+            font-size: 20px;
+            color:white;            
+            height:50px;
+            width:70% !important;
+            font-weight: bold;
+            }
+            
+            .speccolor{
+            font-weight: bold;
+            color:white;
+            transform: rotate(90deg) !important;
+            text-transform: uppercase;
+            font-size: 12px;
+            }
+            
+            .category{
+            background-color:#808080;
+            font-weight: bold;
+            color:white;
+            font-size: 12px;
+            padding:5px;
+            cell-padding:10px;
+            }
+            
+            .subcategory{
+            width:10%;
+            text-align:right !important;
+            padding:5px;
+            font-size: 10px;
+            }
+            .testcssAppNames{ 
+            text-align:center !important;
+            padding:2px;
+            font-size: 11px;
+            
+            }
+            
+            .testcss1{ 
+            text-align:center !important;
+            padding:5px;
+            font-size: 11px;
+            
+            }
+            .testcss2{
+            width:40%;
+            text-align:left !important;
+            padding:5px;
+            font-size: 11px;
+            
+            }
+            .testcss3{
+            width:10%;
+            text-align:center !important;
+            padding:5px;
+            font-size: 11px;
+            }
+            .testcss4{ 
+            text-align:right !important;
+            padding:5px;
+            font-size: 11px;
+            }
+            .testcss5{
+            text-align:center !important;
+            vertical-align:bottom !important;
+            padding:5px;
+            font-size: 11px;
+            }
+            .library{
+            font-size:10px;
+            padding:1px;
+            }
+            .specapplicable{
+           
+            }
+            .header{
+                
+                }
+            .footer{
+                display:block;
+                position: running(footer);
+                margin: 0px auto !Important;
+            	margin-top:0px;
+                
+               
+            
+            }
+            .termAndCond{
+            text-align:left !important;
+            padding:5px;
+            font-size: 11px;
+            
+            }
+            @page{
+            .rotate{
+            /* Safari */
+            -webkit-transform: rotate(-90deg);
+            
+            /* Firefox */
+            -moz-transform: rotate(-90deg);
+            
+            /* IE */
+            -ms-transform: rotate(-90deg);
+            
+            /* Opera */
+            transform: rotate(-90deg);
+            }
+            }
+            .sfdc_richtext img{
+            width:90px;
+            position:relative;
+            left:120px;
+            }
+             
+           
+        </style>
+    </head>
+    <body >
+        <div class= "errormsg1">
+              <!-- <apex:pagemessages id="pgmsg"></apex:pagemessages> -->
+             <apex:outputLabel value="{!errormsg}" id="pgmsg1" escape="false">
+             </apex:outputLabel>
+        </div>
+        
+        <apex:outputPanel rendered="{!AND(isError1 == 0)}">
+    <apex:form >
+    <!---------------------------------Header and Footer---------------------------------------------------------------->
+                <div class="header">      
+                    <table width="100%">
+                      <tr>
+                        <td align="left" width="70%">
+                            
+                            <table>
+                               <tr style="display:{!if(unit.Permitted_Use__c == 'Residential','table-row','none')}">
+                                 <td>  
+                                   <apex:image url="{!$Resource.TEHomesLogo}" width="220" height="50"/>
+                                 </td>  
+                               </tr> 
+                                <tr style="display:{!if(unit.Permitted_Use__c == 'Commercial','table-row','none')}">
+                                 <td>  
+                                   <apex:image url="{!$Resource.TECommercial}" width="220" height="50"/>
+                                 </td>  
+                               </tr>
+                               <tr>
+                                   <td style="font-size: 11px;margin-bottom:0px;">{!promoter.name}<br/>{!promoter.Registered_office__c}</td>
+                                </tr>
+                                
+                            </table>
+                        </td>
+                        <td align="right" width="30%">
+                            <table class="projectLogo" width="100%">
+                               <tr>
+                                 <td align="right" style="text-align:right;">  <apex:outputField value="{!prj.Project_Logo__c}"/></td>
+                               </tr>
+                            </table>
+                        </td>  
+                      </tr>
+                    </table>  
+                </div>
+                <div class="footer">
+                    <!--hr style="margin-bottom:0px;color:#d3d3d3;position:relative;top:7px;"/-->
+                  <!--label style="margin-top:-5px;" class="library">I agree to all the costs, payment schedules, terms and conditions as mentioned above.</label-->
+                    <table width="100%">
+                        <tr class="testcss2" style="display:{!if(unit.Permitted_Use__c == 'Commercial','table-row','none')}">
+                           <td><b>I agree to all the costs, payment schedules, terms and conditions as mentioned above.</b></td> 
+                        </tr> 
+                    </table>
+               <table class="maintable" width="100%">
+               <tr>
+                   <td class="testcssAppNames" > <br/><br/> <br/> {!qt.Applicant_Name__c} <br/><b>Allottee/s</b></td>
+                     <td class="testcss5">
+                     <table class="maintable" width="100%">
+                        
+                     <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c == 'JD','table-row','none')}">
+                         
+                       <td style="border:none;"> <br/> <br/> <br/>{!qt.Sales_Consultant_Formula__c}</td>
+                       <td style="border:none;"> <br/> <br/> <br/>{!u.FirstName}&nbsp;{!u.LastName}</td>
+                       <td style="border:none;"> <br/> <br/> <br/>Sameer Bansal</td>
+                       <td style="border:none;"> <br/> <br/> <br/>Kamal Sagar</td>
+                         <td style="border:none;border-left:1px solid #DCDCDC;"> <br/> <br/> <br/><apex:outputField value="{!unit.Land_Owner__r.JD_Signatory__c}"/></td>   
+                         </tr>
+                         <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c == 'JD','table-row','none')}">
+                             <td style="border:none;border-bottom:1px solid #DCDCDC;" colspan="4"><b>Confirming Party</b></td>
+                             <td style="border:none;border-bottom:1px solid #DCDCDC;border-left:1px solid #DCDCDC;" colspan="1"><b>Landowner</b></td>
+                         </tr>
+                         <apex:outputPanel rendered="{!unit.Unit_Ownership__c == 'JD'}"><b>Authorized Signatories For Promoters</b></apex:outputPanel>
+                         
+                      <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c != 'JD' && unit.Permitted_Use__c == 'Commercial','table-row','none')}">
+                         
+                       <td style="border:none;"> <br/> <br/> <br/>{!qt.Sales_Consultant_Formula__c}</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>   
+                         </tr><apex:outputPanel rendered="{!unit.Unit_Ownership__c != 'JD' && unit.Permitted_Use__c == 'Commercial'}"><b>{!promoter.Name}<br/>[Promoters]</b></apex:outputPanel>   
+                     <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c != 'JD' && unit.Permitted_Use__c == 'Residential','table-row','none')}">
+                         
+                       <td style="border:none;"> <br/> <br/> <br/>{!qt.Sales_Consultant_Formula__c}</td>
+                       <td style="border:none;"> <br/> <br/> <br/>{!u.FirstName}&nbsp;{!u.LastName}</td>
+                       <td style="border:none;"> <br/> <br/> <br/>Sameer Bansal</td>
+                       <td style="border:none;"> <br/> <br/> <br/>Kamal Sagar</td>   
+                         </tr> <apex:outputPanel rendered="{!unit.Unit_Ownership__c != 'JD' && unit.Permitted_Use__c == 'Residential'}"><b>{!promoter.Name}<br/>[Promoters]</b></apex:outputPanel>    
+                     </table>
+                     </td>
+                 </tr> 
+               </table>
+                    <hr style="color:#d3d3d3;margin-top:4px;"/>
+              <p style="text-align:right" class="library">Quotation : {!qt.Name}&nbsp;Generated on: {!dte}</p>
+               </div>
+<!-------------------------------------------------------First Page------------------------------------------------->
+                <div>
+                <Center>
+                
+                        <h3 style="background-color:#696969; color:white; padding: 0px; margin:0;margin-top:-22px;font-size: 18px;">TERMSHEET</h3>
+                
+                </Center>
+                <!-----------------------Residential--------------------------------------------------->
+                 <apex:outputPanel rendered="{!isResidential}">
+                <table class ="maintable" width="100%" >
+                <tr style="width:100%;">
+                     <td style="width:1%;"></td>
+                     <td colspan="3" class="testcss1"><b>Allottees:</b></td> 
+                     <td colspan="5" style="font-size: 11px;padding:5px; text-align:left !important;"><b>{!qt.Applicant_Name__c}</b></td>
+                     <!--<td colspan="2" class="testcss1"><b>Booking Date:&nbsp;&nbsp;&nbsp;</b></td> <apex:outputText value="{0, date, dd-MM-yyyy}"><apex:param value="{!bk.Booking_Date__c}" /></apex:outputText>-->
+                     <td colspan="2" style="font-size: 11px;padding:5px; text-align:center !important;"><b>Booking Date:{!dte}</b></td>
+               </tr>
+                    
+               <tr class="maintable" style="display:{!if(prj.State__c != 'Maharashtra','table-row','none')};width:100%;">
+                     <td></td>
+                     <td colspan="3" class="testcss1" style="width:10%;">Unit</td>
+                     <td class="testcss1" style="width:10%;" >Level [Floor]</td>
+                     <td class="testcss1" style="width:10%;" >Interior Design</td>
+                   	 <td class="testcss1" style="width:10%;" >Saleable Area(Sq. Ft)</td>
+                     <td class="testcss1" style="width:10%;" >Built-Up Area(Sq. Ft)</td>
+                     <td class="testcss1" style="width:10%;" >Carpet Area(Sq. Ft)</td>
+                     <td class="testcss1" style="width:10%;" >Outdoor Area(Sq. Ft)</td>
+                   <td class="testcss1" style="width:10%;" >Consideration<br/>(INR)</td>    
+               </tr>
+               <tr class="maintable" style="display:{!if(prj.State__c == 'Maharashtra','table-row','none')};width:100%;">
+                     <td></td>
+                     <td colspan="3" class="testcss1" style="width:10%;">Unit</td>
+                     <td class="testcss1" style="width:20%;" colspan="2">Level [Floor]</td> 
+                     <td class="testcss1" style="width:10%;" >Interior Design</td>
+                     <td class="testcss1" style="width:10%;" >Built-Up Area(Sq. Ft)</td>
+                     <td class="testcss1" style="width:10%;" >Carpet Area(Sq. Ft)</td>
+                     <td class="testcss1" style="width:10%;" >Outdoor Area(Sq. Ft)</td>
+                   <td class="testcss1" style="width:10%;" >Consideration<br/>(INR)</td>    
+               </tr>     
+                    
+               <tr class="maintable" style="display:{!if(prj.State__c != 'Maharashtra','table-row','none')}">
+                     <td class="testcss1"></td>
+                     <td colspan="3" class="testcss1"><b><apex:outputField value="{!unit.Name}"/></b></td>
+                     <td class="testcss1"><apex:outputText value="{!unit.Level__c}[{!unit.Floor__c}]" rendered="{!unit.Is_Villa__c == false}"></apex:outputText>
+                                      <apex:outputText value="0[0]"  rendered="{!unit.Is_Villa__c == true }"></apex:outputText>
+                     </td>
+                     <td class="testcss1"><apex:outputField value="{!Quote.Final_Customisation__c}"/></td>
+                   	 <td class="testcss4" ><b><apex:outputText value="{0, number, integer}"><apex:param value="{!unit.Saleable_Area_Sub_Product__c}" /></apex:outputText></b></td>
+                     <td class="testcss4" ><b><apex:outputText value="{0, number, integer}"><apex:param value="{!unit.Builtup_Area_Sub_Product__c}" /></apex:outputText></b></td>
+                     <td class="testcss4"><b><apex:outputText value="{0, number, integer}"><apex:param value="{!unit.RERA_Carpet_Area_Sub_Product__c}"/></apex:outputText></b></td>  
+                     <td class="testcss4"><b><apex:outputText value="{0, number, integer}"><apex:param value="{!unit.Outdoor_Area_Sub_Product__c}"/></apex:outputText></b></td>
+                      <td style=" text-align:right !important;padding:5px;font-size: 10px;width:67px;"><b>{!strConsiderationValue}</b></td>     
+               </tr>
+               <tr class="maintable" style="display:{!if(prj.State__c == 'Maharashtra','table-row','none')}">
+                     <td class="testcss1"></td>
+                     <td colspan="3" class="testcss1"><b><apex:outputField value="{!unit.Name}"/></b></td>
+                     <td class="testcss1" colspan="2"><apex:outputText value="{!unit.Level__c}[{!unit.Floor__c}]" rendered="{!unit.Is_Villa__c == false}"></apex:outputText>
+                                      <apex:outputText value="0[0]"  rendered="{!unit.Is_Villa__c == true }"></apex:outputText>
+                     </td>
+                     <td class="testcss1"><apex:outputField value="{!Quote.Final_Customisation__c}"/></td>
+                     <td class="testcss4" ><b><apex:outputText value="{0, number, integer}"><apex:param value="{!unit.Builtup_Area_Sub_Product__c}" /></apex:outputText></b></td>
+                     <td class="testcss4"><b><apex:outputText value="{0, number, integer}"><apex:param value="{!unit.RERA_Carpet_Area_Sub_Product__c}"/></apex:outputText></b></td>  
+                     <td class="testcss4"><b><apex:outputText value="{0, number, integer}"><apex:param value="{!unit.Outdoor_Area_Sub_Product__c}"/></apex:outputText></b></td>
+                      <td style=" text-align:right !important;padding:5px;font-size: 10px;width:67px;"><b>{!strConsiderationValue}</b></td>     
+               </tr>
+                    
+                    
+               <tr class="maintable">
+                     <td class="testcss1" style="border-top: 1px solid black;padding:4px 5px;">&nbsp;&nbsp;</td>
+                     <td style = "width:48%;border-top: 1px solid black;padding:4px 5px;" colspan="6" class="testcss2">Cost of Residential Unit</td>
+                     <td class="testcss1" style="background-color:{!colorcode};color:white;width:81px;border-top: 1px solid black;padding:4px 5px;"><apex:outputField value="{!Quote.Selected_Specification__c}"/></td>
+                     <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;width:81px;border-top: 1px solid black;"></td>
+                     <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;"></td>
+                     <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;">{!strConsiderationValue}</td>     
+               </tr>
+               <apex:repeat value="{!earmarkedcpmap}" var="cp">
+                    <apex:repeat value="{!earmarkedcpmap[cp]}" var="ch">     
+                   <tr class="maintable" style="display:{!if(qt.TotalEarmarkedCarpark__c > 0,'table-row','none')}">
+                         <td>&nbsp;&nbsp;</td>
+                         <td colspan="6" class="testcss2" style='padding:4px 5px;'>&nbsp;&nbsp;&nbsp;{!ch.cName}</td>
+                         <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>
+                         <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;">{!ch.count}</td>
+                         <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>
+                         <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>     
+                   </tr>
+               		</apex:repeat>
+               </apex:repeat>
+                    
+                    <apex:repeat value="{!additionalcpmap}" var="acp"> 
+                        <apex:repeat value="{!additionalcpmap[acp]}" var="ach">
+                            <tr class="maintable" style="display:{!if(qt.TotalAdditionalCarpark__c > 0,'table-row','none')}">
+                                <td>&nbsp;&nbsp;</td>
+                                <td colspan="6" class="testcss2" style='padding:4px 5px;'>&nbsp;&nbsp;&nbsp;{!ach.cAName}</td>
+                                <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>
+                                <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;">{!ach.addcount}</td>
+                                <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>
+                                <td cstyle=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>     
+                            </tr>
+                        </apex:repeat>
+                    </apex:repeat>
+               
+               <tr class="maintable" style="display:{!if((unit.Additional_Land__c != Null && unit.Additional_Land__c > 0) || (unit.Villa_Plot_Area_Sub_Product__c != null && unit.Villa_Plot_Area_Sub_Product__c != 0) ,'table-row','none')}">
+                     <td>&nbsp;&nbsp;</td>
+                     <td colspan="6" class="testcss2" style='padding:4px 5px;'>&nbsp;&nbsp;&nbsp;Exclusive Right to Access of :&nbsp;{!excAccessRight}&nbsp;Square Feet</td>
+                     <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>
+                     <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>
+                     <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>
+                     <td cstyle=" text-align:right !important;padding:4px 5px;font-size: 10px;"></td>     
+               </tr>
+               
+       <!-----------------------------------------Second Table-------------------------------------------------->        
+               
+               <tr class="maintable">
+                   <td style="width:1%;border-top: 1px solid black;"></td>
+                   <td colspan="6" style="width:40px;text-align:left !important; padding:4px 5px;font-size: 11px;border-top: 1px solid black;" ><b>Payment Schedule</b></td>
+                   <td style=" text-align:center !important;padding:4px 5px;font-size: 11px;border-top: 1px solid black;"><b>Due Date</b></td>
+                   <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;" ><b>Consideration</b></td>
+                   <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;" ><b>Estimated Tax</b></td>
+                   <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;" ><b>Total Consideration(INR)</b></td>
+                </tr>
+                <tr class="maintable">
+                     <td style="width:1%;padding:3px 5px;"></td>
+                     <td colspan="6" class="testcss1" style="padding:3px 5px;"></td>
+                     <td class="testcss1" style="padding:3px 5px;"></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><b>{!strConsiderationValue}</b></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><b>{!stradditionoftax }</b></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><b>{!strTotalAmtwithtax }</b></td>
+                </tr>
+                <!----------------------Raised Milestone----------------------------------->
+                    
+               <apex:variable rendered="{!see}" value="{!1}" var="count" >
+                <tr  class="maintable">
+                     <td style="height:0px;padding:3px 5px;" class="testcss1"  >{!count}</td>
+                     <td style = "text-align:left !important;padding:3px 5px;font-size: 11px;" colspan="6" >Special Installment</td>
+                     <td style="text-align:center !important;padding:3px 5px;font-size:11px;"><apex:outputText value="{0,date,dd/MM/yyyy}" ><apex:param value="{!book.Booking_Date__c}"/></apex:outputText> </td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><apex:outputText value="{!amountraised}"></apex:outputText> </td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!taxraised}</td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!amounttaxraised}</td>     
+               </tr>
+               </apex:variable>
+               <!--------------------------------------------------------------------------------------->
+                <apex:variable value="{!b}" var="count" />
+                <apex:repeat value="{!pmwList}" var="avcharge" rendered="{!ISNULL(pmwList) == false && pmwList.size > 0}">
+                <tr  class="maintable">
+                     <td style="height:0px;padding:3px 5px;" class="testcss1"  >{!count}</td><apex:variable value="{!count+1}" var="count" />
+                     <td style = "text-align:left !important;padding:3px 5px;font-size: 11px;" colspan="6" >{!avcharge.milestoneName}</td>
+                     <td style="text-align:center !important;padding:3px 5px;font-size:11px;"> <apex:outputText rendered="{!avcharge.Datetoprint }" value="{!avcharge.mdate}"   /> <!-- <apex:outputText value="{0,date,dd/mm/yyyy}" ><apex:param value="{!avcharge.mdate}"/></apex:outputText> --></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><apex:outputText value="{!avcharge.amount}"></apex:outputText> </td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!avcharge.tax}</td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!avcharge.grandtotal}</td>     
+               </tr>
+               </apex:repeat>
+               
+               <apex:repeat value="{!ocwList}" var="occharge" rendered="{{!ISNULL(ocwList) == false && ocwList.size > 0}}">
+                <tr class="maintable">
+                     <td class="testcss1" style="padding:3px 5px;" >{!occharge.srno}</td>
+                     <td colspan="6" class="testcss2" style="padding:3px 5px;">{!occharge.milestoneName}</td>
+                     <td class="testcss1" style="padding:3px 5px;">{!occharge.mdate} <!-- <apex:outputText value="{0,date,MM/dd/yyyy}" ><apex:param value="{!occharge.mdate}"/></apex:outputText> --></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><apex:outputText value="{!occharge.amount}"></apex:outputText> </td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!occharge.tax}</td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!occharge.grandtotal}</td>     
+               </tr>
+               </apex:repeat>
+               
+               </table>
+                </apex:outputPanel>
+                    <!-------------------------------------------------For Commercial------------------------------------------>
+                    <apex:outputPanel rendered="{!isCommercial}">
+                        <table width="100%" style="border-collapse:collapse;">
+                            
+
+                            <tr style="width:100%;">
+                                <td style="width:1%;padding:3px 5px;border:1px solid #DCDCDC">&nbsp;</td>
+                                <td colspan="3" class="testcss1" style="border:1px solid #DCDCDC"><b>Allottees:</b></td> 
+                                <td colspan="5" style="font-size: 11px;padding:5px; text-align:left !important;border:1px solid #DCDCDC"><b>{!qt.Applicant_Name__c}</b></td>
+                                <!--<td colspan="2" class="testcss1"><b>Booking Date:&nbsp;&nbsp;&nbsp;</b></td> <apex:outputText value="{0, date, dd-MM-yyyy}"><apex:param value="{!bk.Booking_Date__c}" /></apex:outputText>-->
+                                <td colspan="2" style="font-size: 11px;padding:5px; text-align:center !important;border:1px solid #DCDCDC"><b>Booking Date:{!dte}</b></td>
+                            </tr>
+                        </table>
+                        <table class="maintable">
+                            <tr class="maintable" >
+                                <td style="width:1%;padding:3px 5px;">&nbsp;</td>
+                                <td class="testcss1" width="10%" >Unit</td>
+                                <td class="testcss1" width="20%" >Allottee's Saleable Area ID</td>
+                                <td class="testcss1" width="15%"  >Level [Floor]</td>
+                                <td class="testcss1" width="15%" >Unit Saleable Area</td>
+                                <td class="testcss1" width="15%">Allottee's Saleable Area</td>
+                                <td class="testcss1" width="10%" >Consideration<br/>(INR)</td>    
+                            </tr>
+                            
+                            <tr class="maintable">
+                                <td class="testcss1"></td>
+                                <td class="testcss1"><b><apex:outputField value="{!unit.Parent_Unit__c}"/></b></td>
+                                <td class="testcss1"><b><apex:outputField value="{!unit.Name}"/></b></td>
+                                <td class="testcss1"><apex:outputText value="{!unit.Level__c}[{!unit.Floor__c}]" rendered="{!unit.Is_Villa__c == false}"></apex:outputText>
+                                    <apex:outputText value="0[0]"  rendered="{!unit.Is_Villa__c == true }"></apex:outputText>
+                                </td>
+                                <td class="testcss1"><b><apex:outputText value="{0, number, integer}"><apex:param value="{!unit.Parent_Saleable_Area__c}"/></apex:outputText></b></td>
+                                <td class="testcss4"><b><apex:outputText value="{0, number, integer}"><apex:param value="{!unit.Saleable_Area_Sub_Product__c}"/></apex:outputText></b></td>
+                                <td style=" text-align:right !important;padding:5px;font-size: 10px;width:67px;"><b>{!ConsiderationValue}</b></td>     
+                            </tr>
+                        </table>   
+                        
+                        
+               
+               <table class ="maintable" width="100%" >  
+               <tr class="maintable">
+                     <td class="testcss1" style="border-top: 1px solid black;padding:4px 5px;">&nbsp;&nbsp;</td>
+                     <td style = "width:45%;border-top: 1px solid black;padding:4px 5px;" colspan="5" class="testcss2">Cost of Commercial Unit</td>
+                     <td class="testcss1" style="background-color:{!Quote.Selected_Specification__c};color:white;width:81px;border-top: 1px solid black;padding:4px 5px;"><apex:outputField value="{!Quote.Selected_Specification__c}"/></td>
+                     <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;width:81px;border-top: 1px solid black;"></td>
+                     <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;"></td>
+                     <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;">{!ConsiderationValue}</td>     
+               </tr>
+              
+              
+               
+               <tr class="maintable">
+                   <td style="width:1%;border-top: 1px solid black;"></td>
+                   <td colspan="5" style="width:40px;text-align:left !important; padding:4px 5px;font-size: 11px;border-top: 1px solid black;" ><b>Payment Schedule</b></td>
+                   <td style=" text-align:center !important;padding:4px 5px;font-size: 11px;border-top: 1px solid black;"><b>Due Date</b></td>
+                   <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;" ><b>Consideration</b></td>
+                   <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;" ><b>Estimated Tax</b></td>
+                   <td style=" text-align:right !important;padding:4px 5px;font-size: 10px;border-top: 1px solid black;" ><b>Total (INR)</b></td>
+                </tr>
+                <tr class="maintable">
+                     <td style="width:1%;padding:3px 5px;"></td>
+                     <td colspan="5" class="testcss1" style="padding:3px 5px;"></td>
+                     <td class="testcss1" style="padding:3px 5px;"></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><b>{!strConsiderationValue}</b></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><b>{!stradditionoftax }</b></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><b>{!strTotalAmtwithtax }</b></td>
+                </tr>
+                <apex:repeat value="{!pmwList}" var="avcharge" rendered="{!ISNULL(pmwList) == false && pmwList.size > 0}">
+                <tr  class="maintable">
+                     <td style="height:0px;padding:3px 5px;" class="testcss1"  >{!avcharge.srno}</td>
+                     <td style = "text-align:left !important;padding:3px 5px;font-size: 11px;" colspan="5" >{!avcharge.milestoneName}</td>
+                     <td style="text-align:center !important;padding:3px 5px;font-size:11px;"> <apex:outputText rendered="{!avcharge.milestonetype = 'Date Linked' || avcharge.milestoneName = 'On On Virtual Completion [on or before]' || avcharge.milestoneName = 'On Virtual Completion' || avcharge.milestoneName = 'On Virtual Completion [on or before]' }" value="{!avcharge.mdate}"   /> <!-- <apex:outputText value="{0,date,dd/mm/yyyy}" ><apex:param value="{!avcharge.mdate}"/></apex:outputText> --></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><apex:outputText value="{!avcharge.amount}"></apex:outputText> </td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!avcharge.tax}</td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!avcharge.grandtotal}</td>     
+               </tr>
+               </apex:repeat>
+               
+               <apex:repeat value="{!ocwList}" var="occharge" rendered="{{!ISNULL(ocwList) == false && ocwList.size > 0}}">
+                <tr class="maintable">
+                     <td class="testcss1" style="padding:3px 5px;" >{!occharge.srno}</td>
+                     <td colspan="5" class="testcss2" style="padding:3px 5px;">{!occharge.milestoneName}</td>
+                     <td class="testcss1" style="padding:3px 5px;">{!occharge.mdate} <!-- <apex:outputText value="{0,date,MM/dd/yyyy}" ><apex:param value="{!occharge.mdate}"/></apex:outputText> --></td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;"><apex:outputText value="{!occharge.amount}"></apex:outputText> </td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!occharge.tax}</td>
+                     <td style=" text-align:right !important;padding:3px 5px;font-size: 10px;">{!occharge.grandtotal}</td>     
+               </tr>
+               </apex:repeat>
+               
+               </table>
+                </apex:outputPanel>
+               </div>
+               <!---------------------------Special Clauses ------------------------------------------------------->
+                     <div style = "border:none">
+                         <br/>
+                             <table>
+                                 <tr style="display: {!IF((ISBLANK(qt.Specific_Terms_and_Condition__c) && ISBLANK(qt.Customization_Credit__c)), 'none', 'table-row')};">
+                                     <th style="background:#a0a0a0;color:#FFF;font-size: 14px;padding:1px 4px; font-weight:bold;width:1000px !important;font-size:14px">Special Terms of Sale</th>
+                                 </tr>
+                                 <apex:repeat value="{!splitted1}" var="split" >
+                                     <tr>
+                                         <td style = "font-size:11px">{!split} {!splitted1[split]}</td> 
+                                     </tr>
+                                 </apex:repeat>
+                             </table>
+                         
+                     </div>
+                 <!------------------------------------------------------------------------------------------------------>     
+      </apex:form>
+      </apex:outputPanel>  
+        <div style="page-break-after:always;"> </div>
+                
+<!--------------------------------   Terms and Condition ----------------------------------------------------------->
+            <apex:outputPanel >
+                <div class="testcss2">
+                    <div class="footer">
+                    <!--hr style="margin-bottom:0px;color:#d3d3d3;position:relative;top:7px;"/-->
+                  <!--label style="margin-top:-5px;" class="library">I agree to all the costs, payment schedules, terms and conditions as mentioned above.</label-->
+               <table class="maintable" width="100%">
+               <tr>
+                   <td class="testcssAppNames" > <br/><br/><br/> {!qt.Applicant_Name__c} <br/><b>Allottee/s</b></td>
+                     <td class="testcss5">
+                     <table class="maintable" width="100%">
+                        
+                     <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c == 'JD','table-row','none')}">
+                         
+                       <td style="border:none;"> <br/> <br/> <br/>{!qt.Sales_Consultant_Formula__c}</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                         <td style="border:none;border-left:1px solid #DCDCDC;"> <br/> <br/> <br/><apex:outputField value="{!unit.Land_Owner__r.JD_Signatory__c}"/></td>   
+                         </tr>
+                         <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c == 'JD','table-row','none')}">
+                             <td style="border:none;border-bottom:1px solid #DCDCDC;" colspan="4"><b>Confirming Party</b></td>
+                             <td style="border:none;border-bottom:1px solid #DCDCDC;border-left:1px solid #DCDCDC;" colspan="1"><b>Landowner</b></td>
+                         </tr>
+                         <apex:outputPanel rendered="{!unit.Unit_Ownership__c == 'JD'}"><b>Authorized Signatories For Promoters</b></apex:outputPanel>
+                         
+                     <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c != 'JD','table-row','none')}">
+                         
+                       <td style="border:none;text-align:center;" colspan="4"> <br/> <br/> <br/>{!qt.Sales_Consultant_Formula__c}</td>
+                    <!--   <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>   -->
+                         </tr> <apex:outputPanel rendered="{!unit.Unit_Ownership__c != 'JD' && unit.Permitted_Use__c != 'Commercial'}"><b>Promoters<br/> (Authorised Signatory)</b></apex:outputPanel><apex:outputPanel rendered="{!unit.Unit_Ownership__c != 'JD' && unit.Permitted_Use__c == 'Commercial'}"><b>Promoters<br/> (Authorised Signatory)</b></apex:outputPanel>    
+                     </table>
+                     </td>
+                 </tr> 
+               </table>
+                    <hr style="color:#d3d3d3;margin-top:4px;"/>
+              <p style="text-align:right" class="library">Quotation : {!qt.Name}&nbsp;Generated on: {!dte}</p>
+               </div>
+                    <c:TermANDCondition_C unitd="{!unit.id}" documentType="PostLaunchTermSheet" schemeId="{!Quote.Scheme__c}" quotationId="{!qt.id}" /><!--bookingId="{!bk.Id}"-->
+                    
+                </div>
+            </apex:outputPanel>
+              
+<!----------------------------------- Specification Page ----------------------------------------------------------->   
+        <apex:outputPanel >
+            <div class="footer">
+                    <!--hr style="margin-bottom:0px;color:#d3d3d3;position:relative;top:7px;"/-->
+                  <!--label style="margin-top:-5px;" class="library">I agree to all the costs, payment schedules, terms and conditions as mentioned above.</label-->
+               <table class="maintable" width="100%">
+               <tr>
+                   <td class="testcssAppNames" > <br/><br/><br/> {!qt.Applicant_Name__c} <br/><b>Allottee/s</b></td>
+                     <td class="testcss5">
+                     <table class="maintable" width="100%">
+                        
+                     <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c == 'JD','table-row','none')}">
+                         
+                       <td style="border:none;"> <br/> <br/> <br/>{!qt.Sales_Consultant_Formula__c}</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                         <td style="border:none;border-left:1px solid #DCDCDC;"> <br/> <br/> <br/><apex:outputField value="{!unit.Land_Owner__r.JD_Signatory__c}"/></td>   
+                         </tr>
+                         <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c == 'JD','table-row','none')}">
+                             <td style="border:none;border-bottom:1px solid #DCDCDC;" colspan="4"><b>Confirming Party</b></td>
+                             <td style="border:none;border-bottom:1px solid #DCDCDC;border-left:1px solid #DCDCDC;" colspan="1"><b>Landowner</b></td>
+                         </tr>
+                         <apex:outputPanel rendered="{!unit.Unit_Ownership__c == 'JD'}"><b>Authorized Signatories For Promoters</b></apex:outputPanel>
+                         
+                     <tr class="testcss5" style="display:{!if(unit.Unit_Ownership__c != 'JD','table-row','none')}">
+                         
+                       <td style="border:none;text-align:center;" colspan="4"> <br/> <br/> <br/>{!qt.Sales_Consultant_Formula__c}</td>
+                    <!--   <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>
+                       <td style="border:none;"> <br/> <br/> <br/>&nbsp;</td>   -->  
+                         </tr> <apex:outputPanel rendered="{!unit.Unit_Ownership__c != 'JD'}"><b>Promoters<br/> (Authorised Signatory)</b></apex:outputPanel>    
+                     </table>
+                     </td>
+                 </tr> 
+               </table>
+                    <hr style="color:#d3d3d3;margin-top:4px;"/>
+              <p style="text-align:right" class="library">Quotation : {!qt.Name}&nbsp;Generated on: {!dte}</p>
+               </div>
+            <apex:outputPanel rendered="{!unit.Permitted_Use__c == 'Residential'}">
+                <div style="page-break-after:always;"> </div>  
+                <div>
+                    <!--  <apex:include pageName="{!specificationPage}"/> --> 
+                    <apex:outputPanel rendered="{!renderSpec}"> <!-- if Specidication is present -->
+                    	<c:ViewSpecificationCopy specsId="{!specList[0].id}"/> 
+                    </apex:outputPanel> 
+                    <apex:outputPanel rendered="{!NOT(renderSpec)}"> <!--- If Specification is not present -->
+                    	<c:ViewSpecification_C specsId="{!Quote.Specification_Id__c}"/> 
+                    </apex:outputPanel> 
+                    <p style="width:100%;text-align:justify !important;font-size: 11px;">
+                        *The Specifications listed here are applicable only for the default layout of the Unit and may not apply to 
+                        changes made to spaces within the Unit or any additional spaces created during the interior design journey. 
+                        It is our earnest endeavour to use the same brands, products and materials as mentioned above, however, 
+                        if there are situations that compel us to change some items, rest assured that all changes shall always 
+                        be of an equivalent brand, product or material.
+                    </p>
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel> 
+        
+        
+        </body>
+      
+ 
+</apex:page>
